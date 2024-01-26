@@ -1,0 +1,18 @@
+{
+  "name": "@hmz/root",
+  "private": true,
+  "workspaces": [
+    "packages/apps/*"
+  ],
+  "scripts": {
+    "start:be": "lerna run start --scope @app/be",
+    "build": "lerna run build"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.7",
+    "lerna": "^8.0.2",
+    "vite": "^5.0.12",
+    "eslint": "^8.55.0",
+    "typescript": "^5.2.2"
+  }
+}

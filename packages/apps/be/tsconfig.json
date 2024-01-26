@@ -1,0 +1,11 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "module": "node16",
+    "moduleResolution": "node16",
+    "useDefineForClassFields": false
+  },
+  "include": ["src"],
+  "exclude": ["node_modules"]
+}
