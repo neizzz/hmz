@@ -2,10 +2,10 @@
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
     "outDir": "dist",
-    "module": "node16",
-    "moduleResolution": "node16",
-    "useDefineForClassFields": false
+    "useDefineForClassFields": false,
+    // "allowImportingTsExtensions": true,
+    // "noEmit": false,
   },
   "include": ["src"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules"],
 }
