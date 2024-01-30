@@ -8,6 +8,8 @@ import { Express } from 'express';
  */
 import { WaitingRoom } from './rooms/WaitingRoom.ts';
 import { Server } from 'colyseus';
+import { RoomType } from '@shared/type';
+import { GameRoom } from './rooms/GameRoom.ts';
 
 const config: ConfigOptions = {
   initializeGameServer: (gameServer: Server) => {
@@ -15,7 +17,8 @@ const config: ConfigOptions = {
      * Define your room handlers:
      */
     // TODO: LobbyRoom
-    gameServer.define('my_room', WaitingRoom);
+    gameServer.define(RoomType.WAITING_ROOM, WaitingRoom);
+    gameServer.define(RoomType.GAME_ROOM, GameRoom);
   },
 
   initializeExpress: (app: Express) => {

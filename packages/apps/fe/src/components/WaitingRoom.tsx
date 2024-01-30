@@ -4,6 +4,9 @@ import { Room } from 'colyseus.js';
 
 type Props = {
   room: Room;
+  host?: boolean;
+  onClickStart: () => void;
+  onGameCreated: (roomId: string) => void;
 };
 
 // FIXME: be state 사용
@@ -30,7 +33,7 @@ const buildAwaitersByTeam = (
   );
 };
 
-const WaitingRoom = ({ room }: Props) => {
+const WaitingRoom = ({ room, host, onClickStart, onGameCreated }: Props) => {
   const [awaitersByTeam, setAwaitersByTeam] = useState<AwaitersByTeam>({
     [Team.RED]: [],
     [Team.BLUE]: [],
@@ -59,15 +62,15 @@ const WaitingRoom = ({ room }: Props) => {
     room.onMessage(WaitingRoomMessageType.CHANGE_ROOM, awaiters => {
       setAwaitersByTeam(buildAwaitersByTeam(awaiters));
     });
+
+    room.onMessage(WaitingRoomMessageType.START_GAME, gameRoomId => {
+      onGameCreated(gameRoomId);
+    });
   }, []);
 
   const changeTeam = useCallback((to: Team) => {
     room.send(WaitingRoomMessageType.CHANGE_ROOM, { to });
   }, []);
-
-  useEffect(() => {
-    console.log(awaitersByTeam);
-  }, [awaitersByTeam]);
 
   return (
     <div className={'centering-layer'}>
@@ -113,6 +116,19 @@ const WaitingRoom = ({ room }: Props) => {
             </ul>
           </li>
         </ul>
+        <div>
+          {host && (
+            <button
+              onClick={() => {
+                // TODO: check start condition
+                onClickStart();
+                room.send(WaitingRoomMessageType.START_GAME);
+              }}
+            >
+              start
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

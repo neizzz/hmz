@@ -3,10 +3,10 @@ import { AwaiterState, WaitingRoomState } from './schema/WaitingRoomState.ts';
 import { Team, WaitingRoomMessageType, WaitingRoomOption } from '@shared/type';
 
 export class WaitingRoom extends Room<WaitingRoomState> {
-  maxClients = 4;
+  maxClients = 10;
 
   onCreate(option: WaitingRoomOption) {
-    console.log('room', this.roomId, 'creating...');
+    console.log('waiting room', this.roomId, 'creating...');
     this.setState(new WaitingRoomState());
 
     this.onMessage(WaitingRoomMessageType.CHANGE_ROOM, (client, message) => {
@@ -24,6 +24,13 @@ export class WaitingRoom extends Room<WaitingRoomState> {
       awaiter.team = message.to;
       this.state.awaiters.set(client.sessionId, awaiter);
       this.broadcast(WaitingRoomMessageType.CHANGE_ROOM, this.state.awaiters);
+    });
+
+    this.onMessage(WaitingRoomMessageType.START_GAME, (client, message) => {
+      console.log(
+        `[${WaitingRoomMessageType.START_GAME}]: ${client.sessionId}, ${JSON.stringify(message)}`
+      );
+      this.broadcast(WaitingRoomMessageType.START_GAME, this.state.awaiters);
     });
   }
 
@@ -45,6 +52,6 @@ export class WaitingRoom extends Room<WaitingRoomState> {
   }
 
   onDispose() {
-    console.log('room', this.roomId, 'disposing...');
+    console.log('waiting room', this.roomId, 'disposing...');
   }
 }
