@@ -1,26 +1,37 @@
-import { useEffect, useState } from 'react';
 import './App.css';
 import { Client, Room } from 'colyseus.js';
-import WaitingRoom from '@components/WaitingRoom';
-import { RoomType } from '@shared/types';
-import InGame from '@components/InGame';
 
-const client = new Client('ws://localhost:2567');
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+
+import WelcomePage from './pages/WelcomePage';
+import LobbyPage from './pages/LobbyPage';
+
+const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <WelcomePage />,
+  },
+  {
+    path: '/rooms',
+    element: <LobbyPage />,
+  },
+]);
 
 function App() {
-  const [room, setRoom] = useState<Room>();
-  const [game, setGame] = useState<Room>();
+  // const [room, setRoom] = useState<Room>();
+  // const [game, setGame] = useState<Room>();
 
-  useEffect(() => {
-    console.log(client);
-    client.create(RoomType.WAITING_ROOM).then(setRoom);
-    // client.joinById('49W9FtPUq').then(setRoom);
-  }, []);
+  // useEffect(() => {
+  //   console.log(client);
+  //   client.create(RoomType.WAITING_ROOM).then(setRoom);
+  //   // client.joinById('49W9FtPUq').then(setRoom);
+  // }, []);
 
   /** TODO: Router */
   return (
     <div className={'app'}>
-      {game ? (
+      <RouterProvider router={router} />
+      {/* {game ? (
         <InGame />
       ) : room ? (
         <WaitingRoom
@@ -35,7 +46,7 @@ function App() {
         />
       ) : (
         'loading'
-      )}
+      )} */}
     </div>
   );
 }
