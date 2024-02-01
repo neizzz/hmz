@@ -1,5 +1,6 @@
 import { GameScene } from '@in-game/scenes/GameScene.ts';
 import { useEffect, useRef } from 'react';
+import { useLoaderData } from 'react-router-dom';
 
 const GAME_SCENE_PARENT_ID = 'in-game-container';
 
@@ -14,12 +15,17 @@ const config: Phaser.Types.Core.GameConfig = {
   scene: [GameScene],
 };
 
+export type InGameLoaderData = {
+  roomId: string;
+};
+
 const InGame = () => {
+  const data = useLoaderData() as InGameLoaderData;
   const gameInstanceRef = useRef<Phaser.Game>();
 
   useEffect(() => {
     gameInstanceRef.current = new Phaser.Game(config);
-  });
+  }, []);
 
   return <div id={GAME_SCENE_PARENT_ID} />;
 };
