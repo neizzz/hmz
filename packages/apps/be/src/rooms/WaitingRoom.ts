@@ -1,6 +1,6 @@
 import { Room, Client } from '@colyseus/core';
 import { AwaiterState, WaitingRoomState } from './schema/WaitingRoomState.ts';
-import { Team, WaitingRoomMessageType, WaitingRoomOption } from '@shared/type';
+import { Team, WaitingRoomMessageType, WaitingRoomOption } from '@shared/types';
 
 export class WaitingRoom extends Room<WaitingRoomState> {
   maxClients = 10;

@@ -1,6 +1,6 @@
 import { Room, Client } from '@colyseus/core';
 import { WaitingRoomState } from './schema/WaitingRoomState.ts';
-import { WaitingRoomOption } from '@shared/type';
+import { WaitingRoomOption } from '@shared/types';
 import { GameRoomState } from './schema/GameRoomState.ts';
 
 export class GameRoom extends Room<GameRoomState> {

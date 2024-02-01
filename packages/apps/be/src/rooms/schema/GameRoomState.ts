@@ -1,5 +1,5 @@
 import { Schema, type, MapSchema } from '@colyseus/schema';
-import { Team } from '@shared/type';
+import { Team } from '@shared/types';
 
 export class PlayerState extends Schema {
   @type('string') name: string;

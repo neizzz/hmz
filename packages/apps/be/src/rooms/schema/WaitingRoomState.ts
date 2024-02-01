@@ -1,5 +1,5 @@
 import { Schema, MapSchema, type } from '@colyseus/schema';
-import { Team } from '@shared/type';
+import { Team } from '@shared/types';
 
 export class AwaiterState extends Schema {
   @type('string') name: string;

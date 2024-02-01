@@ -8,7 +8,7 @@ import { Express } from 'express';
  */
 import { WaitingRoom } from './rooms/WaitingRoom.ts';
 import { Server } from 'colyseus';
-import { RoomType } from '@shared/type';
+import { RoomType } from '@shared/types';
 import { GameRoom } from './rooms/GameRoom.ts';
 
 const config: ConfigOptions = {
