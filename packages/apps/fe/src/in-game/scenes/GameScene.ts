@@ -1,4 +1,6 @@
 import { Player } from '@in-game/entities/Player';
+import { GameRoomState, PlayerState } from '@schema';
+import { GameRoomActionType, GameRoomMessageType } from '@shared/types';
 import { Room } from 'colyseus.js';
 import Phaser from 'phaser';
 
@@ -9,7 +11,8 @@ type InitParams = {
 export class GameScene extends Phaser.Scene {
   room: Room;
   me: string; // session id
-  players: { [sessionId: string]: any } = {};
+  players: { [sessionId: string]: Player } = {};
+  playerSprites: { [sessionId: string]: Phaser.GameObjects.Sprite } = {};
 
   constructor() {
     super('game-scene');
@@ -34,11 +37,26 @@ export class GameScene extends Phaser.Scene {
 
     const { width, height } = this.game.config;
 
-    this.players[this.me] = this.physics.add.sprite(
+    this.playerSprites[this.me] = this.physics.add.sprite(
       +width / 2,
       +height / 2,
       'player'
     );
+
+    this.room.onStateChange((state: GameRoomState) => {
+      state.players.forEach((player, id) => {
+        const playerSprite = this.playerSprites[id];
+        playerSprite.x = player.x;
+        playerSprite.y = player.y;
+      });
+    });
+
+    this.room.send(GameRoomMessageType.ACTION, {
+      type: GameRoomActionType.DIRECTION,
+      payload: {
+        direction: 'rightdown',
+      },
+    });
   }
 
   update(time: number, delta: number): void {

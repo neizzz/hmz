@@ -1,29 +1,33 @@
 import { GameScene } from '@in-game/scenes/GameScene';
+import { PlayerState } from '@schema';
 
 type InitParams = {
-  scene: GameScene;
-  sessionId: string;
-  x: number;
-  y: number;
-  avatar?: string;
-  name?: string;
+  state: PlayerState;
+  // scene: GameScene;
+  // sessionId: string;
+  // x: number;
+  // y: number;
+  // avatar?: string;
+  // name?: string;
 };
 
 export class Player {
-  scene: GameScene;
-  sessionId: string;
-  x: number;
-  y: number;
-  avatar?: string;
-  name?: string;
+  state: PlayerState;
+  // scene: GameScene;
+  // sessionId: string;
+  // x: number;
+  // y: number;
+  // avatar?: string;
+  // name?: string;
 
-  constructor(params: InitParams) {
-    this.scene = params.scene;
-    this.sessionId = params.sessionId;
-    this.x = params.x;
-    this.y = params.y;
-    this.avatar = params.avatar;
-    this.name = params.name;
+  constructor({ state }: InitParams) {
+    this.state = state;
+    // this.scene = params.scene;
+    // this.sessionId = params.sessionId;
+    // this.x = params.x;
+    // this.y = params.y;
+    // this.avatar = params.avatar;
+    // this.name = params.name;
   }
 
   static generateTexture(scene: Phaser.Scene): void {
@@ -34,7 +38,7 @@ export class Player {
     graphics.destroy();
   }
 
-  update() {
+  update(state: PlayerState) {
     // TODO:
   }
 }

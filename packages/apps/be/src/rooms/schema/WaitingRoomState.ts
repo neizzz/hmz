@@ -7,6 +7,6 @@ export class AwaiterState extends Schema {
 }
 
 export class WaitingRoomState extends Schema {
-  @type('string') hostSessionId?: string;
+  @type('string') hostSessionId: string;
   @type({ map: AwaiterState }) awaiters = new MapSchema<AwaiterState>();
 }

@@ -4,5 +4,15 @@ export const enum Team {
   BLUE = 'blue',
 }
 
+export type Direction =
+  | 'left'
+  | 'right'
+  | 'up'
+  | 'down'
+  | 'leftup'
+  | 'leftdown'
+  | 'rightup'
+  | 'rightdown';
+
 export * from './option.ts';
 export * from './message.ts';

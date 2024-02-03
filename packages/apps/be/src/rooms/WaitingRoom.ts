@@ -26,12 +26,21 @@ export class WaitingRoom extends Room<WaitingRoomState> {
       this.broadcast(WaitingRoomMessageType.CHANGE_ROOM, this.state.awaiters);
     });
 
-    this.onMessage(WaitingRoomMessageType.START_GAME, (client, message) => {
-      console.log(
-        `[${WaitingRoomMessageType.START_GAME}]: ${client.sessionId}, ${JSON.stringify(message)}`
-      );
-      this.broadcast(WaitingRoomMessageType.START_GAME, this.state.awaiters);
-    });
+    this.onMessage(
+      WaitingRoomMessageType.START_GAME,
+      (client, { gameRoomId }) => {
+        console.log(
+          `[${WaitingRoomMessageType.START_GAME}]: ${client.sessionId}`
+        );
+        this.broadcast(
+          WaitingRoomMessageType.START_GAME,
+          {
+            gameRoomId,
+          },
+          { except: client }
+        );
+      }
+    );
   }
 
   onJoin(client: Client, options: any) {

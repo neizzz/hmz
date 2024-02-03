@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Team, WaitingRoomMessageType } from '@shared/types';
 import { Room } from 'colyseus.js';
+import { AwaiterState } from '@schema';
 
 type Props = {
   room: Room;
@@ -8,17 +9,10 @@ type Props = {
   onClickStart: () => void;
   onGameCreated: (roomId: string) => void;
 };
-
-// FIXME: be state 사용
-type Awaiter = {
-  name: string;
-  team: Team;
-};
-
-type AwaitersByTeam = Record<Team, [string, Awaiter][]>;
+type AwaitersByTeam = Record<Team, [string, AwaiterState][]>;
 
 const buildAwaitersByTeam = (
-  awaiters: Record<string, Awaiter>
+  awaiters: Record<string, AwaiterState>
 ): AwaitersByTeam => {
   return Object.entries(awaiters).reduce(
     (result, [sessionId, awaiter]) => {
@@ -41,7 +35,7 @@ const WaitingRoom = ({ room, host, onClickStart, onGameCreated }: Props) => {
   });
 
   useEffect(() => {
-    room.state.awaiters.onAdd((awaiter: Awaiter, sessionId: string) => {
+    room.state.awaiters.onAdd((awaiter: AwaiterState, sessionId: string) => {
       console.log('awaiter add', awaiter, sessionId);
       setAwaitersByTeam(prev => ({
         ...prev,
@@ -49,7 +43,7 @@ const WaitingRoom = ({ room, host, onClickStart, onGameCreated }: Props) => {
       }));
     });
 
-    room.state.awaiters.onRemove((awaiter: Awaiter, sessionId: string) => {
+    room.state.awaiters.onRemove((awaiter: AwaiterState, sessionId: string) => {
       console.log('awaiter remove', awaiter, sessionId);
       setAwaitersByTeam(prev => ({
         ...prev,
