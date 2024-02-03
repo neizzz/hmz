@@ -5,6 +5,7 @@ export const enum Team {
 }
 
 export type Direction =
+  | ''
   | 'left'
   | 'right'
   | 'up'

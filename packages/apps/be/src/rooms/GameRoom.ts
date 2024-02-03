@@ -19,7 +19,6 @@ export class GameRoom extends Room<GameRoomState> {
     this.onMessage(
       GameRoomMessageType.ACTION,
       (client: Client, { type, payload }) => {
-        console.log('[GameRoom] receive message:', type, payload);
         switch (type) {
           case GameRoomActionType.DIRECTION:
             this.state.acceleratePlayer(
@@ -43,6 +42,8 @@ export class GameRoom extends Room<GameRoomState> {
     /** TODO: */
     // player.name = options.name;
     // player.team = Team.OBSERVER;
+    player.x = 300;
+    player.y = 400;
     this.state.players.set(client.sessionId, player);
   }
 

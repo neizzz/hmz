@@ -12,7 +12,7 @@ const config: Phaser.Types.Core.GameConfig = {
   height: 600,
   backgroundColor: '#b6d53c',
   parent: GAME_SCENE_PARENT_ID,
-  physics: { default: 'arcade', arcade: { debug: true } },
+  physics: { default: 'matter', matter: { debug: true, gravity: { y: 0 } } },
   pixelArt: false,
   scene: [BootstrapScene, GameScene],
 };

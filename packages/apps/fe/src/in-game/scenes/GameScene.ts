@@ -1,6 +1,10 @@
 import { Player } from '@in-game/entities/Player';
 import { GameRoomState, PlayerState } from '@schema';
-import { GameRoomActionType, GameRoomMessageType } from '@shared/types';
+import {
+  Direction,
+  GameRoomActionType,
+  GameRoomMessageType,
+} from '@shared/types';
 import { Room } from 'colyseus.js';
 import Phaser from 'phaser';
 
@@ -12,7 +16,10 @@ export class GameScene extends Phaser.Scene {
   room: Room;
   me: string; // session id
   players: { [sessionId: string]: Player } = {};
-  playerSprites: { [sessionId: string]: Phaser.GameObjects.Sprite } = {};
+  // playerSprites: { [sessionId: string]: Phaser.GameObjects.Sprite } = {};
+  playerSprites: { [sessionId: string]: Phaser.Physics.Matter.Sprite } = {};
+
+  cursorKeys: Phaser.Types.Input.Keyboard.CursorKeys;
 
   constructor() {
     super('game-scene');
@@ -21,6 +28,7 @@ export class GameScene extends Phaser.Scene {
   init({ room }: InitParams) {
     this.room = room;
     this.me = room.sessionId;
+    this.cursorKeys = this.input.keyboard.createCursorKeys();
   }
 
   preload() {
@@ -37,11 +45,12 @@ export class GameScene extends Phaser.Scene {
 
     const { width, height } = this.game.config;
 
-    this.playerSprites[this.me] = this.physics.add.sprite(
-      +width / 2,
-      +height / 2,
-      'player'
-    );
+    this.playerSprites[this.me] = this.matter.add
+      .sprite(+width / 2, +height / 2, 'player')
+      .setBody({
+        type: 'circle',
+        radius: 20,
+      });
 
     this.room.onStateChange((state: GameRoomState) => {
       state.players.forEach((player, id) => {
@@ -50,17 +59,15 @@ export class GameScene extends Phaser.Scene {
         playerSprite.y = player.y;
       });
     });
-
-    this.room.send(GameRoomMessageType.ACTION, {
-      type: GameRoomActionType.DIRECTION,
-      payload: {
-        direction: 'rightdown',
-      },
-    });
   }
 
   update(time: number, delta: number): void {
-    // this.players[this.me].x += 2;
+    this.room.send(GameRoomMessageType.ACTION, {
+      type: GameRoomActionType.DIRECTION,
+      payload: {
+        direction: this.getDirectionFromInput(),
+      },
+    });
   }
 
   private drawGround() {
@@ -73,5 +80,13 @@ export class GameScene extends Phaser.Scene {
     const tiles = map.addTilesetImage('ground-tile');
     const layer = map.createBlankLayer('ground-layer', tiles);
     layer.fill(0, 0, 0, map.width, map.height); // Body of the water
+  }
+
+  private getDirectionFromInput(): Direction {
+    const xdir = +this.cursorKeys.right.isDown - +this.cursorKeys.left.isDown;
+    const ydir = +this.cursorKeys.down.isDown - +this.cursorKeys.up.isDown;
+
+    return ((xdir ? (xdir === -1 ? 'left' : 'right') : '') +
+      (ydir ? (ydir === -1 ? 'up' : 'down') : '')) as Direction;
   }
 }
