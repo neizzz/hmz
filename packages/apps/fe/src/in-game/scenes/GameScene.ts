@@ -1,42 +1,41 @@
-import { Player } from '@in-game/entities/Player.ts';
-import { Client, Room } from 'colyseus.js';
+import { Player } from '@in-game/entities/Player';
+import { Room } from 'colyseus.js';
 import Phaser from 'phaser';
 
 type InitParams = {
-  serverUrl: string;
+  room: Room;
 };
 
 export class GameScene extends Phaser.Scene {
-  client: Client;
   room: Room;
+  me: string; // session id
+  players: { [sessionId: string]: any } = {};
 
-  playerSessions: { [sessionId: string]: any };
+  constructor() {
+    super('game-scene');
+  }
 
-  init(params: InitParams) {
-    const { serverUrl } = params;
-    this.client = new Client(serverUrl);
+  init({ room }: InitParams) {
+    this.room = room;
+    this.me = room.sessionId;
   }
 
   preload() {
-    // preload scene
+    console.log('[GameScene] preload');
+
+    Player.generateTexture(this);
   }
 
-  async create() {
-    console.log('Joining room...');
+  create() {
+    console.log('[GameScene] create');
 
-    try {
-      this.room = await this.client.joinOrCreate('my_room');
-      console.log('Joined successfully!');
-    } catch (e) {
-      console.error(e);
-    }
+    const { width, height } = this.game.config;
 
-    // listen for new players
-    this.room?.state.players.onAdd((player: Player, sessionId: string) => {
-      const entity = this.physics.add.image(player.x, player.y, 'ship_0001');
-
-      // keep a reference of it on `playerEntities`
-    });
+    this.players[this.me] = this.physics.add.sprite(
+      +width / 2,
+      +height / 2,
+      'player'
+    );
   }
 
   update(time: number, delta: number): void {

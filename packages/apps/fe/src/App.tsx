@@ -19,15 +19,16 @@ const router = createBrowserRouter([
   },
   {
     path: '/test/:roomId?',
-    loader: ({ params }) => {
+    loader: async ({ params }) => {
       const client = useHmzClient();
       if (params.roomId) {
-        client.joinById(params.roomId);
-        return { roomId: params.roomId } as InGameLoaderData;
+        return {
+          room: await client.joinById(params.roomId),
+        } as InGameLoaderData;
       } else {
         return client.create(RoomType.GAME_ROOM).then(room => {
           history.replaceState(null, null, `/test/${room.roomId}`);
-          return { roomId: room.roomId } as InGameLoaderData;
+          return { room } as InGameLoaderData;
         });
       }
     },
