@@ -6,6 +6,7 @@
     "packages/shared/*"
   ],
   "scripts": {
+    "generate-schema-ts": "schema-codegen packages/apps/be/src/rooms/schema/* --ts --output packages/apps/fe/schema/",
     "start:be": "lerna run start --scope @app/be",
     "build": "lerna run build"
   },
