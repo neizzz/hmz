@@ -11,6 +11,8 @@ import {
   PlayerState,
 } from '../rooms/schema/GameRoomState.ts';
 
+const DEFAULT_FRICTION_AIR = 0.02;
+
 export class GameEngine {
   // Matter.js engine
   engine: Matter.Engine;
@@ -87,6 +89,7 @@ export class GameEngine {
     this.ball = Matter.Bodies.circle(x, y, radius, {
       isStatic: false,
     });
+    this.ball.friction = 0;
     this.ball.frictionAir = 0.02;
     Matter.Composite.add(this.world, [this.ball]);
     this.state.ball = state;
@@ -97,7 +100,8 @@ export class GameEngine {
     const worldPlayer = Matter.Bodies.circle(x, y, radius, {
       isStatic: false,
     });
-    worldPlayer.frictionAir = 0.02;
+    this.ball.friction = 0;
+    worldPlayer.frictionAir = 0;
     this.players[sessionId] = worldPlayer;
     Matter.Composite.add(this.world, [worldPlayer]);
     this.state.createPlayer(sessionId, state);
@@ -135,14 +139,23 @@ export class GameEngine {
     payload: GameRoomActionPayload[GameRoomActionType.DIRECTION]
   ): void {
     const speedLimit = PlayerState.SPEED_LIMIT;
+    const friction = PlayerState.FRICTION;
     const currVelocity = worldPlayer.velocity;
+    const [accelX, accelY] = player.accelrate(payload.direction);
+
     let newVx = currVelocity.x;
     let newVy = currVelocity.y;
 
-    const [accelX, accelY] = player.accelrate(payload.direction);
-
-    accelX && (newVx = Math.min(speedLimit, newVx + accelX));
-    accelY && (newVy = Math.min(speedLimit, newVy + accelY));
+    accelX
+      ? (newVx =
+          (Math.sign(newVx + accelX) || 1) *
+          Math.min(speedLimit, Math.abs(newVx + accelX)))
+      : (newVx -= newVx * (friction + accelY ? 0.02 : 0));
+    accelY
+      ? (newVy =
+          (Math.sign(newVy + accelY) || 1) *
+          Math.min(speedLimit, Math.abs(newVy + accelY)))
+      : (newVy -= newVy * (friction + accelX ? 0.02 : 0));
 
     const speed = Math.sqrt(newVx * newVx + newVy * newVy);
     const overSpeedRatio = speed / speedLimit;
@@ -151,7 +164,6 @@ export class GameEngine {
       newVy /= overSpeedRatio;
     }
 
-    // Update in the world
     Matter.Body.setVelocity(worldPlayer, { x: newVx, y: newVy });
   }
 }

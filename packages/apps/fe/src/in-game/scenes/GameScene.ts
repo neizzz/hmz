@@ -86,8 +86,6 @@ export class GameScene extends Phaser.Scene {
         direction: this.getDirectionFromInput(),
       },
     });
-
-    console.log(this.getDirectionFromInput());
   }
 
   private drawGround() {

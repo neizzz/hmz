@@ -7,8 +7,9 @@ import {
 } from '@shared/types';
 
 export class PlayerState extends Schema {
-  static SPEED_LIMIT = 3.0; // pixel per step
-  static ACCELERATION = 1.0; // speed per step
+  static SPEED_LIMIT = 2.8; // pixel per step
+  static ACCELERATION = 0.12; // speed per step
+  static FRICTION = 0.04; // rate per step
 
   accelX: number = 0;
   accelY: number = 0;
@@ -17,7 +18,7 @@ export class PlayerState extends Schema {
   @type('string') team: Team;
   @type('number') x: number;
   @type('number') y: number;
-  @type('number') radius: number = 20;
+  @type('number') radius: number = 26;
 
   accelrate(direction: Direction): [number, number] {
     const acceleration = PlayerState.ACCELERATION;
@@ -68,7 +69,7 @@ export class PlayerState extends Schema {
 export class BallState extends Schema {
   @type('number') x: number;
   @type('number') y: number;
-  @type('number') radius: number = 15;
+  @type('number') radius: number = 17;
 }
 
 export class GameRoomState extends Schema {

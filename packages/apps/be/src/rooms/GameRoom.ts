@@ -40,10 +40,9 @@ export class GameRoom extends Room<GameRoomState> {
     const { gameSetting } = params;
     this.gameSetting = gameSetting;
     this.setState(new GameRoomState());
-    this.setPatchRate(50);
-
     this.engine = new GameEngine(this.state);
-    this.setSimulationInterval(deltaTime => this.engine.update(deltaTime), 50);
+    this.setPatchRate(16.6);
+    this.setSimulationInterval(deltaTime => this.engine.update(deltaTime));
 
     const { map } = this.gameSetting;
     this.engine.addBall(new BallState({ x: map.width / 2, y: map.height / 2 }));
