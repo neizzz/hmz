@@ -2,13 +2,12 @@ import { MapSchema } from '@colyseus/schema';
 /** NOTE: sync to server schema */
 
 export class GameRoomState {
-  // public players: { [sessionId: string]: PlayerState };
   public players: MapSchema<PlayerState>;
+  public ball: BallState;
 }
 
 export class WaitingRoomState {
   public hostSessionId!: string;
-  // public awaiters: { [sessionId: string]: AwaiterState };
   public awaiters: MapSchema<AwaiterState>;
 }
 
@@ -22,4 +21,11 @@ export class PlayerState {
   public team!: string;
   public x!: number;
   public y!: number;
+  public radius!: number;
+}
+
+export class BallState {
+  public x!: number;
+  public y!: number;
+  public radius!: number;
 }

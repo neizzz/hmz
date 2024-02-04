@@ -15,5 +15,11 @@ export type Direction =
   | 'rightup'
   | 'rightdown';
 
+export type MapInfo = {
+  // ground: ...; TODO:
+  width: number;
+  height: number;
+};
+
 export * from './option.ts';
 export * from './message.ts';

@@ -1,3 +1,4 @@
+import { Ball } from '@in-game/entities/Ball';
 import { Player } from '@in-game/entities/Player';
 import { GameRoomState, PlayerState } from '@schema';
 import {
@@ -8,7 +9,11 @@ import {
 import { Room } from 'colyseus.js';
 import Phaser from 'phaser';
 
-type InitParams = {
+export type GameSceneInitParams = {
+  map: {
+    width: number;
+    height: number;
+  };
   room: Room;
 };
 
@@ -16,8 +21,8 @@ export class GameScene extends Phaser.Scene {
   room: Room;
   me: string; // session id
   players: { [sessionId: string]: Player } = {};
-  // playerSprites: { [sessionId: string]: Phaser.GameObjects.Sprite } = {};
   playerSprites: { [sessionId: string]: Phaser.Physics.Matter.Sprite } = {};
+  ballSprite: Phaser.Physics.Matter.Sprite;
 
   cursorKeys: Phaser.Types.Input.Keyboard.CursorKeys;
 
@@ -25,7 +30,7 @@ export class GameScene extends Phaser.Scene {
     super('game-scene');
   }
 
-  init({ room }: InitParams) {
+  init({ map, room }: GameSceneInitParams) {
     this.room = room;
     this.me = room.sessionId;
     this.cursorKeys = this.input.keyboard.createCursorKeys();
@@ -36,6 +41,7 @@ export class GameScene extends Phaser.Scene {
 
     this.load.image('ground-tile', '/assets/bg.png');
     Player.generateTexture(this);
+    Ball.generateTexture(this);
   }
 
   create() {
@@ -43,14 +49,23 @@ export class GameScene extends Phaser.Scene {
 
     this.drawGround();
 
-    const { width, height } = this.game.config;
+    // const { width, height } = this.game.config;
 
-    this.playerSprites[this.me] = this.matter.add
-      .sprite(+width / 2, +height / 2, 'player')
-      .setBody({
+    this.room.state.listen('ball', ({ x, y, radius }) => {
+      this.ballSprite = this.matter.add.sprite(x, y, 'ball').setBody({
         type: 'circle',
-        radius: 20,
+        radius,
       });
+    });
+
+    this.room.state.players.onAdd(({ x, y, radius }) => {
+      this.playerSprites[this.me] = this.matter.add
+        .sprite(x, y, 'player')
+        .setBody({
+          type: 'circle',
+          radius,
+        });
+    });
 
     this.room.onStateChange((state: GameRoomState) => {
       state.players.forEach((player, id) => {
@@ -58,6 +73,9 @@ export class GameScene extends Phaser.Scene {
         playerSprite.x = player.x;
         playerSprite.y = player.y;
       });
+
+      this.ballSprite.x = state.ball.x;
+      this.ballSprite.y = state.ball.y;
     });
   }
 
@@ -68,6 +86,8 @@ export class GameScene extends Phaser.Scene {
         direction: this.getDirectionFromInput(),
       },
     });
+
+    console.log(this.getDirectionFromInput());
   }
 
   private drawGround() {

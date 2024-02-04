@@ -4,9 +4,10 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 
 import WelcomePage from './pages/WelcomePage';
 import LobbyPage from './pages/LobbyPage';
-import InGame, { InGameLoaderData } from '@components/InGame';
+import InGame from '@components/InGame';
 import { useHmzClient } from '@hooks/useHmzClient';
-import { RoomType } from '@shared/types';
+import { RoomType, Team } from '@shared/types';
+import { GameSceneInitParams } from '@in-game/scenes/GameScene';
 
 const router = createBrowserRouter([
   {
@@ -24,12 +25,28 @@ const router = createBrowserRouter([
       if (params.roomId) {
         return {
           room: await client.joinById(params.roomId),
-        } as InGameLoaderData;
+        } as GameSceneInitParams;
       } else {
-        return client.create(RoomType.GAME_ROOM).then(room => {
-          history.replaceState(null, null, `/test/${room.roomId}`);
-          return { room } as InGameLoaderData;
-        });
+        const map = {
+          width: 800,
+          height: 600,
+        };
+        return client
+          .create(RoomType.GAME_ROOM, {
+            hostJoinInfo: {
+              team: Team.RED,
+              number: 0,
+            },
+            gameSetting: {
+              map,
+              redTeamCount: 1,
+              blueTeamCount: 0,
+            },
+          })
+          .then(room => {
+            history.replaceState(null, null, `/test/${room.roomId}`);
+            return { room, map } as GameSceneInitParams;
+          });
       }
     },
     Component: InGame,

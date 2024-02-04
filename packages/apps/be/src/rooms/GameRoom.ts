@@ -1,50 +1,66 @@
 import { Room, Client } from '@colyseus/core';
-import { GameRoomState, PlayerState } from './schema/GameRoomState.ts';
 import {
-  GameRoomActionPayload,
-  GameRoomActionType,
+  BallState,
+  GameRoomState,
+  PlayerState,
+} from './schema/GameRoomState.ts';
+import {
+  GameRoomAction,
   GameRoomMessageType,
+  MapInfo,
   Team,
 } from '@shared/types';
+import { GameEngine } from '../engine/index.ts';
+
+type GameSetting = {
+  map: MapInfo;
+  redTeamCount: number;
+  blueTeamCount: number;
+};
+
+type GameRoomCreateInfo = {
+  hostJoinInfo: PlayerJoinInfo;
+  gameSetting: GameSetting;
+};
+type PlayerJoinInfo = { team: Team; number: number };
 
 export class GameRoom extends Room<GameRoomState> {
   maxClients = 10;
+  engine: GameEngine;
 
-  onCreate(option: {}) {
-    console.log('game room', this.roomId, 'creating...');
-    this.setState(new GameRoomState());
-    this.setSimulationInterval(deltaTime => this.state.update(deltaTime));
-    this.setPatchRate(16.6);
-
-    this.onMessage(
-      GameRoomMessageType.ACTION,
-      (client: Client, { type, payload }) => {
-        switch (type) {
-          case GameRoomActionType.DIRECTION:
-            this.state.acceleratePlayer(
-              client.sessionId,
-              payload as GameRoomActionPayload[GameRoomActionType.DIRECTION]
-            );
-            break;
-        }
-      }
-    );
-  }
+  playerCount: number;
+  gameSetting: GameSetting;
 
   /** TODO:
-   * 1. 각자 WaitingRoom에서의 상태 들고있기
-   * 2. join시 data로 같이 상태를 보냄
-   * 3. 각 상태를 통해 player초기화
+   * data: 총 인원, order in team
    */
-  onJoin(client: Client, options: any) {
-    console.log(client.sessionId, 'joined!');
-    const player = new PlayerState();
-    /** TODO: */
-    // player.name = options.name;
-    // player.team = Team.OBSERVER;
-    player.x = 300;
-    player.y = 400;
-    this.state.players.set(client.sessionId, player);
+  onCreate(params: GameRoomCreateInfo) {
+    console.log('game room', this.roomId, 'creating...');
+
+    const { gameSetting } = params;
+    this.gameSetting = gameSetting;
+    this.setState(new GameRoomState());
+    this.setPatchRate(50);
+
+    this.engine = new GameEngine(this.state);
+    this.setSimulationInterval(deltaTime => this.engine.update(deltaTime), 50);
+
+    const { map } = this.gameSetting;
+    this.engine.addBall(new BallState({ x: map.width / 2, y: map.height / 2 }));
+
+    this.initMessageHandlers();
+  }
+
+  onJoin(client: Client, params: PlayerJoinInfo | GameRoomCreateInfo) {
+    console.log(client.sessionId, 'joined!', params);
+
+    // @ts-expect-error
+    const { team, number } = params.hostJoinInfo ?? params;
+    this.layoutPlayer(client.sessionId, team, number);
+
+    if (this.isReady()) {
+      // TODO:
+    }
   }
 
   onLeave(client: Client, consented: boolean) {
@@ -53,5 +69,52 @@ export class GameRoom extends Room<GameRoomState> {
 
   onDispose() {
     console.log('game room', this.roomId, 'disposing...');
+  }
+
+  private isReady(): boolean {
+    return (
+      this.gameSetting.redTeamCount + this.gameSetting.redTeamCount ===
+      this.state.players.size
+    );
+  }
+
+  private initMessageHandlers(): void {
+    this.onMessage(
+      GameRoomMessageType.ACTION,
+      (client: Client, action: GameRoomAction) =>
+        this.engine.processPlayerAction(client.sessionId, action)
+    );
+  }
+
+  private layoutPlayer(sessionId: string, team: Team, number: number): void {
+    const map = this.gameSetting.map;
+    const halfX = map.width / 2;
+
+    switch (team) {
+      case Team.RED:
+        this.engine.addPlayer(
+          sessionId,
+          new PlayerState({
+            team,
+            x: halfX / 2,
+            y:
+              (map.height * (number + 1)) / (this.gameSetting.redTeamCount + 1),
+          })
+        );
+        break;
+
+      case Team.BLUE:
+        this.engine.addPlayer(
+          sessionId,
+          new PlayerState({
+            team,
+            x: halfX + halfX / 2,
+            y:
+              (map.height * (number + 1)) /
+              (this.gameSetting.blueTeamCount + 1),
+          })
+        );
+        break;
+    }
   }
 }
