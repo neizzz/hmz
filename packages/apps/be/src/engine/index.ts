@@ -3,6 +3,7 @@ import {
   GameRoomActionType,
   GameRoomActionHandlers,
   GameRoomAction,
+  HmzMapInfo,
 } from '@shared/types';
 import Matter from 'matter-js';
 import {
@@ -11,16 +12,10 @@ import {
   PlayerState,
 } from '../rooms/schema/GameRoomState.ts';
 
-const DEFAULT_FRICTION_AIR = 0.02;
-
 export class GameEngine {
-  // Matter.js engine
   engine: Matter.Engine;
-  // Matter.js world
   world: Matter.World;
-  // Colyseus room state. Need to update whenever there are updates in the world.
 
-  // Some of the objects in the world we want to track/update
   players: { [sessionId in string]: Matter.Body } = {};
   ball: Matter.Body;
 
@@ -84,11 +79,14 @@ export class GameEngine {
     Matter.Engine.update(this.engine, delta);
   }
 
+  applyMap(map: HmzMapInfo): void {}
+
   addBall(state: BallState): void {
     const { x, y, radius } = state;
     this.ball = Matter.Bodies.circle(x, y, radius, {
       isStatic: false,
     });
+    this.ball.mass = 0.005;
     this.ball.friction = 0;
     this.ball.frictionAir = 0.02;
     Matter.Composite.add(this.world, [this.ball]);
