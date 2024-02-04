@@ -7,17 +7,16 @@ import {
 import {
   GameRoomAction,
   GameRoomMessageType,
-  MapInfo,
+  HmzMapInfo,
   Team,
 } from '@shared/types';
 import { GameEngine } from '../engine/index.ts';
 
 type GameSetting = {
-  map: MapInfo;
+  map: HmzMapInfo;
   redTeamCount: number;
   blueTeamCount: number;
 };
-
 type GameRoomCreateInfo = {
   hostJoinInfo: PlayerJoinInfo;
   gameSetting: GameSetting;
@@ -45,6 +44,7 @@ export class GameRoom extends Room<GameRoomState> {
     this.setSimulationInterval(deltaTime => this.engine.update(deltaTime));
 
     const { map } = this.gameSetting;
+    this.engine.applyMap(map);
     this.engine.addBall(new BallState({ x: map.width / 2, y: map.height / 2 }));
 
     this.initMessageHandlers();

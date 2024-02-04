@@ -7,8 +7,10 @@ import {
 } from '@shared/types';
 
 export class PlayerState extends Schema {
-  static SPEED_LIMIT = 2.8; // pixel per step
-  static ACCELERATION = 0.12; // speed per step
+  static SPEED_LIMIT = 5.8; // pixel per step
+  static ACCELERATION = 1.12; // speed per step
+  // static SPEED_LIMIT = 2.8; // pixel per step
+  // static ACCELERATION = 0.12; // speed per step
   static FRICTION = 0.04; // rate per step
 
   accelX: number = 0;
@@ -82,12 +84,5 @@ export class GameRoomState extends Schema {
 
   removePlayer(sessionId: string): void {
     // TODO:
-  }
-
-  acceleratePlayer(
-    sessionId: string,
-    payload: GameRoomActionPayload[GameRoomActionType.DIRECTION]
-  ) {
-    this.players.get(sessionId)?.accelrate(payload.direction);
   }
 }

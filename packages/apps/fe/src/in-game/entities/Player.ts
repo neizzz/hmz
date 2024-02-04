@@ -1,5 +1,7 @@
+import { GameScene } from '@in-game/scenes/GameScene';
+
 export class Player {
-  static generateTexture(scene: Phaser.Scene): void {
+  static generateTexture(scene: GameScene): void {
     const graphics = scene.make.graphics({ x: 0, y: 0 });
     graphics.fillStyle(0x000000);
     graphics.fillCircle(26, 26, 26);

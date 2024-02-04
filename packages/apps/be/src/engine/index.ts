@@ -1,7 +1,6 @@
 import {
   GameRoomActionPayload,
   GameRoomActionType,
-  GameRoomActionHandlers,
   GameRoomAction,
   HmzMapInfo,
 } from '@shared/types';
@@ -20,11 +19,11 @@ export class GameEngine {
   ball: Matter.Body;
 
   state: GameRoomState;
-  actionHandlers?: GameRoomActionHandlers;
+  // actionHandlers?: GameRoomActionHandlers;
 
-  constructor(state: GameRoomState, actionHandlers?: GameRoomActionHandlers) {
+  constructor(state: GameRoomState) {
     this.state = state;
-    this.actionHandlers = actionHandlers;
+    // this.actionHandlers = actionHandlers;
 
     this.engine = Matter.Engine.create();
     this.world = this.engine.world;
@@ -33,6 +32,10 @@ export class GameEngine {
 
   init() {
     this.engine.gravity = { x: 0, y: 0, scale: 0 };
+    // this.world.bounds = {
+    //   min: { x: 0, y: 0 },
+    //   max: { x: 1000, y: 800 },
+    // };
 
     // Add some boundary in our world
     // Matter.Composite.add(this.world, [
@@ -79,7 +82,28 @@ export class GameEngine {
     Matter.Engine.update(this.engine, delta);
   }
 
-  applyMap(map: HmzMapInfo): void {}
+  applyMap(map: HmzMapInfo): void {
+    // const x = map.width - map.ground.width;
+    // const y = map.height - map.ground.height;
+    // this.world.bounds = {
+    //   min: { x: 0, y: 0 },
+    //   max: { x: map.width, y: map.height },
+    // };
+
+    const width = map.width * 2;
+    const height = map.height * 2;
+
+    Matter.Composite.add(this.world, [
+      Matter.Bodies.rectangle(0, 0, width, 1, { isStatic: true }),
+      Matter.Bodies.rectangle(0, 0, 1, height, { isStatic: true }),
+      Matter.Bodies.rectangle(width - 1, 0, width, height, {
+        isStatic: true,
+      }),
+      Matter.Bodies.rectangle(0, height - 1, width, height, {
+        isStatic: true,
+      }),
+    ]);
+  }
 
   addBall(state: BallState): void {
     const { x, y, radius } = state;
@@ -98,7 +122,7 @@ export class GameEngine {
     const worldPlayer = Matter.Bodies.circle(x, y, radius, {
       isStatic: false,
     });
-    this.ball.friction = 0;
+    worldPlayer.friction = 0;
     worldPlayer.frictionAir = 0;
     this.players[sessionId] = worldPlayer;
     Matter.Composite.add(this.world, [worldPlayer]);

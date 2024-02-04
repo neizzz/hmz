@@ -19,10 +19,14 @@ const InGame = () => {
   const gameInstanceRef = useRef<Phaser.Game>();
 
   useEffect(() => {
-    const gameInstance = new Phaser.Game({ ...config, ...data.map });
+    const gameInstance = new Phaser.Game({
+      ...config,
+      width: data.map.width,
+      height: data.map.height,
+    });
     setTimeout(() => {
       gameInstance.scene.start('game-scene', data);
-    }, 1000);
+    }, 500);
     gameInstanceRef.current = gameInstance;
   }, []);
 
