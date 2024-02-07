@@ -87,13 +87,6 @@ export class GameScene extends Phaser.Scene {
   }
 
   private drawStadium() {
-    // Matter.Composite.add(this.world, [
-    //   Matter.Bodies.rectangle(400, 0, 800, 50, { isStatic: true }),
-    //   Matter.Bodies.circle(400, 0, 800, 50, { isStatic: true }),
-    //   Matter.Bodies.circle(400, 600, 800, 50, { isStatic: true }),
-    //   Matter.Bodies.circle(800, 300, 50, 600, { isStatic: true }),
-    //   Matter.Bodies.circle(0, 300, 50, 600, { isStatic: true }),
-    // ]);
     this.drawGround();
 
     const lineWidth = 4;
