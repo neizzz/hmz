@@ -84,6 +84,12 @@ export class GameScene extends Phaser.Scene {
         direction: this.getDirectionFromInput(),
       },
     });
+
+    if (this.cursorKeys.space.isDown) {
+      this.room.send(GameRoomMessageType.ACTION, {
+        type: GameRoomActionType.SHOOT,
+      });
+    }
   }
 
   private drawStadium() {

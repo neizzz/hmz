@@ -66,6 +66,8 @@ export class GameEngine {
 
       this.state.ball.x = this.ball.position.x;
       this.state.ball.y = this.ball.position.y;
+
+      console.log(this.ball.position);
     });
   }
 
@@ -81,7 +83,7 @@ export class GameEngine {
   }
 
   applyMap(map: HmzMapInfo): void {
-    const thick = 1;
+    const thick = 20;
     const width = map.width;
     const height = map.height;
 
@@ -89,17 +91,19 @@ export class GameEngine {
       this.world,
       [
         // top
-        Matter.Bodies.rectangle(width / 2, 0, width, thick, { isStatic: true }),
+        Matter.Bodies.rectangle(width / 2, -thick / 2, width, thick, {
+          isStatic: true,
+        }),
         // bottom
-        Matter.Bodies.rectangle(width / 2, height, width, thick, {
+        Matter.Bodies.rectangle(width / 2, height + thick / 2, width, thick, {
           isStatic: true,
         }),
         // left
-        Matter.Bodies.rectangle(0, height / 2, thick, height, {
+        Matter.Bodies.rectangle(-thick / 2, height / 2, thick, height, {
           isStatic: true,
         }),
         // right
-        Matter.Bodies.rectangle(width, height / 2, thick, height, {
+        Matter.Bodies.rectangle(width + thick / 2, height / 2, thick, height, {
           isStatic: true,
         }),
       ].map(body => {
@@ -124,13 +128,19 @@ export class GameEngine {
       this.world,
       [
         // top
-        Matter.Bodies.rectangle(width / 2, groundY, groundWidth, thick, {
-          isStatic: true,
-        }),
+        Matter.Bodies.rectangle(
+          width / 2,
+          groundY - thick / 2,
+          groundWidth,
+          thick,
+          {
+            isStatic: true,
+          }
+        ),
         // bottom
         Matter.Bodies.rectangle(
           width / 2,
-          groundY + groundHeight,
+          groundY + groundHeight + thick / 2,
           groundWidth,
           thick,
           {
@@ -138,12 +148,18 @@ export class GameEngine {
           }
         ),
         // left
-        Matter.Bodies.rectangle(groundX, height / 2, thick, groundHeight, {
-          isStatic: true,
-        }),
+        Matter.Bodies.rectangle(
+          groundX - thick / 2,
+          height / 2,
+          thick,
+          groundHeight,
+          {
+            isStatic: true,
+          }
+        ),
         // right
         Matter.Bodies.rectangle(
-          groundX + groundWidth,
+          groundX + groundWidth + thick / 2,
           height / 2,
           thick,
           groundHeight,
@@ -159,14 +175,12 @@ export class GameEngine {
         return body;
       })
     );
-
-    console.log(this.world.bodies.map(body => body.collisionFilter));
   }
 
   addBall(state: BallState): void {
     const { x, y, radius } = state;
     this.ball = Matter.Bodies.circle(x, y, radius);
-    this.ball.mass = 0.005;
+    this.ball.mass = 20.0;
     this.ball.friction = 0;
     this.ball.frictionAir = 0.02;
     this.ball.collisionFilter = {
@@ -181,6 +195,7 @@ export class GameEngine {
   addPlayer(sessionId: string, state: PlayerState): void {
     const { x, y, radius, team } = state;
     const worldPlayer = Matter.Bodies.circle(x, y, radius);
+    worldPlayer.mass = 40.0;
     worldPlayer.friction = 0;
     worldPlayer.frictionAir = 0;
     worldPlayer.collisionFilter = {
@@ -215,7 +230,7 @@ export class GameEngine {
         break;
 
       case GameRoomActionType.SHOOT:
-        /** TODO: */
+        this.processPlayerShoot(worldPlayer);
         break;
     }
   }
@@ -252,5 +267,33 @@ export class GameEngine {
     }
 
     Matter.Body.setVelocity(worldPlayer, { x: newVx, y: newVy });
+  }
+
+  private processPlayerShoot(worldPlayer: Matter.Body) {
+    const contactThreshold = 1;
+    const shootForce = 1.0;
+    const worldBall = this.ball;
+
+    // NOTE: vector 방향 중요
+    const diffVectorX = worldBall.position.x - worldPlayer.position.x;
+    const diffVectorY = worldBall.position.y - worldPlayer.position.y;
+    const distBetweenCenter = Math.sqrt(
+      diffVectorX * diffVectorX + diffVectorY * diffVectorY
+    );
+    const distBetweenBody =
+      distBetweenCenter -
+      (worldPlayer.circleRadius ?? 0) -
+      (worldBall.circleRadius ?? 0);
+
+    const unitVectorX = diffVectorX / distBetweenCenter;
+    const unitVectorY = diffVectorY / distBetweenCenter;
+
+    // TODO: contactThreshold를 늘리고, 거리에 반비례하게 힘 적용
+    if (distBetweenBody < contactThreshold) {
+      Matter.Body.applyForce(worldBall, worldBall.position, {
+        x: unitVectorX * Math.sqrt(shootForce),
+        y: unitVectorY * Math.sqrt(shootForce),
+      });
+    }
   }
 }
