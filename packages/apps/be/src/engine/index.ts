@@ -66,8 +66,6 @@ export class GameEngine {
 
       this.state.ball.x = this.ball.position.x;
       this.state.ball.y = this.ball.position.y;
-
-      console.log(this.ball.position);
     });
   }
 
@@ -120,10 +118,11 @@ export class GameEngine {
     const groundHeight = map.ground.height;
     const groundX = (width - groundWidth) / 2;
     const groundY = (height - groundHeight) / 2;
-    const goalPostWidth = 350;
+    const goalPostWidth = map.ground.goalPostWidth;
     const goalPostTopPositionY = (height - goalPostWidth) / 2;
     const goalPostBottomPositionY = (height + goalPostWidth) / 2;
 
+    // ground outlines
     Matter.Composite.add(
       this.world,
       [
@@ -150,9 +149,18 @@ export class GameEngine {
         // left
         Matter.Bodies.rectangle(
           groundX - thick / 2,
-          height / 2,
+          groundY + (goalPostTopPositionY - groundY) / 2,
           thick,
-          groundHeight,
+          goalPostTopPositionY - groundY,
+          {
+            isStatic: true,
+          }
+        ),
+        Matter.Bodies.rectangle(
+          groundX - thick / 2,
+          goalPostBottomPositionY + (goalPostTopPositionY - groundY) / 2,
+          thick,
+          goalPostTopPositionY - groundY,
           {
             isStatic: true,
           }
@@ -160,9 +168,18 @@ export class GameEngine {
         // right
         Matter.Bodies.rectangle(
           groundX + groundWidth + thick / 2,
-          height / 2,
+          groundY + (goalPostTopPositionY - groundY) / 2,
           thick,
-          groundHeight,
+          goalPostTopPositionY - groundY,
+          {
+            isStatic: true,
+          }
+        ),
+        Matter.Bodies.rectangle(
+          groundX + groundWidth + thick / 2,
+          goalPostBottomPositionY + (goalPostTopPositionY - groundY) / 2,
+          thick,
+          goalPostTopPositionY - groundY,
           {
             isStatic: true,
           }
@@ -171,6 +188,43 @@ export class GameEngine {
         body.collisionFilter = {
           group: COLLISION_WITH_BALL_GROUP,
           category: GROUND_OUTLINE_MASK,
+          mask: PLAYER_MASK, // FIXME: 테스트용
+        };
+        return body;
+      })
+    );
+
+    const goalPostRadius = map.ground.goalPostRadius;
+
+    // goal posts
+    Matter.Composite.add(
+      this.world,
+      [
+        // left
+        Matter.Bodies.circle(groundX, goalPostTopPositionY, goalPostRadius, {
+          isStatic: true,
+        }),
+        Matter.Bodies.circle(groundX, goalPostBottomPositionY, goalPostRadius, {
+          isStatic: true,
+        }),
+        // right
+        Matter.Bodies.circle(
+          groundX + groundWidth,
+          goalPostTopPositionY,
+          goalPostRadius,
+          { isStatic: true }
+        ),
+        Matter.Bodies.circle(
+          groundX + groundWidth,
+          goalPostBottomPositionY,
+          goalPostRadius,
+          { isStatic: true }
+        ),
+      ].map(body => {
+        body.collisionFilter = {
+          group: COLLISION_WITH_BALL_GROUP,
+          category: GOAL_POST_MASK,
+          mask: PLAYER_MASK,
         };
         return body;
       })
@@ -201,12 +255,16 @@ export class GameEngine {
     worldPlayer.collisionFilter = {
       group: DEFAULT_GROUP,
       category: team === Team.RED ? RED_PLAYER_MASK : BLUE_PLAYER_MASK,
-      mask: STADIUM_OUTLINE_MASK | BALL_MASK | PLAYER_MASK,
+      mask:
+        STADIUM_OUTLINE_MASK |
+        GOAL_POST_MASK |
+        BALL_MASK |
+        PLAYER_MASK |
+        GROUND_OUTLINE_MASK,
     };
     this.players[sessionId] = worldPlayer;
     Matter.Composite.add(this.world, [worldPlayer]);
     this.state.createPlayer(sessionId, state);
-    console.log(worldPlayer.collisionFilter);
   }
 
   removePlayer(sessionId: string): void {
