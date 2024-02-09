@@ -44,7 +44,7 @@ export class GameRoom extends Room<GameRoomState> {
     this.setSimulationInterval(deltaTime => this.engine.update(deltaTime));
 
     const { map } = this.gameSetting;
-    this.engine.applyMap(map);
+    this.engine.buildMap(map);
     this.engine.addBall(new BallState({ x: map.width / 2, y: map.height / 2 }));
 
     this.initMessageHandlers();

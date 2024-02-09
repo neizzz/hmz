@@ -12,19 +12,21 @@ import {
   PlayerState,
 } from '../rooms/schema/GameRoomState.ts';
 
-const DEFAULT_GROUP = 0;
-const COLLISION_WITH_BALL_GROUP = 1;
+import decomp from 'poly-decomp-es';
+import {
+  BALL_MASK,
+  BLUE_PLAYER_MASK,
+  COLLISION_WITH_BALL_GROUP,
+  DEFAULT_GROUP,
+  GOAL_POST_MASK,
+  PLAYER_MASK,
+  RED_PLAYER_MASK,
+  STADIUM_OUTLINE_MASK,
+} from '@constants';
+import { MapBuilder } from '@utils/map/builder.ts';
 
-const DEFAULT_MASK = 0xffffffff;
-const STADIUM_OUTLINE_MASK = 1 << 0;
-const GOAL_POST_MASK = 1 << 1;
-const GROUND_CENTERLINE_MASK = 1 << 2;
-const GROUND_OUTLINE_MASK = 1 << 3;
-
-const BALL_MASK = 1 << 4;
-const RED_PLAYER_MASK = 1 << 5;
-const BLUE_PLAYER_MASK = 1 << 6;
-const PLAYER_MASK = RED_PLAYER_MASK | BLUE_PLAYER_MASK;
+// @ts-ignore
+global.decomp = decomp;
 
 export class GameEngine {
   engine: Matter.Engine;
@@ -45,8 +47,13 @@ export class GameEngine {
 
   init() {
     this.engine.gravity = { x: 0, y: 0, scale: 1 };
+
     this.initUpdateEvents();
     this.initCollisionEvents();
+  }
+
+  buildMap(map: HmzMapInfo) {
+    new MapBuilder(this.world, map).build();
   }
 
   initUpdateEvents() {
@@ -72,163 +79,13 @@ export class GameEngine {
   initCollisionEvents() {
     // The collision events
     Matter.Events.on(this.engine, 'collisionStart', event => {
-      // const pairs = event.pairs;
+      const pairs = event.pairs;
+      // console.log(pairs);
     });
   }
 
   update(delta: number) {
     Matter.Engine.update(this.engine, delta);
-  }
-
-  applyMap(map: HmzMapInfo): void {
-    const thick = 20;
-    const width = map.width;
-    const height = map.height;
-
-    Matter.Composite.add(
-      this.world,
-      [
-        // top
-        Matter.Bodies.rectangle(width / 2, -thick / 2, width, thick, {
-          isStatic: true,
-        }),
-        // bottom
-        Matter.Bodies.rectangle(width / 2, height + thick / 2, width, thick, {
-          isStatic: true,
-        }),
-        // left
-        Matter.Bodies.rectangle(-thick / 2, height / 2, thick, height, {
-          isStatic: true,
-        }),
-        // right
-        Matter.Bodies.rectangle(width + thick / 2, height / 2, thick, height, {
-          isStatic: true,
-        }),
-      ].map(body => {
-        body.collisionFilter = {
-          group: DEFAULT_GROUP,
-          category: STADIUM_OUTLINE_MASK,
-          mask: PLAYER_MASK,
-        };
-        return body;
-      })
-    );
-
-    const groundWidth = map.ground.width;
-    const groundHeight = map.ground.height;
-    const groundX = (width - groundWidth) / 2;
-    const groundY = (height - groundHeight) / 2;
-    const goalPostWidth = map.ground.goalPostWidth;
-    const goalPostTopPositionY = (height - goalPostWidth) / 2;
-    const goalPostBottomPositionY = (height + goalPostWidth) / 2;
-
-    // ground outlines
-    Matter.Composite.add(
-      this.world,
-      [
-        // top
-        Matter.Bodies.rectangle(
-          width / 2,
-          groundY - thick / 2,
-          groundWidth,
-          thick,
-          {
-            isStatic: true,
-          }
-        ),
-        // bottom
-        Matter.Bodies.rectangle(
-          width / 2,
-          groundY + groundHeight + thick / 2,
-          groundWidth,
-          thick,
-          {
-            isStatic: true,
-          }
-        ),
-        // left
-        Matter.Bodies.rectangle(
-          groundX - thick / 2,
-          groundY + (goalPostTopPositionY - groundY) / 2,
-          thick,
-          goalPostTopPositionY - groundY,
-          {
-            isStatic: true,
-          }
-        ),
-        Matter.Bodies.rectangle(
-          groundX - thick / 2,
-          goalPostBottomPositionY + (goalPostTopPositionY - groundY) / 2,
-          thick,
-          goalPostTopPositionY - groundY,
-          {
-            isStatic: true,
-          }
-        ),
-        // right
-        Matter.Bodies.rectangle(
-          groundX + groundWidth + thick / 2,
-          groundY + (goalPostTopPositionY - groundY) / 2,
-          thick,
-          goalPostTopPositionY - groundY,
-          {
-            isStatic: true,
-          }
-        ),
-        Matter.Bodies.rectangle(
-          groundX + groundWidth + thick / 2,
-          goalPostBottomPositionY + (goalPostTopPositionY - groundY) / 2,
-          thick,
-          goalPostTopPositionY - groundY,
-          {
-            isStatic: true,
-          }
-        ),
-      ].map(body => {
-        body.collisionFilter = {
-          group: COLLISION_WITH_BALL_GROUP,
-          category: GROUND_OUTLINE_MASK,
-          mask: PLAYER_MASK, // FIXME: 테스트용
-        };
-        return body;
-      })
-    );
-
-    const goalPostRadius = map.ground.goalPostRadius;
-
-    // goal posts
-    Matter.Composite.add(
-      this.world,
-      [
-        // left
-        Matter.Bodies.circle(groundX, goalPostTopPositionY, goalPostRadius, {
-          isStatic: true,
-        }),
-        Matter.Bodies.circle(groundX, goalPostBottomPositionY, goalPostRadius, {
-          isStatic: true,
-        }),
-        // right
-        Matter.Bodies.circle(
-          groundX + groundWidth,
-          goalPostTopPositionY,
-          goalPostRadius,
-          { isStatic: true }
-        ),
-        Matter.Bodies.circle(
-          groundX + groundWidth,
-          goalPostBottomPositionY,
-          goalPostRadius,
-          { isStatic: true }
-        ),
-      ].map(body => {
-        body.collisionFilter = {
-          group: COLLISION_WITH_BALL_GROUP,
-          category: GOAL_POST_MASK,
-          mask: PLAYER_MASK,
-        };
-        return body;
-      })
-    );
   }
 
   addBall(state: BallState): void {
@@ -254,13 +111,9 @@ export class GameEngine {
     worldPlayer.frictionAir = 0;
     worldPlayer.collisionFilter = {
       group: DEFAULT_GROUP,
+      // group: COLLISION_WITH_BALL_GROUP,
       category: team === Team.RED ? RED_PLAYER_MASK : BLUE_PLAYER_MASK,
-      mask:
-        STADIUM_OUTLINE_MASK |
-        GOAL_POST_MASK |
-        BALL_MASK |
-        PLAYER_MASK |
-        GROUND_OUTLINE_MASK,
+      mask: STADIUM_OUTLINE_MASK | GOAL_POST_MASK | BALL_MASK | PLAYER_MASK,
     };
     this.players[sessionId] = worldPlayer;
     Matter.Composite.add(this.world, [worldPlayer]);

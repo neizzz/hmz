@@ -17,6 +17,7 @@
       "@hooks/*": ["./src/hooks/*"],
       "@in-game/*": ["./src/in-game/*"],
       "@components/*": ["./src/components/*"],
+      "@utils/*": ["./src/utils/*"],
       "@schema": ["./src/schema"],
     },
   },
