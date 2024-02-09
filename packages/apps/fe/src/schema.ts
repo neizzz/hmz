@@ -22,6 +22,7 @@ export class PlayerState {
   public x!: number;
   public y!: number;
   public radius!: number;
+  public shooting!: boolean;
 }
 
 export class BallState {

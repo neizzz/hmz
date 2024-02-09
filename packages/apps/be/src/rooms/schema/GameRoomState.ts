@@ -1,14 +1,13 @@
 import { Schema, type, MapSchema } from '@colyseus/schema';
-import {
-  Direction,
-  GameRoomActionPayload,
-  GameRoomActionType,
-  Team,
-} from '@shared/types';
+import { Direction, Team } from '@shared/types';
 
 export class PlayerState extends Schema {
-  static SPEED_LIMIT = 5.8; // pixel per step
-  static ACCELERATION = 1.12; // speed per step
+  // static SPEED_LIMIT = 5.8; // pixel per step
+  // static ACCELERATION = 1.12; // speed per step
+  // static SHOOTING_ACCLERATION = 1.0;
+  static SPEED_LIMIT = 3.5; // pixel per step
+  static ACCELERATION = 0.16; // speed per step
+  static SHOOTING_ACCLERATION = 0.12; // speed per step
   static FRICTION = 0.04; // rate per step
 
   accelX: number = 0;
@@ -19,9 +18,12 @@ export class PlayerState extends Schema {
   @type('number') x: number;
   @type('number') y: number;
   @type('number') radius: number = 26;
+  @type('boolean') shooting: boolean = false;
 
   accelrate(direction: Direction): [number, number] {
-    const acceleration = PlayerState.ACCELERATION;
+    const acceleration = this.shooting
+      ? PlayerState.SHOOTING_ACCLERATION
+      : PlayerState.ACCELERATION;
 
     switch (direction) {
       case '':

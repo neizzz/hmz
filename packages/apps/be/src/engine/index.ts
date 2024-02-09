@@ -69,6 +69,8 @@ export class GameEngine {
 
         player.x = this.players[key].position.x;
         player.y = this.players[key].position.y;
+
+        player.shooting && this.processPlayerShoot(worldPlayer, player);
       }
 
       this.state.ball.x = this.ball.position.x;
@@ -140,8 +142,12 @@ export class GameEngine {
         this.processPlayerDirection(worldPlayer, player, payload);
         break;
 
-      case GameRoomActionType.SHOOT:
-        this.processPlayerShoot(worldPlayer);
+      case GameRoomActionType.SHOOT_START:
+        player.shooting = true;
+        break;
+
+      case GameRoomActionType.SHOOT_END:
+        player.shooting = false;
         break;
     }
   }
@@ -180,7 +186,7 @@ export class GameEngine {
     Matter.Body.setVelocity(worldPlayer, { x: newVx, y: newVy });
   }
 
-  private processPlayerShoot(worldPlayer: Matter.Body) {
+  private processPlayerShoot(worldPlayer: Matter.Body, player: PlayerState) {
     const contactThreshold = 1;
     const shootForce = 1.0;
     const worldBall = this.ball;
@@ -196,15 +202,19 @@ export class GameEngine {
       (worldPlayer.circleRadius ?? 0) -
       (worldBall.circleRadius ?? 0);
 
+    if (distBetweenBody > contactThreshold) {
+      return;
+    }
+
     const unitVectorX = diffVectorX / distBetweenCenter;
     const unitVectorY = diffVectorY / distBetweenCenter;
 
     // TODO: contactThreshold를 늘리고, 거리에 반비례하게 힘 적용
-    if (distBetweenBody < contactThreshold) {
-      Matter.Body.applyForce(worldBall, worldBall.position, {
-        x: unitVectorX * Math.sqrt(shootForce),
-        y: unitVectorY * Math.sqrt(shootForce),
-      });
-    }
+    Matter.Body.applyForce(worldBall, worldBall.position, {
+      x: unitVectorX * Math.sqrt(shootForce),
+      y: unitVectorY * Math.sqrt(shootForce),
+    });
+
+    player.shooting = false;
   }
 }

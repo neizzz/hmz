@@ -22,14 +22,16 @@ export type Action<T, P extends Record<keyof T, any>> = {
 
 export const enum GameRoomActionType {
   DIRECTION = 'direction',
-  SHOOT = 'shoot',
+  SHOOT_START = 'shoot-start',
+  SHOOT_END = 'shoot-end',
 }
 
 export type GameRoomActionPayload = {
   [GameRoomActionType.DIRECTION]: {
     direction: Direction;
   };
-  [GameRoomActionType.SHOOT]: undefined;
+  [GameRoomActionType.SHOOT_START]: undefined;
+  [GameRoomActionType.SHOOT_END]: undefined; // bidirection
 };
 
 export type GameRoomActionHandlers = {
@@ -44,6 +46,10 @@ export type GameRoomAction =
       payload: GameRoomActionPayload[GameRoomActionType.DIRECTION];
     }
   | {
-      type: GameRoomActionType.SHOOT;
+      type: GameRoomActionType.SHOOT_START;
+      payload: undefined;
+    }
+  | {
+      type: GameRoomActionType.SHOOT_END;
       payload: undefined;
     };

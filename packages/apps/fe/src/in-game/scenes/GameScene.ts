@@ -72,6 +72,7 @@ export class GameScene extends Phaser.Scene {
         const playerContainer = this.players[id];
         playerContainer.x = player.x;
         playerContainer.y = player.y;
+        player.shooting ? playerContainer.shooting() : playerContainer.idle();
       });
 
       this.ballSprite.position.x = state.ball.x;
@@ -81,11 +82,15 @@ export class GameScene extends Phaser.Scene {
     });
 
     this.input.keyboard.on('keydown-SPACE', event => {
-      this.players[this.me].shooting();
+      this.room.send(GameRoomMessageType.ACTION, {
+        type: GameRoomActionType.SHOOT_START,
+      });
     });
 
     this.input.keyboard.on('keyup-SPACE', event => {
-      this.players[this.me].idle();
+      this.room.send(GameRoomMessageType.ACTION, {
+        type: GameRoomActionType.SHOOT_END,
+      });
     });
   }
 
