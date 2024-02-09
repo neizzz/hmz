@@ -8,13 +8,14 @@ export class Ball extends Phaser.GameObjects.Sprite {
   static lineWidth = 4;
 
   static generateTexture(scene: Phaser.Scene): void {
-    const graphics = scene.make.graphics({ x: 0, y: 0 });
-    graphics.fillStyle(0x000000);
-    graphics.fillCircle(Ball.radius, Ball.radius, Ball.radius);
-    graphics.fillStyle(0xffffff);
-    graphics.fillCircle(Ball.radius, Ball.radius, Ball.radius - Ball.lineWidth);
-    graphics.generateTexture('ball', Ball.radius * 2, Ball.radius * 2);
-    graphics.destroy();
+    scene.make
+      .graphics({ x: 0, y: 0 })
+      .fillStyle(0x000000)
+      .fillCircle(Ball.radius, Ball.radius, Ball.radius)
+      .fillStyle(0xffffff)
+      .fillCircle(Ball.radius, Ball.radius, Ball.radius - Ball.lineWidth)
+      .generateTexture('ball', Ball.radius * 2, Ball.radius * 2)
+      .destroy();
   }
 
   constructor(scene: Phaser.Scene, params: InitParams) {

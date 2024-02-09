@@ -20,8 +20,6 @@ export class MapBuilder {
     this.map = map;
 
     const { ground } = map;
-    ground.width += groundLineWidth;
-    ground.height += groundLineWidth;
 
     groundX = (this.map.width - ground.width) / 2;
     groundY = (this.map.height - ground.height) / 2;

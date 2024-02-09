@@ -44,6 +44,7 @@ export class GameScene extends Phaser.Scene {
     this.mapBuilder.loadAssets();
     Player.generateTexture(this);
     Player.generateShootTexture(this);
+    Player.generateShootAreaTexture(this);
     Ball.generateTexture(this);
   }
 
@@ -57,9 +58,9 @@ export class GameScene extends Phaser.Scene {
       this.ball = new Ball(this, { x, y });
     });
 
-    this.room.state.players.onAdd(({ x, y, radius }) => {
-      this.playerSprites[this.me] = this.matter.add.circle(x, y, radius);
-      this.players[this.me] = new Player(this, { x, y });
+    this.room.state.players.onAdd(({ x, y, radius }, id) => {
+      this.playerSprites[id] = this.matter.add.circle(x, y, radius);
+      this.players[id] = new Player(this, { x, y, me: id === this.me });
     });
 
     this.room.onStateChange((state: GameRoomState) => {
