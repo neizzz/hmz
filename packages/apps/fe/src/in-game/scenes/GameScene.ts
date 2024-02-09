@@ -20,9 +20,10 @@ export class GameScene extends Phaser.Scene {
   room: Room;
   me: string; // session id
   mapBuilder: MapBuilder;
+  ball: Ball;
   players: { [sessionId: string]: Player } = {};
-  playerSprites: { [sessionId: string]: Phaser.Physics.Matter.Sprite } = {};
-  ballSprite: Phaser.Physics.Matter.Sprite;
+  playerSprites: { [sessionId: string]: MatterJS.BodyType } = {}; // FIXME: just for debug
+  ballSprite: MatterJS.BodyType; // FIXME: just for debug
 
   cursorKeys: Phaser.Types.Input.Keyboard.CursorKeys;
 
@@ -42,6 +43,7 @@ export class GameScene extends Phaser.Scene {
 
     this.mapBuilder.loadAssets();
     Player.generateTexture(this);
+    Player.generateShootTexture(this);
     Ball.generateTexture(this);
   }
 
@@ -51,30 +53,38 @@ export class GameScene extends Phaser.Scene {
     this.mapBuilder.build();
 
     this.room.state.listen('ball', ({ x, y, radius }) => {
-      this.ballSprite = this.matter.add.sprite(x, y, 'ball').setBody({
-        type: 'circle',
-        radius,
-      });
+      this.ballSprite = this.matter.add.circle(x, y, radius);
+      this.ball = new Ball(this, { x, y });
     });
 
     this.room.state.players.onAdd(({ x, y, radius }) => {
-      this.playerSprites[this.me] = this.matter.add
-        .sprite(x, y, 'player')
-        .setBody({
-          type: 'circle',
-          radius,
-        });
+      this.playerSprites[this.me] = this.matter.add.circle(x, y, radius);
+      this.players[this.me] = new Player(this, { x, y });
     });
 
     this.room.onStateChange((state: GameRoomState) => {
       state.players.forEach((player, id) => {
         const playerSprite = this.playerSprites[id];
-        playerSprite.x = player.x;
-        playerSprite.y = player.y;
+        playerSprite.position.x = player.x;
+        playerSprite.position.y = player.y;
+
+        const playerContainer = this.players[id];
+        playerContainer.x = player.x;
+        playerContainer.y = player.y;
       });
 
-      this.ballSprite.x = state.ball.x;
-      this.ballSprite.y = state.ball.y;
+      this.ballSprite.position.x = state.ball.x;
+      this.ballSprite.position.y = state.ball.y;
+      this.ball.x = state.ball.x;
+      this.ball.y = state.ball.y;
+    });
+
+    this.input.keyboard.on('keydown-SPACE', event => {
+      this.players[this.me].shooting();
+    });
+
+    this.input.keyboard.on('keyup-SPACE', event => {
+      this.players[this.me].idle();
     });
   }
 
@@ -85,12 +95,6 @@ export class GameScene extends Phaser.Scene {
         direction: this.getDirectionFromInput(),
       },
     });
-
-    if (this.cursorKeys.space.isDown) {
-      this.room.send(GameRoomMessageType.ACTION, {
-        type: GameRoomActionType.SHOOT,
-      });
-    }
   }
 
   private getDirectionFromInput(): Direction {

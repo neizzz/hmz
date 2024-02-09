@@ -9,8 +9,6 @@ import {
 export class PlayerState extends Schema {
   static SPEED_LIMIT = 5.8; // pixel per step
   static ACCELERATION = 1.12; // speed per step
-  // static SPEED_LIMIT = 2.8; // pixel per step
-  // static ACCELERATION = 0.12; // speed per step
   static FRICTION = 0.04; // rate per step
 
   accelX: number = 0;
@@ -71,7 +69,7 @@ export class PlayerState extends Schema {
 export class BallState extends Schema {
   @type('number') x: number;
   @type('number') y: number;
-  @type('number') radius: number = 17;
+  @type('number') radius: number = 19;
 }
 
 export class GameRoomState extends Schema {
