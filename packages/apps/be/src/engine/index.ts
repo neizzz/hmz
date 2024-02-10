@@ -1,3 +1,4 @@
+import { GROUND_OUTLINE_MASK } from './../constants';
 import {
   GameRoomActionPayload,
   GameRoomActionType,
@@ -19,6 +20,7 @@ import {
   COLLISION_WITH_BALL_GROUP,
   DEFAULT_GROUP,
   GOAL_POST_MASK,
+  GROUND_CENTERLINE_MASK,
   PLAYER_MASK,
   RED_PLAYER_MASK,
   STADIUM_OUTLINE_MASK,
@@ -112,10 +114,16 @@ export class GameEngine {
     worldPlayer.friction = 0;
     worldPlayer.frictionAir = 0;
     worldPlayer.collisionFilter = {
-      group: DEFAULT_GROUP,
-      // group: COLLISION_WITH_BALL_GROUP,
+      // group: DEFAULT_GROUP,
+      group: COLLISION_WITH_BALL_GROUP,
       category: team === Team.RED ? RED_PLAYER_MASK : BLUE_PLAYER_MASK,
-      mask: STADIUM_OUTLINE_MASK | GOAL_POST_MASK | BALL_MASK | PLAYER_MASK,
+      mask:
+        STADIUM_OUTLINE_MASK |
+        GROUND_OUTLINE_MASK |
+        GROUND_CENTERLINE_MASK |
+        GOAL_POST_MASK |
+        BALL_MASK |
+        PLAYER_MASK,
     };
     this.players[sessionId] = worldPlayer;
     Matter.Composite.add(this.world, [worldPlayer]);
