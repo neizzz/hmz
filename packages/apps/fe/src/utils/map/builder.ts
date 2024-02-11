@@ -32,7 +32,7 @@ export class MapBuilder {
   }
 
   loadAssets() {
-    this.scene.load.image('ground-tile', '/assets/bg.png');
+    this.scene.load.image('ground-tile', '/assets/images/bg.png');
   }
 
   build() {

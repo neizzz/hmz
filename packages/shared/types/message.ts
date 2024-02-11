@@ -38,6 +38,7 @@ export type FromWaitingRoomMessagePayload = {
 export const enum GameRoomMessageType {
   ACTION = 'action',
   GOAL = 'goal',
+  SHOOT = 'shoot',
   START_TOUCH = 'start-touch',
   TIMESTAMP = 'timestamp',
   END = 'end',
@@ -49,6 +50,7 @@ export type GameRoomMessagePayload = {
     GameRoomActionPayload
   >;
   [GameRoomMessageType.GOAL]: undefined;
+  [GameRoomMessageType.SHOOT]: undefined;
   [GameRoomMessageType.START_TOUCH]: undefined;
   [GameRoomMessageType.TIMESTAMP]: { timestamp: number };
   [GameRoomMessageType.END]: { win: Team };

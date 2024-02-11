@@ -15,6 +15,11 @@ export type Direction =
   | 'rightup'
   | 'rightdown';
 
+export const enum PlayerEntityState {
+  IDLE,
+  SHOOTING,
+}
+
 export * from './map.ts';
 export * from './message.ts';
 export * from './action.ts';

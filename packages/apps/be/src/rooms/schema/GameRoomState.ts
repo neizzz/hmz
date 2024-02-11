@@ -1,5 +1,5 @@
 import { Schema, type, MapSchema } from '@colyseus/schema';
-import { Direction, Team } from '@shared/types';
+import { Direction, PlayerEntityState, Team } from '@shared/types';
 
 export class PlayerState extends Schema {
   // static SPEED_LIMIT = 5.8; // pixel per step
@@ -19,6 +19,7 @@ export class PlayerState extends Schema {
   @type('number') y: number;
   @type('number') radius: number = 26;
   @type('boolean') shooting: boolean = false;
+  @type('number') entityState: PlayerEntityState = PlayerEntityState.IDLE;
 
   accelrate(direction: Direction): [number, number] {
     const acceleration = this.shooting

@@ -4,6 +4,8 @@ import {
   GameRoomAction,
   HmzMapInfo,
   Team,
+  PlayerEntityState,
+  GameRoomMessageType,
 } from '@shared/types';
 import Matter from 'matter-js';
 import {
@@ -25,6 +27,7 @@ import {
   STADIUM_OUTLINE_MASK,
 } from '@constants';
 import { MapBuilder } from '@utils/map/builder.ts';
+import { GameRoom } from '../rooms/GameRoom.ts';
 
 // @ts-ignore
 global.decomp = decomp; // for concave hull
@@ -36,10 +39,12 @@ export class GameEngine {
   players: { [sessionId in string]: Matter.Body } = {};
   ball: Matter.Body;
 
+  room: GameRoom;
   state: GameRoomState;
 
-  constructor(state: GameRoomState) {
-    this.state = state;
+  constructor(room: GameRoom) {
+    this.room = room;
+    this.state = room.state;
 
     this.engine = Matter.Engine.create();
     this.world = this.engine.world;
@@ -71,7 +76,9 @@ export class GameEngine {
         player.x = this.players[key].position.x;
         player.y = this.players[key].position.y;
 
-        player.shooting && this.processPlayerShoot(worldPlayer, player);
+        if (player.entityState === PlayerEntityState.SHOOTING) {
+          this.processPlayerShoot(worldPlayer, player);
+        }
       }
 
       this.state.ball.x = this.ball.position.x;
@@ -148,11 +155,11 @@ export class GameEngine {
         break;
 
       case GameRoomActionType.SHOOT_START:
-        player.shooting = true;
+        player.entityState = PlayerEntityState.SHOOTING;
         break;
 
       case GameRoomActionType.SHOOT_END:
-        player.shooting = false;
+        player.entityState = PlayerEntityState.IDLE;
         break;
     }
   }
@@ -220,6 +227,7 @@ export class GameEngine {
       y: unitVectorY * Math.sqrt(shootForce),
     });
 
-    player.shooting = false;
+    player.entityState = PlayerEntityState.IDLE;
+    this.room.broadcast(GameRoomMessageType.SHOOT);
   }
 }

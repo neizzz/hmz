@@ -1,5 +1,5 @@
 import { MapSchema } from '@colyseus/schema';
-import { Team } from '@shared/types';
+import { PlayerEntityState, Team } from '@shared/types';
 /** NOTE: sync to server schema */
 
 export class GameRoomState {
@@ -23,7 +23,7 @@ export class PlayerState {
   public x!: number;
   public y!: number;
   public radius!: number;
-  public shooting!: boolean;
+  public entityState!: PlayerEntityState;
 }
 
 export class BallState {

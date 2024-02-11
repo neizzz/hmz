@@ -30,7 +30,7 @@ export class GameRoom extends Room<GameRoomState> {
     const { setting } = params;
     this.setting = setting;
     this.setState(new GameRoomState());
-    this.engine = new GameEngine(this.state);
+    this.engine = new GameEngine(this);
     this.setPatchRate(16.6);
     this.setSimulationInterval(deltaTime => this.engine.update(deltaTime));
 

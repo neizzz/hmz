@@ -3,6 +3,7 @@ import { Player } from '@in-game/entities/Player';
 import { BallState, GameRoomState, PlayerState } from '@schema';
 import {
   Direction,
+  GameRoomAction,
   GameRoomActionType,
   GameRoomMessageType,
   HmzMapInfo,
@@ -23,10 +24,19 @@ export class GameScene extends Phaser.Scene {
   mapBuilder: MapBuilder;
   ball: Ball;
   players: { [sessionId: string]: Player } = {};
-  playerSprites: { [sessionId: string]: MatterJS.BodyType } = {}; // FIXME: just for debug
-  ballSprite: MatterJS.BodyType; // FIXME: just for debug
+  // playerSprites: { [sessionId: string]: MatterJS.BodyType } = {}; // FIXME: just for debug
+  // ballSprite: MatterJS.BodyType; // FIXME: just for debug
 
   cursorKeys: Phaser.Types.Input.Keyboard.CursorKeys;
+
+  // whistleAudio:
+  //   | Phaser.Sound.WebAudioSound
+  //   | Phaser.Sound.NoAudioSound
+  //   | Phaser.Sound.HTML5AudioSound;
+  // shootAudio:
+  //   | Phaser.Sound.WebAudioSound
+  //   | Phaser.Sound.NoAudioSound
+  //   | Phaser.Sound.HTML5AudioSound;
 
   constructor() {
     super('game-scene');
@@ -41,6 +51,9 @@ export class GameScene extends Phaser.Scene {
 
   preload() {
     console.log('[GameScene] preload');
+
+    this.load.audio('kick', '/assets/sounds/kick.wav');
+    this.load.audio('whistle', '/assets/sounds/whistle.wav');
 
     this.mapBuilder.loadAssets();
     Player.generateTexture(this, { key: 'red:player', color: Color.RED_TEAM });
@@ -65,6 +78,7 @@ export class GameScene extends Phaser.Scene {
 
     this.mapBuilder.build();
     this.initStateChangedEvents();
+    this.initEffectEvents();
 
     this.input.keyboard.on('keydown-SPACE', event => {
       this.room.send(GameRoomMessageType.ACTION, {
@@ -87,16 +101,25 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
+  private initEffectEvents(): void {
+    const shootAudio = this.sound.add('kick');
+    const whistleAudio = this.sound.add('whistle');
+
+    this.room.onMessage<GameRoomAction>(GameRoomMessageType.SHOOT, () => {
+      shootAudio.play();
+    });
+  }
+
   private initStateChangedEvents(): void {
     this.room.state.listen('ball', (state: BallState) => {
-      const { x, y, radius } = state;
-      this.ballSprite = this.matter.add.circle(x, y, radius);
+      // const { x, y, radius } = state;
+      // this.ballSprite = this.matter.add.circle(x, y, radius);
       this.ball = new Ball(this, { state });
     });
 
     this.room.state.players.onAdd((state: PlayerState, id) => {
-      const { x, y, radius } = state;
-      this.playerSprites[id] = this.matter.add.circle(x, y, radius);
+      // const { x, y, radius } = state;
+      // this.playerSprites[id] = this.matter.add.circle(x, y, radius);
       this.players[id] = new Player(this, { state, me: id === this.me });
     });
 
@@ -106,19 +129,20 @@ export class GameScene extends Phaser.Scene {
   }
 
   private updateFromState = (state: GameRoomState) => {
-    state.players.forEach((player, id) => {
-      const playerSprite = this.playerSprites[id];
-      playerSprite.position.x = player.x;
-      playerSprite.position.y = player.y;
+    state.players.forEach((playerServerState, id) => {
+      // const playerSprite = this.playerSprites[id];
+      // playerSprite.position.x = player.x;
+      // playerSprite.position.y = player.y;
 
-      const playerContainer = this.players[id];
-      playerContainer.x = player.x;
-      playerContainer.y = player.y;
-      player.shooting ? playerContainer.shooting() : playerContainer.idle();
+      this.players[id].update(playerServerState);
+      // const playerContainer = this.players[id];
+      // playerContainer.x = player.x;
+      // playerContainer.y = player.y;
+      // playerContainer.state = player.entityState;
     });
 
-    this.ballSprite.position.x = state.ball.x;
-    this.ballSprite.position.y = state.ball.y;
+    // this.ballSprite.position.x = state.ball.x;
+    // this.ballSprite.position.y = state.ball.y;
     this.ball.x = state.ball.x;
     this.ball.y = state.ball.y;
   };

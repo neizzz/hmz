@@ -1,3 +1,4 @@
+import { PlayerEntityState } from '@shared/types';
 import { Color } from '@constants';
 import { GameScene } from '@in-game/scenes/GameScene';
 import { PlayerState } from '@schema';
@@ -70,6 +71,8 @@ export class Player extends Phaser.GameObjects.Container {
   }
 
   schema: PlayerState;
+  entityState: PlayerEntityState;
+
   bodySprite: Phaser.GameObjects.Sprite;
   avatarText: Phaser.GameObjects.Text;
   shootArea?: Phaser.GameObjects.Sprite;
@@ -80,6 +83,7 @@ export class Player extends Phaser.GameObjects.Container {
     super(scene);
 
     this.schema = state;
+    this.state = state.entityState;
 
     this.bodySprite = scene.add.sprite(0, 0, `${this.schema.team}:player`);
     this.avatarText = scene.add.text(0, 0, 'test');
@@ -97,6 +101,27 @@ export class Player extends Phaser.GameObjects.Container {
     this.setPosition(state.x, state.y);
 
     scene.add.existing(this);
+  }
+
+  update(serverState: PlayerState) {
+    const { x, y, entityState } = serverState;
+
+    this.x = x;
+    this.y = y;
+
+    if (this.entityState === entityState) return;
+
+    // entity state mutation logic
+    switch (entityState) {
+      case PlayerEntityState.IDLE:
+        this.idle();
+        break;
+
+      case PlayerEntityState.SHOOTING:
+        this.shooting();
+        break;
+    }
+    this.entityState = entityState;
   }
 
   shooting() {
