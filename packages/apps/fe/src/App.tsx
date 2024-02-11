@@ -8,6 +8,9 @@ import InGame from '@components/InGame';
 import { useHmzClient } from '@hooks/useHmzClient';
 import { RoomType, Team, HmzMap } from '@shared/types';
 import { GameSceneInitParams } from '@in-game/scenes/GameScene';
+import WaitingRoom, { WaitingRoomInitParams } from '@components/WaitingRoom';
+
+const client = useHmzClient();
 
 const router = createBrowserRouter([
   {
@@ -19,9 +22,34 @@ const router = createBrowserRouter([
     element: <LobbyPage />,
   },
   {
+    path: '/room/:roomId',
+    loader: async ({ params }): Promise<WaitingRoomInitParams> => {
+      return {
+        room: await client.joinById(params.roomId),
+      };
+    },
+    Component: WaitingRoom,
+  },
+  {
+    path: '/room/create/neiz0000',
+    loader: async (): Promise<WaitingRoomInitParams> => {
+      return {
+        room: await client
+          .create(RoomType.WAITING_ROOM, {
+            maxAwaiters: 12,
+          })
+          .then(room => {
+            history.replaceState(null, null, `/room/${room.roomId}`);
+            return room;
+          }),
+        host: true,
+      };
+    },
+    Component: WaitingRoom,
+  },
+  {
     path: '/test/:roomId?',
     loader: async ({ params }) => {
-      const client = useHmzClient();
       if (params.roomId) {
         return {
           room: await client.joinById(params.roomId),

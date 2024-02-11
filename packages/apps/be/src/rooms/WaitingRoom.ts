@@ -1,41 +1,53 @@
 import { Room, Client } from '@colyseus/core';
 import { AwaiterState, WaitingRoomState } from './schema/WaitingRoomState.ts';
-import { Team, WaitingRoomMessageType, WaitingRoomOption } from '@shared/types';
+import {
+  Team,
+  ToWaitingRoomMessageType,
+  FromWaitingRoomMessageType,
+  WaitingRoomCreateInfo,
+  ToWaitingRoomMessagePayload,
+} from '@shared/types';
 
 export class WaitingRoom extends Room<WaitingRoomState> {
   maxClients = 10;
 
-  onCreate(option: WaitingRoomOption) {
+  onCreate(option: WaitingRoomCreateInfo) {
     console.log('waiting room', this.roomId, 'creating...');
     this.setState(new WaitingRoomState());
 
-    this.onMessage(WaitingRoomMessageType.CHANGE_ROOM, (client, message) => {
-      console.log(
-        `[${WaitingRoomMessageType.CHANGE_ROOM}]: ${client.sessionId}, ${JSON.stringify(message)}`
-      );
-      const awaiter = this.state.awaiters.get(client.sessionId);
-
-      if (!awaiter) {
-        throw new Error(
-          `The client(sessionId: ${client.sessionId}) not found.`
-        );
-      }
-
-      awaiter.team = message.to;
-      this.state.awaiters.set(client.sessionId, awaiter);
-      this.broadcast(WaitingRoomMessageType.CHANGE_ROOM, this.state.awaiters);
-    });
-
-    this.onMessage(
-      WaitingRoomMessageType.START_GAME,
-      (client, { gameRoomId }) => {
+    this.onMessage<ToWaitingRoomMessagePayload['CHANGE_TEAM']>(
+      ToWaitingRoomMessageType.CHANGE_TEAM,
+      (client, message) => {
         console.log(
-          `[${WaitingRoomMessageType.START_GAME}]: ${client.sessionId}`
+          `[${ToWaitingRoomMessageType.CHANGE_TEAM}]: ${client.sessionId}, ${JSON.stringify(message)}`
+        );
+        const awaiter = this.state.awaiters.get(client.sessionId);
+
+        if (!awaiter) {
+          throw new Error(
+            `The client(sessionId: ${client.sessionId}) not found.`
+          );
+        }
+
+        awaiter.team = message.to;
+        this.state.awaiters.set(client.sessionId, awaiter);
+        this.broadcast(FromWaitingRoomMessageType.CHANGE_TEAM, {
+          awaiters: this.state.awaiters,
+        });
+      }
+    );
+
+    this.onMessage<ToWaitingRoomMessagePayload['START_GAME']>(
+      ToWaitingRoomMessageType.START_GAME,
+      (client, { roomId: gameRoomId, map }) => {
+        console.log(
+          `[${ToWaitingRoomMessageType.START_GAME}]: ${client.sessionId}`
         );
         this.broadcast(
-          WaitingRoomMessageType.START_GAME,
+          FromWaitingRoomMessageType.START_GAME,
           {
-            gameRoomId,
+            roomId: gameRoomId,
+            map,
           },
           { except: client }
         );

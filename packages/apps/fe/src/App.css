@@ -68,3 +68,9 @@ body {
 .team-list .team-item .member-list {
   margin-top: 0.8em;
 }
+
+#in-game-container {
+  position: absolute;
+  left: 0;
+  top: 0;
+}

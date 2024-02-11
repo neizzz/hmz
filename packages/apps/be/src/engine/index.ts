@@ -1,4 +1,3 @@
-import { GROUND_OUTLINE_MASK } from './../constants';
 import {
   GameRoomActionPayload,
   GameRoomActionType,
@@ -17,8 +16,8 @@ import decomp from 'poly-decomp-es';
 import {
   BALL_MASK,
   BLUE_PLAYER_MASK,
+  GROUND_OUTLINE_MASK,
   COLLISION_WITH_BALL_GROUP,
-  DEFAULT_GROUP,
   GOAL_POST_MASK,
   GROUND_CENTERLINE_MASK,
   PLAYER_MASK,
@@ -28,7 +27,7 @@ import {
 import { MapBuilder } from '@utils/map/builder.ts';
 
 // @ts-ignore
-global.decomp = decomp;
+global.decomp = decomp; // for concave hull
 
 export class GameEngine {
   engine: Matter.Engine;
@@ -114,8 +113,6 @@ export class GameEngine {
     worldPlayer.friction = 0;
     worldPlayer.frictionAir = 0;
     worldPlayer.collisionFilter = {
-      // group: DEFAULT_GROUP,
-      group: COLLISION_WITH_BALL_GROUP,
       category: team === Team.RED ? RED_PLAYER_MASK : BLUE_PLAYER_MASK,
       mask:
         STADIUM_OUTLINE_MASK |

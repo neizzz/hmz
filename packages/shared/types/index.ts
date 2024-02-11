@@ -16,5 +16,6 @@ export type Direction =
   | 'rightdown';
 
 export * from './map.ts';
-export * from './option.ts';
 export * from './message.ts';
+export * from './action.ts';
+export * from './room.ts';

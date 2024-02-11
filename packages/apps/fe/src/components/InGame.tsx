@@ -1,7 +1,9 @@
+import { useHmzClient } from '@hooks/useHmzClient';
 import { BootstrapScene } from '@in-game/scenes/BootstrapScene';
-import { GameScene, GameSceneInitParams } from '@in-game/scenes/GameScene.ts';
-import { useEffect, useRef } from 'react';
-import { useLoaderData } from 'react-router-dom';
+import { GameScene } from '@in-game/scenes/GameScene.ts';
+import { GameRoomJoinInfo, HmzMapInfo } from '@shared/types';
+import { Room } from 'colyseus.js';
+import { useEffect, useRef, useState } from 'react';
 
 const GAME_SCENE_PARENT_ID = 'in-game-container';
 
@@ -14,21 +16,39 @@ const config: Phaser.Types.Core.GameConfig = {
   scene: [BootstrapScene, GameScene],
 } as const;
 
-const InGame = () => {
-  const data = useLoaderData() as GameSceneInitParams;
+export type InGameParams = {
+  host?: boolean;
+  room?: Room; // for host
+  roomId: string;
+  map: HmzMapInfo;
+  myJoinInfo: GameRoomJoinInfo;
+};
+
+const InGame = ({ host, room, roomId, map, myJoinInfo }: InGameParams) => {
+  const client = useHmzClient();
   const gameInstanceRef = useRef<Phaser.Game>();
+  const [gameRoom, setGameRoom] = useState<Room>(undefined);
 
   useEffect(() => {
+    host
+      ? setGameRoom(room)
+      : client.joinById(roomId, myJoinInfo).then(setGameRoom);
+  }, []);
+
+  useEffect(() => {
+    if (!gameRoom) return;
+
     const gameInstance = new Phaser.Game({
       ...config,
-      width: data.map.width,
-      height: data.map.height,
+      width: map.width,
+      height: map.height,
     });
+    // FIXME: remove setTimeout
     setTimeout(() => {
-      gameInstance.scene.start('game-scene', data);
+      gameInstance.scene.start('game-scene', { room: gameRoom, map });
     }, 500);
     gameInstanceRef.current = gameInstance;
-  }, []);
+  }, [gameRoom]);
 
   return <div id={GAME_SCENE_PARENT_ID} />;
 };

@@ -1,4 +1,4 @@
-import { HmzMapInfo } from '@shared/types';
+import { HmzMapInfo, Team } from '@shared/types';
 import { createRoundedPath } from '@utils/path.ts';
 import {
   COLLISION_WITH_BALL_GROUP,
@@ -22,6 +22,31 @@ export class MapBuilder {
   constructor(world: Matter.World, map: HmzMapInfo) {
     this.world = world;
     this.map = map;
+  }
+
+  centerBall(team: Team) {
+    if (team === Team.RED) {
+      this.rightSideCenterLines.forEach(lineBody => {
+        lineBody.collisionFilter.mask =
+          (lineBody.collisionFilter.mask ?? 0) | PLAYER_MASK;
+      });
+    } else {
+      this.leftSideCenterLines.forEach(lineBody => {
+        lineBody.collisionFilter.mask =
+          (lineBody.collisionFilter.mask ?? 0) | PLAYER_MASK;
+      });
+    }
+  }
+
+  onStart() {
+    this.rightSideCenterLines.forEach(lineBody => {
+      lineBody.collisionFilter.mask =
+        (lineBody.collisionFilter.mask ?? 0) & ~PLAYER_MASK;
+    });
+    this.leftSideCenterLines.forEach(lineBody => {
+      lineBody.collisionFilter.mask =
+        (lineBody.collisionFilter.mask ?? 0) & ~PLAYER_MASK;
+    });
   }
 
   build() {
@@ -328,8 +353,8 @@ export class MapBuilder {
       {
         isStatic: true,
         collisionFilter: {
-          group: COLLISION_WITH_BALL_GROUP,
           category: GROUND_CENTERLINE_MASK,
+          mask: 0,
         },
       }
     );
@@ -341,8 +366,8 @@ export class MapBuilder {
       {
         isStatic: true,
         collisionFilter: {
-          group: COLLISION_WITH_BALL_GROUP,
           category: GROUND_CENTERLINE_MASK,
+          mask: 0,
         },
       }
     );
@@ -374,8 +399,8 @@ export class MapBuilder {
       {
         isStatic: true,
         collisionFilter: {
-          group: COLLISION_WITH_BALL_GROUP,
           category: GROUND_CENTERLINE_MASK,
+          mask: 0,
         },
       }
     );
@@ -388,8 +413,8 @@ export class MapBuilder {
       {
         isStatic: true,
         collisionFilter: {
-          group: COLLISION_WITH_BALL_GROUP,
           category: GROUND_CENTERLINE_MASK,
+          mask: 0,
         },
       }
     );

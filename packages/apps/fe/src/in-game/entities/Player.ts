@@ -1,11 +1,10 @@
 import { Color } from '@constants';
 import { GameScene } from '@in-game/scenes/GameScene';
+import { PlayerState } from '@schema';
 import Phaser from 'phaser';
 
 type InitParams = {
-  x: number;
-  y: number;
-  name?: string;
+  state: PlayerState;
   me?: boolean;
 };
 
@@ -13,36 +12,42 @@ export class Player extends Phaser.GameObjects.Container {
   static radius = 26;
   static lineWidth = 4;
 
-  static generateTexture(scene: GameScene): void {
-    const graphics = scene.make.graphics({ x: 0, y: 0 });
-    graphics.fillStyle(0x000000);
-    graphics.fillCircle(Player.radius, Player.radius, Player.radius);
-    graphics.fillStyle(Color.RED_TEAM);
-    graphics.fillCircle(
-      Player.radius,
-      Player.radius,
-      Player.radius - Player.lineWidth
-    );
-    graphics.generateTexture('player', Player.radius * 2, Player.radius * 2);
-    graphics.destroy();
+  static generateTexture(
+    scene: GameScene,
+    params: { key: string; color: Color }
+  ): void {
+    const { key, color } = params;
+    scene.make
+      .graphics({ x: 0, y: 0 })
+      .fillStyle(0x000000)
+      .fillCircle(Player.radius, Player.radius, Player.radius)
+      .fillStyle(color)
+      .fillCircle(
+        Player.radius,
+        Player.radius,
+        Player.radius - Player.lineWidth
+      )
+      .generateTexture(key, Player.radius * 2, Player.radius * 2)
+      .destroy();
   }
 
-  static generateShootTexture(scene: GameScene): void {
-    const graphics = scene.make.graphics({ x: 0, y: 0 });
-    graphics.fillStyle(0xffffff);
-    graphics.fillCircle(Player.radius, Player.radius, Player.radius);
-    graphics.fillStyle(Color.RED_TEAM);
-    graphics.fillCircle(
-      Player.radius,
-      Player.radius,
-      Player.radius - Player.lineWidth
-    );
-    graphics.generateTexture(
-      'player-shoot',
-      Player.radius * 2,
-      Player.radius * 2
-    );
-    graphics.destroy();
+  static generateShootTexture(
+    scene: GameScene,
+    params: { key: string; color: Color }
+  ): void {
+    const { key, color } = params;
+    scene.make
+      .graphics({ x: 0, y: 0 })
+      .fillStyle(0xffffff)
+      .fillCircle(Player.radius, Player.radius, Player.radius)
+      .fillStyle(color)
+      .fillCircle(
+        Player.radius,
+        Player.radius,
+        Player.radius - Player.lineWidth
+      )
+      .generateTexture(key, Player.radius * 2, Player.radius * 2)
+      .destroy();
   }
 
   static generateShootAreaTexture(scene: GameScene): void {
@@ -64,16 +69,19 @@ export class Player extends Phaser.GameObjects.Container {
       .destroy();
   }
 
+  schema: PlayerState;
   bodySprite: Phaser.GameObjects.Sprite;
   avatarText: Phaser.GameObjects.Text;
   shootArea?: Phaser.GameObjects.Sprite;
   nameText: Phaser.GameObjects.Text;
 
   constructor(scene: Phaser.Scene, params: InitParams) {
-    const { x, y, name, me = false } = params;
+    const { state, me } = params;
     super(scene);
 
-    this.bodySprite = scene.add.sprite(0, 0, 'player');
+    this.schema = state;
+
+    this.bodySprite = scene.add.sprite(0, 0, `${this.schema.team}:player`);
     this.avatarText = scene.add.text(0, 0, 'test');
     this.avatarText.setOrigin(0.5, 0.5);
 
@@ -85,17 +93,17 @@ export class Player extends Phaser.GameObjects.Container {
     }
 
     this.add(children);
-    this.setSize(Player.radius * 2, Player.radius * 2);
-    this.setPosition(x, y);
+    this.setSize(state.radius * 2, state.radius * 2);
+    this.setPosition(state.x, state.y);
 
     scene.add.existing(this);
   }
 
   shooting() {
-    this.bodySprite.setTexture('player-shoot');
+    this.bodySprite.setTexture(`${this.schema.team}:player-shoot`);
   }
 
   idle() {
-    this.bodySprite.setTexture('player');
+    this.bodySprite.setTexture(`${this.schema.team}:player`);
   }
 }

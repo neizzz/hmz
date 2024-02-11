@@ -1,4 +1,5 @@
 import { MapSchema } from '@colyseus/schema';
+import { Team } from '@shared/types';
 /** NOTE: sync to server schema */
 
 export class GameRoomState {
@@ -13,12 +14,12 @@ export class WaitingRoomState {
 
 export class AwaiterState {
   public name!: string;
-  public team!: string;
+  public team!: Team;
 }
 
 export class PlayerState {
   public name!: string;
-  public team!: string;
+  public team!: Team;
   public x!: number;
   public y!: number;
   public radius!: number;

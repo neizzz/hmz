@@ -1,6 +1,7 @@
+import { BallState } from '@schema';
+
 type InitParams = {
-  x: number;
-  y: number;
+  state: BallState;
 };
 
 export class Ball extends Phaser.GameObjects.Sprite {
@@ -19,7 +20,8 @@ export class Ball extends Phaser.GameObjects.Sprite {
   }
 
   constructor(scene: Phaser.Scene, params: InitParams) {
-    const { x, y } = params;
+    const { state } = params;
+    const { x, y } = state;
     super(scene, x, y, 'ball');
     this.setPosition(x, y);
     scene.add.existing(this);
