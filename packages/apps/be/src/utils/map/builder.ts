@@ -64,40 +64,30 @@ export class MapBuilder {
       this.world,
       [
         // top
-        Matter.Bodies.rectangle(width / 2, -WALL_THICK / 2, width, WALL_THICK, {
-          isStatic: true,
-        }),
+        Matter.Bodies.rectangle(width / 2, -WALL_THICK / 2, width, WALL_THICK),
         // bottom
         Matter.Bodies.rectangle(
           width / 2,
           height + WALL_THICK / 2,
           width,
-          WALL_THICK,
-          {
-            isStatic: true,
-          }
+          WALL_THICK
         ),
         // left
         Matter.Bodies.rectangle(
           -WALL_THICK / 2,
           height / 2,
           WALL_THICK,
-          height,
-          {
-            isStatic: true,
-          }
+          height
         ),
         // right
         Matter.Bodies.rectangle(
           width + WALL_THICK / 2,
           height / 2,
           WALL_THICK,
-          height,
-          {
-            isStatic: true,
-          }
+          height
         ),
       ].map(body => {
+        body.isStatic = true;
         body.collisionFilter = {
           group: DEFAULT_GROUP,
           category: STADIUM_OUTLINE_MASK,
@@ -116,60 +106,44 @@ export class MapBuilder {
           width / 2,
           groundY - WALL_THICK / 2,
           groundWidth,
-          WALL_THICK,
-          {
-            isStatic: true,
-          }
+          WALL_THICK
         ),
         // bottom
         Matter.Bodies.rectangle(
           width / 2,
           groundY + groundHeight + WALL_THICK / 2,
           groundWidth,
-          WALL_THICK,
-          {
-            isStatic: true,
-          }
+          WALL_THICK
         ),
         // left
         Matter.Bodies.rectangle(
           groundX - WALL_THICK / 2,
           groundY + (goalPostTopPositionY - groundY) / 2,
           WALL_THICK,
-          goalPostTopPositionY - groundY,
-          {
-            isStatic: true,
-          }
+          goalPostTopPositionY - groundY
         ),
         Matter.Bodies.rectangle(
           groundX - WALL_THICK / 2,
           goalPostBottomPositionY + (goalPostTopPositionY - groundY) / 2,
           WALL_THICK,
-          goalPostTopPositionY - groundY,
-          {
-            isStatic: true,
-          }
+          goalPostTopPositionY - groundY
         ),
         // right
         Matter.Bodies.rectangle(
           groundX + groundWidth + WALL_THICK / 2,
           groundY + (goalPostTopPositionY - groundY) / 2,
           WALL_THICK,
-          goalPostTopPositionY - groundY,
-          {
-            isStatic: true,
-          }
+          goalPostTopPositionY - groundY
         ),
         Matter.Bodies.rectangle(
           groundX + groundWidth + WALL_THICK / 2,
           goalPostBottomPositionY + (goalPostTopPositionY - groundY) / 2,
           WALL_THICK,
-          goalPostTopPositionY - groundY,
-          {
-            isStatic: true,
-          }
+          goalPostTopPositionY - groundY
         ),
       ].map(body => {
+        body.isStatic = true;
+        body.restitution = 0.9;
         body.collisionFilter = {
           group: COLLISION_WITH_BALL_GROUP,
           category: GROUND_OUTLINE_MASK,
@@ -199,26 +173,22 @@ export class MapBuilder {
       this.world,
       [
         // left
-        Matter.Bodies.circle(groundX, goalPostTopPositionY, goalPostRadius, {
-          isStatic: true,
-        }),
-        Matter.Bodies.circle(groundX, goalPostBottomPositionY, goalPostRadius, {
-          isStatic: true,
-        }),
+        Matter.Bodies.circle(groundX, goalPostTopPositionY, goalPostRadius),
+        Matter.Bodies.circle(groundX, goalPostBottomPositionY, goalPostRadius),
         // right
         Matter.Bodies.circle(
           groundX + groundWidth,
           goalPostTopPositionY,
-          goalPostRadius,
-          { isStatic: true }
+          goalPostRadius
         ),
         Matter.Bodies.circle(
           groundX + groundWidth,
           goalPostBottomPositionY,
-          goalPostRadius,
-          { isStatic: true }
+          goalPostRadius
         ),
       ].map(body => {
+        body.isStatic = true;
+        body.restitution = 0.9;
         body.collisionFilter = {
           group: COLLISION_WITH_BALL_GROUP,
           category: GOAL_POST_MASK,

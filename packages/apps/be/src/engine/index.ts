@@ -101,9 +101,12 @@ export class GameEngine {
   addBall(state: BallState): void {
     const { x, y, radius } = state;
     this.ball = Matter.Bodies.circle(x, y, radius);
-    this.ball.mass = 20.0;
+    this.ball.mass = 25.0;
     this.ball.friction = 0;
+    this.ball.frictionStatic = 0;
     this.ball.frictionAir = 0.02;
+    this.ball.inertia = Infinity;
+    // this.ball.restitution = 0.9;
     this.ball.collisionFilter = {
       group: COLLISION_WITH_BALL_GROUP,
       category: BALL_MASK,
@@ -119,6 +122,7 @@ export class GameEngine {
     worldPlayer.mass = 40.0;
     worldPlayer.friction = 0;
     worldPlayer.frictionAir = 0;
+    worldPlayer.inertia = Infinity;
     worldPlayer.collisionFilter = {
       category: team === Team.RED ? RED_PLAYER_MASK : BLUE_PLAYER_MASK,
       mask:
