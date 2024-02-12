@@ -1,7 +1,9 @@
+import { Color } from '@constants';
 import { useHmzClient } from '@hooks/useHmzClient';
 import { BootstrapScene } from '@in-game/scenes/BootstrapScene';
 import { GameScene } from '@in-game/scenes/GameScene.ts';
 import { GameRoomJoinInfo, HmzMapInfo } from '@shared/types';
+import clsx from 'clsx';
 import { Room } from 'colyseus.js';
 import { useEffect, useRef, useState } from 'react';
 
@@ -9,7 +11,8 @@ const GAME_SCENE_PARENT_ID = 'in-game-container';
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
-  backgroundColor: '#b6d53c',
+  antialias: true,
+  transparent: true,
   parent: GAME_SCENE_PARENT_ID,
   physics: { default: 'matter', matter: { debug: true, gravity: { y: 0 } } },
   pixelArt: false,
@@ -50,7 +53,14 @@ const InGame = ({ host, room, roomId, map, myJoinInfo }: InGameParams) => {
     gameInstanceRef.current = gameInstance;
   }, [gameRoom]);
 
-  return <div id={GAME_SCENE_PARENT_ID} />;
+  return (
+    <div
+      className={clsx('glb-bg-color', 'centering-layer')}
+      style={{ position: 'absolute', width: '100%', height: '100%' }}
+    >
+      <div id={GAME_SCENE_PARENT_ID} />
+    </div>
+  );
 };
 
 export default InGame;

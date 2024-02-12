@@ -20,6 +20,8 @@ import { useLoaderData } from 'react-router-dom';
 import { useHmzClient } from '@hooks/useHmzClient';
 import InGame, { InGameParams } from './InGame';
 import cloneDeep from 'lodash.clonedeep';
+import { Color } from '@constants';
+import clsx from 'clsx';
 
 export type WaitingRoomInitParams = {
   room: Room;
@@ -125,7 +127,7 @@ const WaitingRoom = () => {
           <ul className={'team-list'}>
             <li className={'team-item'}>
               <button // TODO: disable when active
-                className={'team-header-btn'}
+                className={clsx('team-header-btn', 'team-red')}
                 onClick={() => changeTeam(Team.RED)}
               >
                 Red
@@ -151,7 +153,7 @@ const WaitingRoom = () => {
             </li>
             <li className={'team-item'}>
               <button
-                className={'team-header-btn'}
+                className={clsx('team-header-btn', 'team-blue')}
                 onClick={() => changeTeam(Team.BLUE)}
               >
                 Blue
@@ -163,9 +165,10 @@ const WaitingRoom = () => {
               </ul>
             </li>
           </ul>
-          <div>
+          <div className={'hori-centering'}>
             {host && (
               <button
+                className={'start-btn'}
                 onClick={() => {
                   const map = HmzMap.SMALL;
                   client
@@ -193,7 +196,7 @@ const WaitingRoom = () => {
                     });
                 }}
               >
-                start
+                START
               </button>
             )}
           </div>

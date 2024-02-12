@@ -1,16 +1,28 @@
-import { useRef } from 'react';
+import { PropsWithChildren, useRef } from 'react';
 
-type Props = {
+type Props = PropsWithChildren<{
+  autoFocus?: boolean;
+  label?: string;
   initialValue: string;
   onSubmit: (value: string) => void;
-};
+  onChange?: (value: string) => void;
+}>;
 
-const Input = ({ initialValue, onSubmit }: Props) => {
+const Input = ({
+  autoFocus,
+  label,
+  initialValue,
+  onSubmit,
+  onChange,
+  children,
+}: Props) => {
   const inputElRef = useRef<HTMLInputElement>(null);
   return (
-    <div className={'input-nickname-cont'}>
+    <div className={'input-cont'}>
+      <label>{label}</label>
       <input
         ref={inputElRef}
+        autoFocus={autoFocus}
         type="text"
         defaultValue={initialValue}
         onKeyDown={e => {
@@ -18,9 +30,13 @@ const Input = ({ initialValue, onSubmit }: Props) => {
             onSubmit(inputElRef.current.value);
           }
         }}
+        onChange={e => onChange?.(e.target.value)}
       />
+      {children}
     </div>
   );
 };
 
 export default Input;
+
+// #7da888
