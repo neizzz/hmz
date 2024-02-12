@@ -2,6 +2,9 @@ export type HmzMapInfo = {
   ground: {
     goalPostRadius: number;
     goalPostWidth: number;
+    goalPostNetThickness: number;
+    goalPostDepth: number;
+    goalPostNetCornerRadius: number;
     width: number;
     height: number;
   };
@@ -16,6 +19,9 @@ export const HmzMap: Record<HmzMapSize, HmzMapInfo> = {
     width: 1500,
     height: 750,
     ground: {
+      goalPostNetThickness: 5,
+      goalPostDepth: 50,
+      goalPostNetCornerRadius: 50 * 0.75,
       goalPostRadius: 13,
       goalPostWidth: 210,
       width: 1200,

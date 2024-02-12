@@ -200,60 +200,57 @@ export class MapBuilder {
   }
 
   private drawGoalPostNets() {
-    const width = this.map.width;
-    const height = this.map.height;
-    const groundWidth = this.map.ground.width;
+    const { width, height, ground } = this.map;
+    const {
+      width: groundWidth,
+      goalPostNetThickness,
+      goalPostDepth,
+      goalPostWidth,
+      goalPostNetCornerRadius,
+    } = ground;
     const groundX = (width - groundWidth) / 2;
-    const goalPostNetWidth = 8;
-    const goalPostDepth = 60;
-    const goalPostWidth = this.map.ground.goalPostWidth;
     const goalPostTopPositionY = (height - goalPostWidth) / 2;
-    const goalPostCornerRadius = goalPostDepth * 0.75;
     const cornerRoundDivision = 10;
 
     const path =
-      `${goalPostDepth} 0` +
       createRoundedPath({
-        cx: goalPostCornerRadius + goalPostNetWidth,
-        cy: goalPostCornerRadius + goalPostNetWidth,
-        radius: goalPostCornerRadius + goalPostNetWidth,
+        cx: goalPostNetCornerRadius,
+        cy: goalPostNetCornerRadius,
+        radius: goalPostNetCornerRadius + goalPostNetThickness * 0.5,
         fromRadian: 1.5 * Math.PI,
         toRadian: 2.0 * Math.PI,
         division: cornerRoundDivision,
         reverse: true,
       }) +
       createRoundedPath({
-        cx: goalPostCornerRadius + goalPostNetWidth,
-        cy: goalPostWidth - goalPostCornerRadius + goalPostNetWidth,
-        radius: goalPostCornerRadius + goalPostNetWidth,
+        cx: goalPostNetCornerRadius,
+        cy: goalPostWidth - goalPostNetCornerRadius,
+        radius: goalPostNetCornerRadius + goalPostNetThickness * 0.5,
         fromRadian: 1.0 * Math.PI,
         toRadian: 1.5 * Math.PI,
         division: cornerRoundDivision,
         reverse: true,
       }) +
-      `,${goalPostDepth} ${goalPostWidth + 2 * goalPostNetWidth}` +
-      `,${goalPostDepth} ${goalPostWidth + goalPostNetWidth}` +
       createRoundedPath({
-        cx: goalPostCornerRadius + goalPostNetWidth,
-        cy: goalPostWidth - goalPostCornerRadius + goalPostNetWidth,
-        radius: goalPostCornerRadius,
+        cx: goalPostNetCornerRadius,
+        cy: goalPostWidth - goalPostNetCornerRadius,
+        radius: goalPostNetCornerRadius - goalPostNetThickness,
         fromRadian: 1.0 * Math.PI,
         toRadian: 1.5 * Math.PI,
         division: cornerRoundDivision,
       }) +
       createRoundedPath({
-        cx: goalPostCornerRadius + goalPostNetWidth,
-        cy: goalPostCornerRadius + goalPostNetWidth,
-        radius: goalPostCornerRadius,
+        cx: goalPostNetCornerRadius,
+        cy: goalPostNetCornerRadius,
+        radius: goalPostNetCornerRadius - goalPostNetThickness,
         fromRadian: 1.5 * Math.PI,
         toRadian: 2.0 * Math.PI,
         division: cornerRoundDivision,
-      }) +
-      `,${goalPostDepth} ${goalPostNetWidth}`;
+      });
 
     const netVertices = Matter.Vertices.fromPath(path, Matter.Body.create({}));
     const leftNetBody = Matter.Bodies.fromVertices(
-      groundX - goalPostDepth * 0.5 - goalPostNetWidth,
+      groundX - goalPostDepth * 0.5 - 14,
       goalPostTopPositionY + goalPostWidth / 2,
       [netVertices],
       {
@@ -261,7 +258,7 @@ export class MapBuilder {
       }
     );
     const rightNetBody = Matter.Bodies.fromVertices(
-      groundX + groundWidth + goalPostDepth * 0.5 + goalPostNetWidth,
+      groundX + groundWidth + goalPostDepth * 0.5 + 14,
       goalPostTopPositionY + goalPostWidth / 2,
       [netVertices],
       {

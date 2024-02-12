@@ -33,13 +33,55 @@ export class MapBuilder {
 
   loadAssets() {
     this.scene.load.image('ground-tile', '/assets/images/bg.png');
+
+    // generate texture of the left goal post net
+    const {
+      goalPostNetThickness,
+      goalPostDepth,
+      goalPostWidth,
+      goalPostNetCornerRadius,
+    } = this.map.ground;
+    this.scene.make
+      .graphics({
+        x: 0,
+        y: 0,
+      })
+      .lineStyle(goalPostNetThickness, 0x000000)
+      .beginPath()
+      .arc(
+        goalPostNetCornerRadius + goalPostNetThickness * 0.5,
+        goalPostNetCornerRadius + goalPostNetThickness * 0.5,
+        goalPostNetCornerRadius,
+        -Math.PI * 0.5,
+        -Math.PI,
+        true
+      )
+      .lineTo(
+        goalPostNetThickness * 0.5,
+        goalPostNetThickness * 0.5 + goalPostWidth - goalPostNetCornerRadius
+      )
+      .arc(
+        goalPostNetThickness * 0.5 + goalPostNetCornerRadius,
+        goalPostNetThickness * 0.5 + goalPostWidth - goalPostNetCornerRadius,
+        goalPostNetCornerRadius,
+        -Math.PI,
+        -Math.PI * 1.5,
+        true
+      )
+      .strokePath()
+      .generateTexture(
+        'goalpost-net',
+        goalPostDepth + goalPostNetThickness * 0.5,
+        goalPostWidth + goalPostNetThickness
+      )
+      .destroy();
   }
 
   build() {
     this.drawGrass();
-    this.drawGroundLine();
-    this.drawGoalPostNet();
-    this.drawGoalPost();
+    this.drawGroundLines();
+    this.drawGoalPostNets();
+    this.drawGoalPosts();
   }
 
   private drawGrass() {
@@ -54,7 +96,7 @@ export class MapBuilder {
     layer.fill(0, 0, 0, tilemap.width, tilemap.height); // Body of the water
   }
 
-  private drawGroundLine() {
+  private drawGroundLines() {
     const { ground } = this.map;
     this.scene.add
       .graphics({ x: groundX, y: groundY })
@@ -64,43 +106,52 @@ export class MapBuilder {
       .lineBetween(ground.width / 2, 0, ground.width / 2, ground.height);
   }
 
-  private drawGoalPostNet() {
-    // TODO: receive from server or shared/~
-    const goalPostNetWidth = 8;
-    const goalPostDepth = 60;
-    const netPath = `60 0,52.999999999999986 0,44.70897335286775 0.6525179484577066,36.62209929812778 2.594004636356864,28.93850351380401 5.77665421801651,21.847381628498912 10.122099298127793,15.52334059711297 15.523340597112991,10.122099298127779 21.847381628498937,5.776654218016496 28.93850351380403,2.594004636356857 36.62209929812779,0.6525179484576995 44.70897335286777,0 53.00000000000001,0 173,0.6525179484577066 181.29102664713224,2.594004636356864 189.37790070187222,5.77665421801651 197.06149648619598,10.122099298127793 204.1526183715011,15.523340597112984 210.47665940288704,21.84738162849893 215.87790070187222,28.938503513804026 220.22334578198348,36.62209929812779 223.40599536364314,44.70897335286777 225.3474820515423,53.00000000000001 226,60 226,60 218,53.00000000000001 218,45.960449073189615 217.4459753267812,39.09423525312737 215.7975432332819,32.570427511720396 213.09529358847655,26.549663646838713 209.40576474687265,21.180194846605364 204.81980515339464,16.594235253127373 199.4503363531613,12.904706411523449 193.4295724882796,10.202456766718093 186.90576474687265,8.554024673218805 180.0395509268104,8 173,8 53.00000000000001,8.554024673218798 45.96044907318962,10.202456766718086 39.09423525312737,12.904706411523442 32.570427511720396,16.59423525312736 26.54966364683872,21.180194846605353 21.18019484660537,26.5496636468387 16.594235253127373,32.57042751172038 12.904706411523449,39.09423525312736 10.202456766718093,45.9604490731896 8.554024673218805,52.999999999999986 8,60 8`;
-    const netVertices = this.scene.matter.vertices.fromPath(
-      netPath,
-      this.scene.matter.body.create({})
+  private drawGoalPostNets() {
+    const { height, ground } = this.map;
+    const { width: groundWidth, goalPostDepth, goalPostWidth } = ground;
+    const goalPostTopPositionY = (height - goalPostWidth) / 2;
+
+    // NOTE: for debug
+    // const netPath = `37.49999999999999 -2.5, 31.242621398390753 -2.0075336238055073, 25.139320225002095 -0.5422606518061386, 19.340380010418123 1.859739032465285, 13.988589908301066 5.139320225002109, 9.21572875253809 9.215728752538105, 5.139320225002095 13.988589908301083, 1.8597390324652778 19.340380010418134, -0.5422606518061457 25.13932022500211, -2.0075336238055144 31.242621398390774, -2.5 37.50000000000001, -2.5 172.5, -2.0075336238055073 178.75737860160925, -0.5422606518061386 184.8606797749979, 1.859739032465285 190.65961998958187, 5.139320225002109 196.01141009169893, 9.215728752538102 200.7842712474619, 13.98858990830108 204.8606797749979, 19.340380010418134 208.14026096753472, 25.13932022500211 210.54226065180615, 31.24262139839077 212.0075336238055, 37.50000000000001 212.5, 37.50000000000001 205, 32.4158798861925 204.599871069342, 27.456947682814214 203.40933677959248, 22.74530875846473 201.45771203612196, 18.39697930049463 198.79305231718578, 14.519029611437208 195.4809703885628, 11.20694768281421 191.60302069950538, 8.542287963878046 187.25469124153528, 6.59066322040751 182.54305231718578, 5.400128930658028 177.5841201138075, 5 172.5, 5 37.50000000000001, 5.4001289306580205 32.4158798861925, 6.590663220407507 27.456947682814217, 8.542287963878039 22.745308758464734, 11.206947682814203 18.396979300494632, 14.519029611437201 14.519029611437212, 18.396979300494614 11.20694768281421, 22.745308758464724 8.542287963878046, 27.456947682814203 6.59066322040751, 32.415879886192485 5.400128930658028, 37.49999999999999 5`;
+    // const netVertices = this.scene.matter.vertices.fromPath(
+    //   netPath,
+    //   this.scene.matter.body.create({})
+    // );
+    // const leftNetBody = this.scene.matter.bodies.fromVertices(
+    //   groundX - goalPostDepth * 0.5 - 10,
+    //   goalPostTopPositionY + goalPostWidth / 2,
+    //   [netVertices],
+    //   {
+    //     isStatic: true,
+    //   }
+    // );
+    // const rightNetBody = this.scene.matter.bodies.fromVertices(
+    //   groundX + groundWidth + goalPostDepth * 0.5 + 10,
+    //   goalPostTopPositionY + goalPostWidth / 2,
+    //   [netVertices],
+    //   {
+    //     isStatic: true,
+    //   }
+    // );
+    // this.scene.matter.body.rotate(rightNetBody, Math.PI);
+    // this.scene.matter.world.add(leftNetBody);
+    // this.scene.matter.world.add(rightNetBody);
+
+    this.scene.add.sprite(
+      groundX - goalPostDepth * 0.5,
+      goalPostTopPositionY + goalPostWidth / 2,
+      'goalpost-net'
     );
-
-    const leftNetGraphics = this.scene.add
-      .graphics({
-        x: groundX - goalPostDepth,
-        y: groundY + goalPostTopPositionY - goalPostNetWidth,
-      })
-      .fillStyle(0x000000)
-      .beginPath();
-    netVertices.forEach(({ x, y }) => {
-      leftNetGraphics.lineTo(x, y);
-    });
-    leftNetGraphics.fillPath();
-
-    const rightNetGraphics = this.scene.add
-      .graphics({
-        x: groundX + groundWidth + goalPostDepth,
-        y: groundY + goalPostTopPositionY + goalPostWidth + goalPostNetWidth,
-      })
-      .fillStyle(0x000000)
-      .beginPath();
-    netVertices.forEach(({ x, y }) => {
-      rightNetGraphics.lineTo(x, y);
-    });
-    rightNetGraphics.fillPath();
-    rightNetGraphics.rotation = Math.PI;
+    this.scene.add
+      .sprite(
+        groundX + groundWidth + goalPostDepth * 0.5,
+        goalPostTopPositionY + goalPostWidth / 2,
+        'goalpost-net'
+      )
+      .setRotation(Math.PI);
   }
 
-  private drawGoalPost() {
+  private drawGoalPosts() {
     this.scene.add
       .graphics({
         x: groundX,
