@@ -14,11 +14,13 @@ import { MapBuilder } from '@utils/map/builder';
 import { Color } from '@constants';
 
 export type GameSceneInitParams = {
+  observer?: boolean;
   map: HmzMapInfo;
   room: Room;
 };
 
 export class GameScene extends Phaser.Scene {
+  observer?: boolean;
   room: Room;
   me: string; // session id
   mapBuilder: MapBuilder;
@@ -29,20 +31,12 @@ export class GameScene extends Phaser.Scene {
 
   cursorKeys: Phaser.Types.Input.Keyboard.CursorKeys;
 
-  // whistleAudio:
-  //   | Phaser.Sound.WebAudioSound
-  //   | Phaser.Sound.NoAudioSound
-  //   | Phaser.Sound.HTML5AudioSound;
-  // shootAudio:
-  //   | Phaser.Sound.WebAudioSound
-  //   | Phaser.Sound.NoAudioSound
-  //   | Phaser.Sound.HTML5AudioSound;
-
   constructor() {
     super('game-scene');
   }
 
-  init({ room, map }: GameSceneInitParams) {
+  init({ room, map, observer }: GameSceneInitParams) {
+    this.observer = observer; // TODO:
     this.room = room;
     this.me = room.sessionId;
     this.mapBuilder = new MapBuilder(this, map);

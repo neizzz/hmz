@@ -24,9 +24,9 @@ export const HmzMap: Record<HmzMapSize, HmzMapInfo> = {
     height: 750,
     ground: {
       x: 150,
-      y: 95,
+      y: 75,
       width: 1200,
-      height: 560,
+      height: 600,
       goalPostWidth: 210,
       goalPostTopPositionY: (750 - 210) / 2,
       goalPostBottomPositionY: (750 + 210) / 2,

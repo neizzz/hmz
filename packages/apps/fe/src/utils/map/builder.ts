@@ -20,7 +20,6 @@ export class MapBuilder {
     this.generateGoalPostTexture(Color.BLUE_GOALPOST, Team.BLUE);
 
     const {
-      goalPostRadius,
       goalPostNetThickness,
       goalPostDepth,
       goalPostWidth,
@@ -98,15 +97,22 @@ export class MapBuilder {
   }
 
   private drawGrass() {
+    const { x: groundX, y: groundY, width: groundWidth } = this.map.ground;
+
     const tilemap = this.scene.make.tilemap({
-      tileWidth: 120,
-      tileHeight: 120,
-      width: 16,
-      height: 8,
+      tileWidth: groundWidth / 10,
+      tileHeight: groundWidth / 10,
+      width: 10,
+      height: 5,
     });
     const tiles = tilemap.addTilesetImage('ground-tile');
-    const layer = tilemap.createBlankLayer('ground-layer', tiles);
-    layer.fill(0, 0, 0, tilemap.width, tilemap.height); // Body of the water
+    const layer = tilemap.createBlankLayer(
+      'ground-layer',
+      tiles,
+      groundX,
+      groundY
+    );
+    layer.fill(0, 0, 0, tilemap.width, tilemap.height);
   }
 
   private drawGroundLines() {
