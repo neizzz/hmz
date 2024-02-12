@@ -1,4 +1,4 @@
-import { PlayerEntityState } from '@shared/types';
+import { PlayerEntityState, Team } from '@shared/types';
 import { Color } from '@constants';
 import { GameScene } from '@in-game/scenes/GameScene';
 import { PlayerState } from '@schema';
@@ -74,7 +74,7 @@ export class Player extends Phaser.GameObjects.Container {
   entityState: PlayerEntityState;
 
   bodySprite: Phaser.GameObjects.Sprite;
-  avatarText: Phaser.GameObjects.Text;
+  avatarText: Phaser.GameObjects.Text | Phaser.GameObjects.BitmapText;
   shootArea?: Phaser.GameObjects.Sprite;
   nameText: Phaser.GameObjects.Text;
 
@@ -86,10 +86,15 @@ export class Player extends Phaser.GameObjects.Container {
     this.state = state.entityState;
 
     this.bodySprite = scene.add.sprite(0, 0, `${this.schema.team}:player`);
-    this.avatarText = scene.add.text(0, 0, 'test');
+    this.avatarText = scene.add.text(0, 0, 'te', {
+      fontFamily: 'Verdana',
+      fontSize: 26,
+      strokeThickness: 2,
+    });
     this.avatarText.setOrigin(0.5, 0.5);
 
     const children = [this.bodySprite, this.avatarText];
+
     if (me) {
       this.shootArea = scene.add.sprite(0, 0, 'player-shoot-area');
       this.shootArea.setDepth(-1);
