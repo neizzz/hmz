@@ -10,8 +10,8 @@ type InitParams = {
 };
 
 export class Player extends Phaser.GameObjects.Container {
-  static radius = 26;
-  static lineWidth = 4;
+  static radius = 28;
+  static lineWidth = 3;
 
   static generateTexture(
     scene: GameScene,
@@ -20,13 +20,17 @@ export class Player extends Phaser.GameObjects.Container {
     const { key, color } = params;
     scene.make
       .graphics({ x: 0, y: 0 })
-      .fillStyle(0x000000)
-      .fillCircle(Player.radius, Player.radius, Player.radius)
+      .lineStyle(Player.lineWidth, 0x000000)
       .fillStyle(color)
       .fillCircle(
         Player.radius,
         Player.radius,
         Player.radius - Player.lineWidth
+      )
+      .strokeCircle(
+        Player.radius,
+        Player.radius,
+        Player.radius - Player.lineWidth * 0.5
       )
       .generateTexture(key, Player.radius * 2, Player.radius * 2)
       .destroy();
@@ -39,13 +43,17 @@ export class Player extends Phaser.GameObjects.Container {
     const { key, color } = params;
     scene.make
       .graphics({ x: 0, y: 0 })
-      .fillStyle(0xffffff)
-      .fillCircle(Player.radius, Player.radius, Player.radius)
+      .lineStyle(Player.lineWidth, 0xffffff)
       .fillStyle(color)
       .fillCircle(
         Player.radius,
         Player.radius,
         Player.radius - Player.lineWidth
+      )
+      .strokeCircle(
+        Player.radius,
+        Player.radius,
+        Player.radius - Player.lineWidth * 0.5
       )
       .generateTexture(key, Player.radius * 2, Player.radius * 2)
       .destroy();
@@ -88,7 +96,7 @@ export class Player extends Phaser.GameObjects.Container {
     this.bodySprite = scene.add.sprite(0, 0, `${this.schema.team}:player`);
     this.avatarText = scene.add.text(0, 0, 'te', {
       fontFamily: 'Verdana',
-      fontSize: 26,
+      fontSize: 30,
       strokeThickness: 2,
     });
     this.avatarText.setOrigin(0.5, 0.5);

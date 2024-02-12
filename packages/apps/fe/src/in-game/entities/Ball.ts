@@ -6,7 +6,7 @@ type InitParams = {
 
 export class Ball extends Phaser.GameObjects.Sprite {
   static radius = 19;
-  static lineWidth = 4;
+  static lineWidth = 3;
 
   static generateTexture(scene: Phaser.Scene): void {
     scene.make

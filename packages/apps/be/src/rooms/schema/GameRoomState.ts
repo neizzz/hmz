@@ -17,7 +17,7 @@ export class PlayerState extends Schema {
   @type('string') team: Team;
   @type('number') x: number;
   @type('number') y: number;
-  @type('number') radius: number = 26;
+  @type('number') radius: number = 28;
   @type('boolean') shooting: boolean = false;
   @type('number') entityState: PlayerEntityState = PlayerEntityState.IDLE;
 

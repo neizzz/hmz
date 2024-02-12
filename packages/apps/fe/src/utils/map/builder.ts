@@ -1,15 +1,8 @@
-import { HmzMapInfo } from '@shared/types';
+import { Color } from '@constants';
+import { HmzMapInfo, Team } from '@shared/types';
 
 const groundLineWidth = 4;
-const goalPostLineWidth = 3.5;
-let groundX = NaN;
-let groundY = NaN;
-let groundWidth = NaN;
-let groundHeight = NaN;
-let goalPostWidth = NaN;
-let goalPostRadius = NaN;
-let goalPostTopPositionY = NaN;
-let goalPostBottomPositionY = NaN;
+const goalPostLineWidth = 3;
 
 export class MapBuilder {
   private scene: Phaser.Scene;
@@ -18,29 +11,22 @@ export class MapBuilder {
   constructor(scene: Phaser.Scene, map: HmzMapInfo) {
     this.scene = scene;
     this.map = map;
-
-    const { ground } = map;
-
-    groundX = (this.map.width - ground.width) / 2;
-    groundY = (this.map.height - ground.height) / 2;
-    groundWidth = this.map.ground.width;
-    groundHeight = this.map.ground.height;
-    goalPostWidth = this.map.ground.goalPostWidth;
-    goalPostRadius = this.map.ground.goalPostRadius;
-    goalPostTopPositionY = (groundHeight - goalPostWidth) / 2;
-    goalPostBottomPositionY = (groundHeight + goalPostWidth) / 2;
   }
 
   loadAssets() {
     this.scene.load.image('ground-tile', '/assets/images/bg.png');
 
-    // generate texture of the left goal post net
+    this.generateGoalPostTexture(Color.RED_GOALPOST, Team.RED);
+    this.generateGoalPostTexture(Color.BLUE_GOALPOST, Team.BLUE);
+
     const {
+      goalPostRadius,
       goalPostNetThickness,
       goalPostDepth,
       goalPostWidth,
       goalPostNetCornerRadius,
     } = this.map.ground;
+    // generate texture of the left goal post net
     this.scene.make
       .graphics({
         x: 0,
@@ -84,6 +70,33 @@ export class MapBuilder {
     this.drawGoalPosts();
   }
 
+  private generateGoalPostTexture(color: number, team?: Team) {
+    const { goalPostRadius } = this.map.ground;
+    this.scene.make
+      .graphics({
+        x: 0,
+        y: 0,
+      })
+      .lineStyle(goalPostLineWidth, 0x000000)
+      .fillStyle(color)
+      .fillCircle(
+        goalPostRadius,
+        goalPostRadius,
+        goalPostRadius - goalPostLineWidth * 0.5
+      )
+      .strokeCircle(
+        goalPostRadius,
+        goalPostRadius,
+        goalPostRadius - goalPostLineWidth * 0.5
+      )
+      .generateTexture(
+        `${team ? `${team}:` : ''}goalpost`,
+        goalPostRadius * 2,
+        goalPostRadius * 2
+      )
+      .destroy();
+  }
+
   private drawGrass() {
     const tilemap = this.scene.make.tilemap({
       tileWidth: 120,
@@ -97,18 +110,28 @@ export class MapBuilder {
   }
 
   private drawGroundLines() {
-    const { ground } = this.map;
+    const {
+      x: groundX,
+      y: groundY,
+      width: groundWidth,
+      height: groundHeight,
+    } = this.map.ground;
     this.scene.add
       .graphics({ x: groundX, y: groundY })
       .lineStyle(groundLineWidth, 0xffffff)
-      .strokeRect(0, 0, ground.width, ground.height)
-      .strokeCircle(ground.width / 2, ground.height / 2, ground.height / 4.5)
-      .lineBetween(ground.width / 2, 0, ground.width / 2, ground.height);
+      .strokeRect(0, 0, groundWidth, groundHeight)
+      .strokeCircle(groundWidth / 2, groundHeight / 2, groundHeight / 4.5)
+      .lineBetween(groundWidth / 2, 0, groundWidth / 2, groundHeight);
   }
 
   private drawGoalPostNets() {
     const { height, ground } = this.map;
-    const { width: groundWidth, goalPostDepth, goalPostWidth } = ground;
+    const {
+      x: groundX,
+      width: groundWidth,
+      goalPostDepth,
+      goalPostWidth,
+    } = ground;
     const goalPostTopPositionY = (height - goalPostWidth) / 2;
 
     // NOTE: for debug
@@ -152,52 +175,31 @@ export class MapBuilder {
   }
 
   private drawGoalPosts() {
-    this.scene.add
-      .graphics({
-        x: groundX,
-        y: groundY,
-      })
-      .lineStyle(goalPostLineWidth, 0x000000)
-      .fillStyle(0xffffff)
-      .fillCircle(
-        0,
-        goalPostTopPositionY,
-        goalPostRadius - goalPostLineWidth / 2
-      )
-      .strokeCircle(
-        0,
-        goalPostTopPositionY,
-        goalPostRadius - goalPostLineWidth / 2
-      )
-      .fillCircle(
-        0,
-        goalPostBottomPositionY,
-        goalPostRadius - goalPostLineWidth / 2
-      )
-      .strokeCircle(
-        0,
-        goalPostBottomPositionY,
-        goalPostRadius - goalPostLineWidth / 2
-      )
-      .fillCircle(
-        groundWidth,
-        goalPostTopPositionY,
-        goalPostRadius - goalPostLineWidth / 2
-      )
-      .strokeCircle(
-        groundWidth,
-        goalPostTopPositionY,
-        goalPostRadius - goalPostLineWidth / 2
-      )
-      .fillCircle(
-        groundWidth,
-        goalPostBottomPositionY,
-        goalPostRadius - goalPostLineWidth / 2
-      )
-      .strokeCircle(
-        groundWidth,
-        goalPostBottomPositionY,
-        goalPostRadius - goalPostLineWidth / 2
-      );
+    const {
+      x: groundX,
+      width: groundWidth,
+      goalPostTopPositionY,
+      goalPostBottomPositionY,
+    } = this.map.ground;
+    this.scene.add.sprite(
+      groundX,
+      goalPostTopPositionY,
+      `${Team.RED}:goalpost`
+    );
+    this.scene.add.sprite(
+      groundX,
+      goalPostBottomPositionY,
+      `${Team.RED}:goalpost`
+    );
+    this.scene.add.sprite(
+      groundX + groundWidth,
+      goalPostTopPositionY,
+      `${Team.BLUE}:goalpost`
+    );
+    this.scene.add.sprite(
+      groundX + groundWidth,
+      goalPostBottomPositionY,
+      `${Team.BLUE}:goalpost`
+    );
   }
 }
