@@ -22,7 +22,7 @@
   },
   "homepage": "https://github.com/colyseus/create-colyseus#readme",
   "devDependencies": {
-    "@colyseus/loadtest": "^0.15.0",
+    "@colyseus/loadtest": "^0.15.2",
     "@colyseus/testing": "^0.15.0",
     "@shared/types": "file:../../shared/types",
     "@types/express": "^4.17.1",
