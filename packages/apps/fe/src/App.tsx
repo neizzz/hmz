@@ -50,7 +50,6 @@ const router = createBrowserRouter([
               history.replaceState(null, null, `/room/${room.roomId}`);
               return room;
             }),
-          host: true,
         };
       } else {
         return redirect('/');

@@ -42,6 +42,7 @@ export class GameEngine {
 
   room: GameRoom;
   state: GameRoomState;
+  mapBuilder: MapBuilder;
 
   redGoalLine: number;
   blueGoalLine: number;
@@ -63,7 +64,8 @@ export class GameEngine {
   }
 
   buildMap(map: HmzMapInfo) {
-    new MapBuilder(this.world, map).build();
+    this.mapBuilder = new MapBuilder(this.world, map);
+    this.mapBuilder.build();
 
     this.redGoalLine = map.ground.x;
     this.blueGoalLine = map.ground.x + map.ground.width;
@@ -117,7 +119,7 @@ export class GameEngine {
               }, 3000);
             } else {
               setTimeout(() => {
-                this.layoutKickoff();
+                this.kickoff(isRedTeamGoal ? Team.BLUE : Team.RED);
               }, 3000);
             }
           }
@@ -125,10 +127,12 @@ export class GameEngine {
 
         case GameState.KICK_OFF:
           if (
-            this.state.ball.x !== this.ball.position.x ||
-            this.state.ball.y !== this.ball.position.y
+            this.ball.position.x !== this.room.setting.map.kickoff.ball.x ||
+            this.ball.position.y !== this.room.setting.map.kickoff.ball.y
           ) {
             this.state.state = GameState.PROGRESS;
+            this.mapBuilder.openCenterLine();
+            this.mapBuilder.openGroundLines();
           }
           break;
       }
@@ -172,7 +176,6 @@ export class GameEngine {
     this.ball.frictionStatic = 0;
     this.ball.frictionAir = 0.02;
     this.ball.inertia = Infinity;
-    // this.ball.restitution = 0.9;
     this.ball.collisionFilter = {
       group: COLLISION_WITH_BALL_GROUP,
       category: BALL_MASK,
@@ -242,7 +245,10 @@ export class GameEngine {
   }
 
   /** FIXME: duplicate logic */
-  private layoutKickoff() {
+  kickoff(team: Team) {
+    this.mapBuilder.blockGroundOutLines();
+    this.mapBuilder.blockCenterLine(team === Team.RED ? 'right' : 'left');
+
     const height = this.room.setting.map.height;
     const centerLine = this.room.setting.map.width / 2;
     const redTeamCount = this.room.setting.redTeamCount;
@@ -264,14 +270,7 @@ export class GameEngine {
       Matter.Body.setVelocity(worldPlayer, { x: 0, y: 0 });
     }
 
-    const groundX = this.room.setting.map.ground.x;
-    const groundY = this.room.setting.map.ground.y;
-    const groundWidth = this.room.setting.map.ground.width;
-    const groundHeight = this.room.setting.map.ground.height;
-    Matter.Body.setPosition(this.ball, {
-      x: groundX + groundWidth / 2,
-      y: groundY + groundHeight / 2,
-    });
+    Matter.Body.setPosition(this.ball, this.room.setting.map.kickoff.ball);
     Matter.Body.setVelocity(this.ball, { x: 0, y: 0 });
     this.state.state = GameState.KICK_OFF;
     this.room.broadcast(GameRoomMessageType.KICK_OFF);

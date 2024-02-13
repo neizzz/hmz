@@ -111,7 +111,6 @@ export class GameScene extends Phaser.Scene {
       shootAudio.play();
     });
     this.room.onMessage<GameRoomAction>(GameRoomMessageType.GOAL, () => {
-      whistleAudio.play();
       croudScoreAudio.play(undefined);
     });
     this.room.onMessage<GameRoomAction>(GameRoomMessageType.KICK_OFF, () => {

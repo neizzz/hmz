@@ -23,7 +23,6 @@ import clsx from 'clsx';
 
 export type WaitingRoomInitParams = {
   room: Room;
-  host?: boolean;
 };
 
 type AwaitersByTeam = Record<Team, [string, AwaiterState][]>;
@@ -46,7 +45,8 @@ const buildAwaitersByTeam = (
 
 const WaitingRoom = () => {
   const client = useHmzClient();
-  const { room, host = false } = useLoaderData() as WaitingRoomInitParams;
+  const { room } = useLoaderData() as WaitingRoomInitParams;
+  const [hostSessionId, setHostSessionId] = useState();
   const [awaitersByTeam, setAwaitersByTeam] = useState<AwaitersByTeam>({
     [Team.RED]: [],
     [Team.BLUE]: [],
@@ -54,6 +54,8 @@ const WaitingRoom = () => {
   });
   const awaitersByTeamRef = useRef<AwaitersByTeam>(awaitersByTeam);
   const [inGameParams, setInGameParams] = useState<InGameParams>(undefined);
+
+  const isHost = room.sessionId === hostSessionId;
 
   useLayoutEffect(() => {
     awaitersByTeamRef.current = cloneDeep(awaitersByTeam);
@@ -101,11 +103,17 @@ const WaitingRoom = () => {
       }));
     });
 
+    room.state.listen('hostSessionId', newHostSessionId => {
+      setHostSessionId(newHostSessionId);
+    });
+
     room.onMessage(FromWaitingRoomMessageType.CHANGE_TEAM, ({ awaiters }) => {
       setAwaitersByTeam(buildAwaitersByTeam(awaiters));
     });
+  }, []);
 
-    host ||
+  useEffect(() => {
+    room.sessionId === hostSessionId ||
       room.onMessage(
         FromWaitingRoomMessageType.START_GAME,
         ({ roomId: gameRoomId, map }) => {
@@ -116,7 +124,7 @@ const WaitingRoom = () => {
           });
         }
       );
-  }, []);
+  }, [hostSessionId]);
 
   return (
     <>
@@ -164,7 +172,7 @@ const WaitingRoom = () => {
             </li>
           </ul>
           <div className={'hori-centering'}>
-            {host && (
+            {room.sessionId === hostSessionId && (
               <button
                 className={'start-btn'}
                 onClick={() => {
@@ -181,7 +189,7 @@ const WaitingRoom = () => {
                     })
                     .then(gameRoom => {
                       const inGameInfo = {
-                        host,
+                        host: true,
                         room: gameRoom,
                         roomId: gameRoom.roomId,
                         map,

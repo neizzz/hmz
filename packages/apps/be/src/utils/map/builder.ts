@@ -12,10 +12,14 @@ import {
 import Matter from 'matter-js';
 
 const WALL_THICK = 20;
+const lineWidth = 4; // FIXME:
 
 export class MapBuilder {
   private world: Matter.World;
   private map: HmzMapInfo;
+
+  /** for block */
+  private groundOutLines: Matter.Body[] = [];
   private leftSideCenterLines: Matter.Body[] = [];
   private rightSideCenterLines: Matter.Body[] = [];
 
@@ -24,8 +28,22 @@ export class MapBuilder {
     this.map = map;
   }
 
-  centerBall(team: Team) {
-    if (team === Team.RED) {
+  blockGroundOutLines() {
+    this.groundOutLines.forEach(body => {
+      body.collisionFilter.mask =
+        (body.collisionFilter.mask ?? 0) | PLAYER_MASK;
+    });
+  }
+
+  openGroundLines() {
+    this.groundOutLines.forEach(body => {
+      body.collisionFilter.mask =
+        (body.collisionFilter.mask ?? 0) & ~PLAYER_MASK;
+    });
+  }
+
+  blockCenterLine(side: 'left' | 'right') {
+    if (side === 'right') {
       this.rightSideCenterLines.forEach(lineBody => {
         lineBody.collisionFilter.mask =
           (lineBody.collisionFilter.mask ?? 0) | PLAYER_MASK;
@@ -38,7 +56,7 @@ export class MapBuilder {
     }
   }
 
-  onStart() {
+  openCenterLine() {
     this.rightSideCenterLines.forEach(lineBody => {
       lineBody.collisionFilter.mask =
         (lineBody.collisionFilter.mask ?? 0) & ~PLAYER_MASK;
@@ -52,13 +70,6 @@ export class MapBuilder {
   build() {
     const width = this.map.width;
     const height = this.map.height;
-    const groundWidth = this.map.ground.width;
-    const groundHeight = this.map.ground.height;
-    const groundX = (width - groundWidth) / 2;
-    const groundY = (height - groundHeight) / 2;
-    const goalPostWidth = this.map.ground.goalPostWidth;
-    const goalPostTopPositionY = (height - goalPostWidth) / 2;
-    const goalPostBottomPositionY = (height + goalPostWidth) / 2;
 
     Matter.Composite.add(
       this.world,
@@ -97,65 +108,15 @@ export class MapBuilder {
       })
     );
 
-    // ground outlines
-    Matter.Composite.add(
-      this.world,
-      [
-        // top
-        Matter.Bodies.rectangle(
-          width / 2,
-          groundY - WALL_THICK / 2,
-          groundWidth,
-          WALL_THICK
-        ),
-        // bottom
-        Matter.Bodies.rectangle(
-          width / 2,
-          groundY + groundHeight + WALL_THICK / 2,
-          groundWidth,
-          WALL_THICK
-        ),
-        // left
-        Matter.Bodies.rectangle(
-          groundX - WALL_THICK / 2,
-          groundY + (goalPostTopPositionY - groundY) / 2,
-          WALL_THICK,
-          goalPostTopPositionY - groundY
-        ),
-        Matter.Bodies.rectangle(
-          groundX - WALL_THICK / 2,
-          goalPostBottomPositionY + (goalPostTopPositionY - groundY) / 2,
-          WALL_THICK,
-          goalPostTopPositionY - groundY
-        ),
-        // right
-        Matter.Bodies.rectangle(
-          groundX + groundWidth + WALL_THICK / 2,
-          groundY + (goalPostTopPositionY - groundY) / 2,
-          WALL_THICK,
-          goalPostTopPositionY - groundY
-        ),
-        Matter.Bodies.rectangle(
-          groundX + groundWidth + WALL_THICK / 2,
-          goalPostBottomPositionY + (goalPostTopPositionY - groundY) / 2,
-          WALL_THICK,
-          goalPostTopPositionY - groundY
-        ),
-      ].map(body => {
-        body.isStatic = true;
-        body.restitution = 0.9;
-        body.collisionFilter = {
-          group: COLLISION_WITH_BALL_GROUP,
-          category: GROUND_OUTLINE_MASK,
-        };
-        return body;
-      })
-    );
+    this.groundOutLines = this.drawGroundOutLines();
+    const centerLines = this.drawCenterLines();
+    const leftHalfCircle = this.drawCenterLeftHalfCircle();
+    const rightHalfCircle = this.drawCenterRightHalfCircle();
+    this.leftSideCenterLines = [...centerLines, leftHalfCircle];
+    this.rightSideCenterLines = [...centerLines, rightHalfCircle];
 
     this.drawGoalPostNets();
     this.drawGoalPosts();
-    this.drawCenterHalfCircles();
-    this.drawCenterLines();
   }
 
   private drawGoalPosts() {
@@ -197,6 +158,73 @@ export class MapBuilder {
         return body;
       })
     );
+  }
+
+  private drawGroundOutLines(mask = 0) {
+    const width = this.map.width;
+    const height = this.map.height;
+    const groundWidth = this.map.ground.width;
+    const groundHeight = this.map.ground.height;
+    const groundX = (width - groundWidth) / 2;
+    const groundY = (height - groundHeight) / 2;
+    const goalPostWidth = this.map.ground.goalPostWidth;
+    const goalPostTopPositionY = (height - goalPostWidth) / 2;
+    const goalPostBottomPositionY = (height + goalPostWidth) / 2;
+
+    const groundOutLines = [
+      // top
+      Matter.Bodies.rectangle(
+        width / 2,
+        groundY - WALL_THICK / 2,
+        groundWidth,
+        WALL_THICK
+      ),
+      // bottom
+      Matter.Bodies.rectangle(
+        width / 2,
+        groundY + groundHeight + WALL_THICK / 2,
+        groundWidth,
+        WALL_THICK
+      ),
+      // left
+      Matter.Bodies.rectangle(
+        groundX - WALL_THICK / 2,
+        groundY + (goalPostTopPositionY - groundY) / 2,
+        WALL_THICK,
+        goalPostTopPositionY - groundY
+      ),
+      Matter.Bodies.rectangle(
+        groundX - WALL_THICK / 2,
+        goalPostBottomPositionY + (goalPostTopPositionY - groundY) / 2,
+        WALL_THICK,
+        goalPostTopPositionY - groundY
+      ),
+      // right
+      Matter.Bodies.rectangle(
+        groundX + groundWidth + WALL_THICK / 2,
+        groundY + (goalPostTopPositionY - groundY) / 2,
+        WALL_THICK,
+        goalPostTopPositionY - groundY
+      ),
+      Matter.Bodies.rectangle(
+        groundX + groundWidth + WALL_THICK / 2,
+        goalPostBottomPositionY + (goalPostTopPositionY - groundY) / 2,
+        WALL_THICK,
+        goalPostTopPositionY - groundY
+      ),
+    ].map(body => {
+      body.isStatic = true;
+      body.restitution = 0.9;
+      body.collisionFilter = {
+        group: COLLISION_WITH_BALL_GROUP,
+        category: GROUND_OUTLINE_MASK,
+        mask,
+      };
+      return body;
+    });
+
+    Matter.Composite.add(this.world, groundOutLines);
+    return groundOutLines;
   }
 
   private drawGoalPostNets() {
@@ -277,7 +305,7 @@ export class MapBuilder {
     );
   }
 
-  private drawCenterHalfCircles() {
+  private drawCenterLeftHalfCircle(mask = 0): Matter.Body {
     const width = this.map.width;
     const height = this.map.height;
     const groundWidth = this.map.ground.width;
@@ -287,9 +315,54 @@ export class MapBuilder {
     const cx = groundX + groundWidth * 0.5;
     const cy = groundY + groundHeight * 0.5;
     const radius = groundHeight * 0.222222;
-    const lineWidth = 4;
-    const division = 20;
+    const rightHalfCircleVertices = this.createRightHalfCircleVertices();
+    const leftHalfCircleBody = Matter.Bodies.fromVertices(
+      cx - (radius / 2 + lineWidth * 4),
+      cy,
+      [rightHalfCircleVertices],
+      {
+        isStatic: true,
+        collisionFilter: {
+          category: GROUND_CENTERLINE_MASK,
+        },
+      }
+    );
+    Matter.Body.rotate(leftHalfCircleBody, Math.PI);
+    leftHalfCircleBody.collisionFilter.mask = mask;
+    Matter.Composite.add(this.world, [leftHalfCircleBody]);
+    return leftHalfCircleBody;
+  }
+  private drawCenterRightHalfCircle(mask = 0): Matter.Body {
+    const width = this.map.width;
+    const height = this.map.height;
+    const groundWidth = this.map.ground.width;
+    const groundHeight = this.map.ground.height;
+    const groundX = (width - groundWidth) * 0.5;
+    const groundY = (height - groundHeight) * 0.5;
+    const cx = groundX + groundWidth * 0.5;
+    const cy = groundY + groundHeight * 0.5;
+    const radius = groundHeight * 0.222222;
+    const rightHalfCircleVertices = this.createRightHalfCircleVertices();
+    const rightHalfCircleBody = Matter.Bodies.fromVertices(
+      cx + radius / 2 + lineWidth * 4,
+      cy,
+      [rightHalfCircleVertices],
+      {
+        isStatic: true,
+        collisionFilter: {
+          category: GROUND_CENTERLINE_MASK,
+        },
+      }
+    );
+    rightHalfCircleBody.collisionFilter.mask = mask;
+    Matter.Composite.add(this.world, [rightHalfCircleBody]);
+    return rightHalfCircleBody;
+  }
 
+  private createRightHalfCircleVertices(): Matter.Vector[] {
+    const groundHeight = this.map.ground.height;
+    const radius = groundHeight * 0.222222;
+    const division = 20;
     const rightHalfCirclePath =
       createRoundedPath({
         cx: 0,
@@ -308,45 +381,14 @@ export class MapBuilder {
         division,
         reverse: true,
       });
-
-    const rightHalfCircleVertices = Matter.Vertices.fromPath(
+    return Matter.Vertices.fromPath(
       rightHalfCirclePath,
       Matter.Body.create({})
     );
-    const rightHalfCircleBody = Matter.Bodies.fromVertices(
-      cx + radius / 2 + lineWidth * 4,
-      cy,
-      [rightHalfCircleVertices],
-      {
-        isStatic: true,
-        collisionFilter: {
-          category: GROUND_CENTERLINE_MASK,
-          mask: 0,
-        },
-      }
-    );
-
-    const leftHalfCircleBody = Matter.Bodies.fromVertices(
-      cx - (radius / 2 + lineWidth * 4),
-      cy,
-      [rightHalfCircleVertices],
-      {
-        isStatic: true,
-        collisionFilter: {
-          category: GROUND_CENTERLINE_MASK,
-          mask: 0,
-        },
-      }
-    );
-    Matter.Body.rotate(leftHalfCircleBody, Math.PI);
-    Matter.Composite.add(this.world, [leftHalfCircleBody, rightHalfCircleBody]);
-
-    this.leftSideCenterLines.push(leftHalfCircleBody);
-    this.rightSideCenterLines.push(rightHalfCircleBody);
   }
 
   /** NOTE: center circle기준으로 위, 아래 라인만 */
-  private drawCenterLines() {
+  private drawCenterLines(mask = 0): Matter.Body[] {
     const width = this.map.width;
     const height = this.map.height;
     const groundWidth = this.map.ground.width;
@@ -367,11 +409,10 @@ export class MapBuilder {
         isStatic: true,
         collisionFilter: {
           category: GROUND_CENTERLINE_MASK,
-          mask: 0,
+          mask,
         },
       }
     );
-
     const lowerCenterLineBody = Matter.Bodies.rectangle(
       cx,
       groundY + groundHeight - upperHalfLineHeight * 0.5,
@@ -381,17 +422,13 @@ export class MapBuilder {
         isStatic: true,
         collisionFilter: {
           category: GROUND_CENTERLINE_MASK,
-          mask: 0,
+          mask,
         },
       }
     );
 
-    Matter.Composite.add(this.world, [
-      upperCenterLineBody,
-      lowerCenterLineBody,
-    ]);
-
-    this.leftSideCenterLines.push(upperCenterLineBody, lowerCenterLineBody);
-    this.rightSideCenterLines.push(upperCenterLineBody, lowerCenterLineBody);
+    const lineBodies = [upperCenterLineBody, lowerCenterLineBody];
+    Matter.Composite.add(this.world, lineBodies);
+    return lineBodies;
   }
 }

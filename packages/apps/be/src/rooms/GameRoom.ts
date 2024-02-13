@@ -13,7 +13,6 @@ import {
   Team,
 } from '@shared/types';
 import { GameEngine } from '../engine/index.ts';
-import cloneDeep from 'lodash.clonedeep';
 
 export class GameRoom extends Room<GameRoomState> {
   maxClients = 10;
@@ -22,11 +21,6 @@ export class GameRoom extends Room<GameRoomState> {
   playerCount: number;
   setting: GameRoomSetting;
 
-  kickoffStateSnapshot: GameRoomState;
-
-  /** TODO:
-   * data: 총 인원, order in team
-   */
   onCreate(params: GameRoomCreateInfo) {
     console.log('game room', this.roomId, 'creating...');
 
@@ -39,7 +33,7 @@ export class GameRoom extends Room<GameRoomState> {
 
     const { map } = this.setting;
     this.engine.buildMap(map);
-    this.engine.addBall(new BallState({ x: map.width / 2, y: map.height / 2 }));
+    this.engine.addBall(new BallState(map.kickoff.ball));
 
     this.initMessageHandlers();
   }
@@ -50,12 +44,11 @@ export class GameRoom extends Room<GameRoomState> {
 
     // @ts-expect-error
     const { team, index } = params.hostJoinInfo ?? params;
-    this.layoutPlayer(client.sessionId, team, index);
+    this.addPlayer(client.sessionId, team, index);
 
     if (this.isReady()) {
-      this.kickoffStateSnapshot = cloneDeep(this.state);
+      this.engine.kickoff(Team.RED);
       this.broadcast(GameRoomMessageType.KICK_OFF);
-      // TODO: blocking
     }
   }
 
@@ -82,10 +75,7 @@ export class GameRoom extends Room<GameRoomState> {
     );
   }
 
-  private layoutPlayer(sessionId: string, team: Team, index: number): void {
-    const map = this.setting.map;
-    const centerLine = map.width / 2;
-
+  private addPlayer(sessionId: string, team: Team, index: number): void {
     switch (team) {
       case Team.RED:
         this.engine.addPlayer(
@@ -93,8 +83,6 @@ export class GameRoom extends Room<GameRoomState> {
           new PlayerState({
             index,
             team,
-            x: centerLine / 2,
-            y: (map.height * (index + 1)) / (this.setting.redTeamCount + 1),
           })
         );
         break;
@@ -105,8 +93,6 @@ export class GameRoom extends Room<GameRoomState> {
           new PlayerState({
             index,
             team,
-            x: centerLine + centerLine / 2,
-            y: (map.height * (index + 1)) / (this.setting.blueTeamCount + 1),
           })
         );
         break;

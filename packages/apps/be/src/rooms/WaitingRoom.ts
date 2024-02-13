@@ -70,6 +70,10 @@ export class WaitingRoom extends Room<WaitingRoomState> {
   onLeave(client: Client, consented: boolean) {
     console.log(client.sessionId, 'left!');
     this.state.awaiters.delete(client.sessionId);
+
+    if (this.state.hostSessionId === client.sessionId) {
+      this.state.hostSessionId = [...this.state.awaiters.keys()][0];
+    }
   }
 
   onDispose() {

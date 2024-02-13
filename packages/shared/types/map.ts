@@ -12,6 +12,12 @@ export type HmzMapInfo = {
     goalPostTopPositionY: number;
     goalPostBottomPositionY: number;
   };
+  kickoff: {
+    ball: {
+      x: 750;
+      y: 375;
+    };
+  };
   width: number;
   height: number;
 };
@@ -22,6 +28,12 @@ export const HmzMap: Record<HmzMapSize, HmzMapInfo> = {
   SMALL: {
     width: 1500,
     height: 750,
+    kickoff: {
+      ball: {
+        x: 750,
+        y: 375,
+      },
+    },
     ground: {
       x: 150,
       y: 75,
