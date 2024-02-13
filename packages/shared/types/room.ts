@@ -2,7 +2,11 @@ import { Team } from './index.ts';
 import { HmzMapInfo } from './map.ts';
 
 export type WaitingRoomCreateInfo = {
+  hostJoinInfo: WaitingRoomJoinInfo;
   maxAwaiters: number;
+};
+export type WaitingRoomJoinInfo = {
+  name: string;
 };
 
 export type GameRoomSetting = {

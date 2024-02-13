@@ -6,6 +6,7 @@ import {
   FromWaitingRoomMessageType,
   WaitingRoomCreateInfo,
   ToWaitingRoomMessagePayload,
+  WaitingRoomJoinInfo,
 } from '@shared/types';
 
 export class WaitingRoom extends Room<WaitingRoomState> {
@@ -55,10 +56,13 @@ export class WaitingRoom extends Room<WaitingRoomState> {
     );
   }
 
-  onJoin(client: Client, options: any) {
+  onJoin(client: Client, options: WaitingRoomCreateInfo | WaitingRoomJoinInfo) {
     console.log(client.sessionId, 'joined!');
+
+    // @ts-ignore
+    const info = options.hostJoinInfo ?? options;
     const awaiter = new AwaiterState();
-    awaiter.name = options.name;
+    awaiter.name = info.name;
     awaiter.team = Team.OBSERVER;
     this.state.awaiters.set(client.sessionId, awaiter);
 

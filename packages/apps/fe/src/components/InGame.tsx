@@ -1,4 +1,3 @@
-import { Color } from '@constants';
 import { useHmzClient } from '@hooks/useHmzClient';
 import { BootstrapScene } from '@in-game/scenes/BootstrapScene';
 import { GameScene } from '@in-game/scenes/GameScene.ts';
@@ -6,7 +5,6 @@ import {
   GameRoomJoinInfo,
   GameRoomMessageType,
   HmzMapInfo,
-  Team,
 } from '@shared/types';
 import clsx from 'clsx';
 import { Room } from 'colyseus.js';

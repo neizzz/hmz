@@ -10,8 +10,8 @@ type InitParams = {
 };
 
 export class Player extends Phaser.GameObjects.Container {
-  static radius = 28;
-  static lineWidth = 3;
+  static radius = 28; // FIXME:
+  static lineWidth = 3; // FIXME:
 
   static generateTexture(
     scene: GameScene,
@@ -91,13 +91,14 @@ export class Player extends Phaser.GameObjects.Container {
     super(scene);
 
     this.schema = state;
-    this.state = state.entityState;
+    this.entityState = state.entityState;
 
     this.bodySprite = scene.add.sprite(0, 0, `${this.schema.team}:player`);
-    this.avatarText = scene.add.text(0, 0, 'te', {
+    this.avatarText = scene.add.text(0, 0, this.schema.name.slice(0, 2), {
       fontFamily: 'Verdana',
       fontSize: 30,
       strokeThickness: 2,
+      align: 'center',
     });
     this.avatarText.setOrigin(0.5, 0.5);
 

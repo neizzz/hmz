@@ -105,7 +105,7 @@ export class GameScene extends Phaser.Scene {
     const shootAudio = this.sound.add('kick');
     const whistleAudio = this.sound.add('whistle');
     const croudScoreAudio = this.sound.add('crowd-score');
-    const hitGoalpost = this.sound.add('hit-goalpost');
+    const hitGoalpost = this.sound.add('hit-goalpost'); // TODO:
 
     this.room.onMessage<GameRoomAction>(GameRoomMessageType.SHOOT, () => {
       shootAudio.play();
@@ -126,6 +126,7 @@ export class GameScene extends Phaser.Scene {
     });
 
     this.room.state.players.onAdd((state: PlayerState, id) => {
+      console.log(state);
       // const { x, y, radius } = state;
       // this.playerSprites[id] = this.matter.add.circle(x, y, radius);
       this.players[id] = new Player(this, { state, me: id === this.me });
@@ -138,19 +139,9 @@ export class GameScene extends Phaser.Scene {
 
   private updateFromState = (state: GameRoomState) => {
     state.players.forEach((playerServerState, id) => {
-      // const playerSprite = this.playerSprites[id];
-      // playerSprite.position.x = player.x;
-      // playerSprite.position.y = player.y;
-
       this.players[id].update(playerServerState);
-      // const playerContainer = this.players[id];
-      // playerContainer.x = player.x;
-      // playerContainer.y = player.y;
-      // playerContainer.state = player.entityState;
     });
 
-    // this.ballSprite.position.x = state.ball.x;
-    // this.ballSprite.position.y = state.ball.y;
     this.ball.x = state.ball.x;
     this.ball.y = state.ball.y;
   };

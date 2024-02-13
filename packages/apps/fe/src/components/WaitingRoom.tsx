@@ -55,8 +55,6 @@ const WaitingRoom = () => {
   const awaitersByTeamRef = useRef<AwaitersByTeam>(awaitersByTeam);
   const [inGameParams, setInGameParams] = useState<InGameParams>(undefined);
 
-  const isHost = room.sessionId === hostSessionId;
-
   useLayoutEffect(() => {
     awaitersByTeamRef.current = cloneDeep(awaitersByTeam);
   }, [awaitersByTeam]);
@@ -139,8 +137,8 @@ const WaitingRoom = () => {
                 Red
               </button>
               <ul className={'member-list'}>
-                {awaitersByTeam[Team.RED].map(([sessionId]) => (
-                  <li>{sessionId}</li>
+                {awaitersByTeam[Team.RED].map(([_, { name }]) => (
+                  <li>{name}</li>
                 ))}
               </ul>
             </li>
@@ -152,8 +150,8 @@ const WaitingRoom = () => {
                 Observer
               </button>
               <ul className={'member-list'}>
-                {awaitersByTeam[Team.OBSERVER].map(([sessionId]) => (
-                  <li>{sessionId}</li>
+                {awaitersByTeam[Team.OBSERVER].map(([_, { name }]) => (
+                  <li>{name}</li>
                 ))}
               </ul>
             </li>
@@ -165,8 +163,8 @@ const WaitingRoom = () => {
                 Blue
               </button>
               <ul className={'member-list'}>
-                {awaitersByTeam[Team.BLUE].map(([sessionId]) => (
-                  <li>{sessionId}</li>
+                {awaitersByTeam[Team.BLUE].map(([_, { name }]) => (
+                  <li>{name}</li>
                 ))}
               </ul>
             </li>

@@ -43,8 +43,8 @@ export class GameRoom extends Room<GameRoomState> {
     console.log(client.sessionId, 'joined!', params);
 
     // @ts-expect-error
-    const { team, index } = params.hostJoinInfo ?? params;
-    this.addPlayer(client.sessionId, team, index);
+    const { team, name, index } = params.hostJoinInfo ?? params;
+    this.addPlayer(client.sessionId, { team, name, index });
 
     if (this.isReady()) {
       this.engine.kickoff(Team.RED);
@@ -75,7 +75,15 @@ export class GameRoom extends Room<GameRoomState> {
     );
   }
 
-  private addPlayer(sessionId: string, team: Team, index: number): void {
+  private addPlayer(
+    sessionId: string,
+    params: {
+      team: Team;
+      name: string;
+      index: number;
+    }
+  ): void {
+    const { team, name, index } = params;
     switch (team) {
       case Team.RED:
         this.engine.addPlayer(
@@ -83,6 +91,7 @@ export class GameRoom extends Room<GameRoomState> {
           new PlayerState({
             index,
             team,
+            name,
           })
         );
         break;
@@ -93,6 +102,7 @@ export class GameRoom extends Room<GameRoomState> {
           new PlayerState({
             index,
             team,
+            name,
           })
         );
         break;

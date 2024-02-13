@@ -29,7 +29,9 @@ const router = createBrowserRouter([
     loader: async ({ params }): Promise<WaitingRoomInitParams | Response> => {
       if (getUserNickname()) {
         return {
-          room: await client.joinById(params.roomId),
+          room: await client.joinById(params.roomId, {
+            name: getUserNickname(),
+          }),
         };
       } else {
         return redirect('/');
@@ -44,6 +46,7 @@ const router = createBrowserRouter([
         return {
           room: await client
             .create(RoomType.WAITING_ROOM, {
+              hostJoinInfo: { name: getUserNickname() },
               maxAwaiters: 12,
             })
             .then(room => {
