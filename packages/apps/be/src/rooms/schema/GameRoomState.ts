@@ -77,6 +77,9 @@ export class BallState extends Schema {
 }
 
 export class GameRoomState extends Schema {
+  redTeamScore = 0;
+  blueTeamScore = 0;
+
   @type('number') state: GameState = GameState.KICK_OFF;
   @type({ map: PlayerState }) players = new MapSchema<PlayerState>();
   @type(BallState) ball: BallState;

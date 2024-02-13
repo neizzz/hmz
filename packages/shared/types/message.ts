@@ -1,5 +1,6 @@
 import { Action, GameRoomActionPayload, GameRoomActionType } from './action.ts';
 import { HmzMapInfo, Team } from './index.ts';
+
 export const enum RoomType {
   WAITING_ROOM = 'waiting-room',
   GAME_ROOM = 'game-room',
@@ -13,6 +14,7 @@ export type ToWaitingRoomMessagePayload = {
   CHANGE_TEAM: {
     to: Team;
   };
+  /** host 전용 */
   START_GAME: {
     roomId: string; // game room id for broadcast to non-host clients
     map: HmzMapInfo;
@@ -41,6 +43,7 @@ export const enum GameRoomMessageType {
   SHOOT = 'shoot',
   TIMESTAMP = 'timestamp',
   END = 'end',
+  DISPOSE = 'dispose',
 }
 
 export type GameRoomMessagePayload = {
@@ -48,9 +51,14 @@ export type GameRoomMessagePayload = {
     GameRoomActionType,
     GameRoomActionPayload
   >;
-  [GameRoomMessageType.GOAL]: { team: Team };
+  [GameRoomMessageType.GOAL]: {
+    team: Team;
+    redTeamScore: number;
+    blueTeamScore: number;
+  };
   [GameRoomMessageType.SHOOT]: undefined;
   [GameRoomMessageType.KICK_OFF]: undefined;
   [GameRoomMessageType.TIMESTAMP]: { timestamp: number };
-  [GameRoomMessageType.END]: { win: Team };
+  [GameRoomMessageType.END]: { victoryTeam: Team };
+  [GameRoomMessageType.DISPOSE]: undefined;
 };

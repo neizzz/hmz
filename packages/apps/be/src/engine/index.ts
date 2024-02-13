@@ -78,17 +78,48 @@ export class GameEngine {
             this.state.ball.x > this.blueGoalLine
           ) {
             this.state.state = GameState.GOAL;
-            this.state.ball.x < this.redGoalLine
-              ? this.room.broadcast(GameRoomMessageType.GOAL, {
-                  team: Team.RED,
-                })
-              : this.room.broadcast(GameRoomMessageType.GOAL, {
-                  team: Team.BLUE,
-                });
+            const isRedTeamGoal = this.state.ball.x > this.blueGoalLine;
 
-            setTimeout(() => {
-              this.layoutKickoff();
-            }, 3500);
+            if (isRedTeamGoal) {
+              this.state.redTeamScore += 1;
+              this.room.broadcast(GameRoomMessageType.GOAL, {
+                team: Team.RED,
+                redTeamScore: this.state.redTeamScore,
+                blueTeamScore: this.state.blueTeamScore,
+              });
+            } else {
+              this.state.blueTeamScore += 1;
+              this.room.broadcast(GameRoomMessageType.GOAL, {
+                team: Team.BLUE,
+                redTeamScore: this.state.redTeamScore,
+                blueTeamScore: this.state.blueTeamScore,
+              });
+            }
+
+            const endScore = this.room.setting.endScore;
+
+            if (
+              this.state.redTeamScore === endScore ||
+              this.state.blueTeamScore === endScore
+            ) {
+              const isRedTeamVictory = this.state.redTeamScore === endScore;
+
+              isRedTeamVictory
+                ? this.room.broadcast(GameRoomMessageType.END, {
+                    victoryTeam: Team.RED,
+                  })
+                : this.room.broadcast(GameRoomMessageType.END, {
+                    victoryTeam: Team.BLUE,
+                  });
+
+              setTimeout(() => {
+                this.destory();
+              }, 3000);
+            } else {
+              setTimeout(() => {
+                this.layoutKickoff();
+              }, 3000);
+            }
           }
           break;
 
@@ -203,8 +234,15 @@ export class GameEngine {
     }
   }
 
+  destory() {
+    Matter.World.clear(this.world, false);
+    Matter.Engine.clear(this.engine);
+    this.room.broadcast(GameRoomMessageType.DISPOSE);
+    this.room.disconnect();
+  }
+
+  /** FIXME: duplicate logic */
   private layoutKickoff() {
-    /** FIXME: duplicate logic */
     const height = this.room.setting.map.height;
     const centerLine = this.room.setting.map.width / 2;
     const redTeamCount = this.room.setting.redTeamCount;

@@ -10,7 +10,6 @@ import {
   GameRoomJoinInfo,
   GameRoomMessageType,
   GameRoomSetting,
-  GameState,
   Team,
 } from '@shared/types';
 import { GameEngine } from '../engine/index.ts';

@@ -9,7 +9,6 @@ import {
   FromWaitingRoomMessageType,
   GameRoomJoinInfo,
   HmzMap,
-  HmzMapInfo,
   RoomType,
   Team,
   ToWaitingRoomMessageType,
@@ -20,7 +19,6 @@ import { useLoaderData } from 'react-router-dom';
 import { useHmzClient } from '@hooks/useHmzClient';
 import InGame, { InGameParams } from './InGame';
 import cloneDeep from 'lodash.clonedeep';
-import { Color } from '@constants';
 import clsx from 'clsx';
 
 export type WaitingRoomInitParams = {
@@ -178,6 +176,7 @@ const WaitingRoom = () => {
                         map,
                         redTeamCount: awaitersByTeam.red.length,
                         blueTeamCount: awaitersByTeam.blue.length,
+                        endScore: 3,
                       },
                     })
                     .then(gameRoom => {
@@ -202,7 +201,9 @@ const WaitingRoom = () => {
           </div>
         </div>
       </div>
-      {inGameParams && <InGame {...inGameParams} />}
+      {inGameParams && (
+        <InGame {...inGameParams} onEnd={() => setInGameParams(undefined)} />
+      )}
     </>
   );
 };

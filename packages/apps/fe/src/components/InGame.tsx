@@ -32,7 +32,11 @@ export type InGameParams = {
   myJoinInfo: GameRoomJoinInfo;
 };
 
-const InGame = ({ host, room, roomId, map, myJoinInfo }: InGameParams) => {
+type Props = {
+  onEnd?: () => void;
+} & InGameParams;
+
+const InGame = ({ host, room, roomId, map, myJoinInfo, onEnd }: Props) => {
   const client = useHmzClient();
   const gameInstanceRef = useRef<Phaser.Game>();
   const [gameRoom, setGameRoom] = useState<Room>(undefined);
@@ -61,12 +65,15 @@ const InGame = ({ host, room, roomId, map, myJoinInfo }: InGameParams) => {
   useEffect(() => {
     if (!gameRoom) return;
 
-    gameRoom.onMessage(GameRoomMessageType.GOAL, ({ team }) => {
-      if (team === Team.RED) {
-        setRedScore(prev => prev + 1);
-      } else {
-        setBlueScore(prev => prev + 1);
+    gameRoom.onMessage(
+      GameRoomMessageType.GOAL,
+      ({ team, redTeamScore, blueTeamScore }) => {
+        setRedScore(redTeamScore);
+        setBlueScore(blueTeamScore);
       }
+    );
+    gameRoom.onMessage(GameRoomMessageType.DISPOSE, () => {
+      onEnd?.();
     });
   }, [gameRoom]);
 

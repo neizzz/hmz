@@ -9,6 +9,7 @@ export type GameRoomSetting = {
   map: HmzMapInfo;
   redTeamCount: number;
   blueTeamCount: number;
+  endScore: number;
 };
 export type GameRoomCreateInfo = {
   hostJoinInfo: GameRoomJoinInfo;

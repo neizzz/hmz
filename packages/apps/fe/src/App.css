@@ -9,6 +9,9 @@ body {
 button {
   padding: 0.4em 0.8em;
 }
+button:hover {
+  opacity: 0.8;
+}
 
 .glb-bg-color {
   background-color: #7da888;
@@ -99,9 +102,6 @@ button {
   text-align: center;
   border: solid 2px black;
   border-radius: 0.6em;
-}
-.team-list .team-item .team-header-btn:hover {
-  opacity: 0.8;
 }
 
 .team-header-btn.team-red {

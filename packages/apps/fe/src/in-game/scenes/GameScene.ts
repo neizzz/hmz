@@ -46,8 +46,10 @@ export class GameScene extends Phaser.Scene {
   preload() {
     console.log('[GameScene] preload');
 
-    this.load.audio('kick', '/assets/sounds/kick.wav');
+    this.load.audio('kick', '/assets/sounds/kick.mp3');
     this.load.audio('whistle', '/assets/sounds/whistle.wav');
+    this.load.audio('crowd-score', '/assets/sounds/crowd-score.mp3');
+    this.load.audio('hit-goalpost', '/assets/sounds/hit-goalpost.mp3');
 
     this.mapBuilder.loadAssets();
     Player.generateTexture(this, { key: 'red:player', color: Color.RED_TEAM });
@@ -74,6 +76,10 @@ export class GameScene extends Phaser.Scene {
     this.initStateChangedEvents();
     this.initEffectEvents();
 
+    this.room.onMessage(GameRoomMessageType.DISPOSE, () => {
+      this.game.destroy(true);
+    });
+
     this.input.keyboard.on('keydown-SPACE', event => {
       this.room.send(GameRoomMessageType.ACTION, {
         type: GameRoomActionType.SHOOT_START,
@@ -98,15 +104,16 @@ export class GameScene extends Phaser.Scene {
   private initEffectEvents(): void {
     const shootAudio = this.sound.add('kick');
     const whistleAudio = this.sound.add('whistle');
+    const croudScoreAudio = this.sound.add('crowd-score');
+    const hitGoalpost = this.sound.add('hit-goalpost');
 
     this.room.onMessage<GameRoomAction>(GameRoomMessageType.SHOOT, () => {
       shootAudio.play();
     });
-
     this.room.onMessage<GameRoomAction>(GameRoomMessageType.GOAL, () => {
       whistleAudio.play();
+      croudScoreAudio.play(undefined);
     });
-
     this.room.onMessage<GameRoomAction>(GameRoomMessageType.KICK_OFF, () => {
       whistleAudio.play();
     });
