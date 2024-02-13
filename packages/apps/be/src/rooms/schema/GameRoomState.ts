@@ -1,5 +1,5 @@
 import { Schema, type, MapSchema } from '@colyseus/schema';
-import { Direction, PlayerEntityState, Team } from '@shared/types';
+import { Direction, GameState, PlayerEntityState, Team } from '@shared/types';
 
 export class PlayerState extends Schema {
   // static SPEED_LIMIT = 5.8; // pixel per step
@@ -12,19 +12,20 @@ export class PlayerState extends Schema {
 
   accelX: number = 0;
   accelY: number = 0;
+  index: number;
 
   @type('string') name: string;
   @type('string') team: Team;
   @type('number') x: number;
   @type('number') y: number;
   @type('number') radius: number = 28;
-  @type('boolean') shooting: boolean = false;
   @type('number') entityState: PlayerEntityState = PlayerEntityState.IDLE;
 
   accelrate(direction: Direction): [number, number] {
-    const acceleration = this.shooting
-      ? PlayerState.SHOOTING_ACCLERATION
-      : PlayerState.ACCELERATION;
+    const acceleration =
+      this.entityState === PlayerEntityState.SHOOTING
+        ? PlayerState.SHOOTING_ACCLERATION
+        : PlayerState.ACCELERATION;
 
     switch (direction) {
       case '':
@@ -76,6 +77,7 @@ export class BallState extends Schema {
 }
 
 export class GameRoomState extends Schema {
+  @type('number') state: GameState = GameState.KICK_OFF;
   @type({ map: PlayerState }) players = new MapSchema<PlayerState>();
   @type(BallState) ball: BallState;
 

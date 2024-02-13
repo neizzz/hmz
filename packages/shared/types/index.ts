@@ -15,6 +15,13 @@ export type Direction =
   | 'rightup'
   | 'rightdown';
 
+export const enum GameState {
+  KICK_OFF,
+  PROGRESS,
+  GOAL,
+  END,
+}
+
 export const enum PlayerEntityState {
   IDLE,
   SHOOTING,

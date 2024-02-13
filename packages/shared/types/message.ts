@@ -1,4 +1,3 @@
-import { Room } from 'colyseus.js';
 import { Action, GameRoomActionPayload, GameRoomActionType } from './action.ts';
 import { HmzMapInfo, Team } from './index.ts';
 export const enum RoomType {
@@ -38,8 +37,8 @@ export type FromWaitingRoomMessagePayload = {
 export const enum GameRoomMessageType {
   ACTION = 'action',
   GOAL = 'goal',
+  KICK_OFF = 'start-touch',
   SHOOT = 'shoot',
-  START_TOUCH = 'start-touch',
   TIMESTAMP = 'timestamp',
   END = 'end',
 }
@@ -49,9 +48,9 @@ export type GameRoomMessagePayload = {
     GameRoomActionType,
     GameRoomActionPayload
   >;
-  [GameRoomMessageType.GOAL]: undefined;
+  [GameRoomMessageType.GOAL]: { team: Team };
   [GameRoomMessageType.SHOOT]: undefined;
-  [GameRoomMessageType.START_TOUCH]: undefined;
+  [GameRoomMessageType.KICK_OFF]: undefined;
   [GameRoomMessageType.TIMESTAMP]: { timestamp: number };
   [GameRoomMessageType.END]: { win: Team };
 };

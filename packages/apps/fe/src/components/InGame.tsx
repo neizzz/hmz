@@ -2,7 +2,12 @@ import { Color } from '@constants';
 import { useHmzClient } from '@hooks/useHmzClient';
 import { BootstrapScene } from '@in-game/scenes/BootstrapScene';
 import { GameScene } from '@in-game/scenes/GameScene.ts';
-import { GameRoomJoinInfo, HmzMapInfo } from '@shared/types';
+import {
+  GameRoomJoinInfo,
+  GameRoomMessageType,
+  HmzMapInfo,
+  Team,
+} from '@shared/types';
 import clsx from 'clsx';
 import { Room } from 'colyseus.js';
 import { useEffect, useRef, useState } from 'react';
@@ -46,11 +51,23 @@ const InGame = ({ host, room, roomId, map, myJoinInfo }: InGameParams) => {
       width: map.width,
       height: map.height,
     });
-    // FIXME: remove setTimeout
-    setTimeout(() => {
-      gameInstance.scene.start('game-scene', { room: gameRoom, map });
-    }, 500);
+    gameInstance.scene.start('game-scene', { room: gameRoom, map });
     gameInstanceRef.current = gameInstance;
+  }, [gameRoom]);
+
+  const [redScore, setRedScore] = useState(0);
+  const [blueScore, setBlueScore] = useState(0);
+
+  useEffect(() => {
+    if (!gameRoom) return;
+
+    gameRoom.onMessage(GameRoomMessageType.GOAL, ({ team }) => {
+      if (team === Team.RED) {
+        setRedScore(prev => prev + 1);
+      } else {
+        setBlueScore(prev => prev + 1);
+      }
+    });
   }, [gameRoom]);
 
   return (
@@ -58,6 +75,11 @@ const InGame = ({ host, room, roomId, map, myJoinInfo }: InGameParams) => {
       className={clsx('glb-bg-color', 'centering-layer')}
       style={{ position: 'absolute', width: '100%', height: '100%' }}
     >
+      <div className={clsx('score-board')}>
+        <span className={'red-team-avatar'} />
+        {`${redScore} : ${blueScore}`}
+        <span className={'blue-team-avatar'} />
+      </div>
       <div id={GAME_SCENE_PARENT_ID} />
     </div>
   );

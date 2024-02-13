@@ -10,9 +10,11 @@ import {
   GameRoomJoinInfo,
   GameRoomMessageType,
   GameRoomSetting,
+  GameState,
   Team,
 } from '@shared/types';
 import { GameEngine } from '../engine/index.ts';
+import cloneDeep from 'lodash.clonedeep';
 
 export class GameRoom extends Room<GameRoomState> {
   maxClients = 10;
@@ -20,6 +22,8 @@ export class GameRoom extends Room<GameRoomState> {
 
   playerCount: number;
   setting: GameRoomSetting;
+
+  kickoffStateSnapshot: GameRoomState;
 
   /** TODO:
    * data: 총 인원, order in team
@@ -50,7 +54,9 @@ export class GameRoom extends Room<GameRoomState> {
     this.layoutPlayer(client.sessionId, team, index);
 
     if (this.isReady()) {
-      // TODO: broadcast start
+      this.kickoffStateSnapshot = cloneDeep(this.state);
+      this.broadcast(GameRoomMessageType.KICK_OFF);
+      // TODO: blocking
     }
   }
 
@@ -79,15 +85,16 @@ export class GameRoom extends Room<GameRoomState> {
 
   private layoutPlayer(sessionId: string, team: Team, index: number): void {
     const map = this.setting.map;
-    const halfX = map.width / 2;
+    const centerLine = map.width / 2;
 
     switch (team) {
       case Team.RED:
         this.engine.addPlayer(
           sessionId,
           new PlayerState({
+            index,
             team,
-            x: halfX / 2,
+            x: centerLine / 2,
             y: (map.height * (index + 1)) / (this.setting.redTeamCount + 1),
           })
         );
@@ -97,8 +104,9 @@ export class GameRoom extends Room<GameRoomState> {
         this.engine.addPlayer(
           sessionId,
           new PlayerState({
+            index,
             team,
-            x: halfX + halfX / 2,
+            x: centerLine + centerLine / 2,
             y: (map.height * (index + 1)) / (this.setting.blueTeamCount + 1),
           })
         );

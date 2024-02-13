@@ -6,6 +6,7 @@ import {
   Team,
   PlayerEntityState,
   GameRoomMessageType,
+  GameState,
 } from '@shared/types';
 import Matter from 'matter-js';
 import {
@@ -42,6 +43,9 @@ export class GameEngine {
   room: GameRoom;
   state: GameRoomState;
 
+  redGoalLine: number;
+  blueGoalLine: number;
+
   constructor(room: GameRoom) {
     this.room = room;
     this.state = room.state;
@@ -60,13 +64,48 @@ export class GameEngine {
 
   buildMap(map: HmzMapInfo) {
     new MapBuilder(this.world, map).build();
+
+    this.redGoalLine = map.ground.x;
+    this.blueGoalLine = map.ground.x + map.ground.width;
   }
 
   initUpdateEvents() {
-    // Update events to sync bodies in the world to the state.
     Matter.Events.on(this.engine, 'afterUpdate', () => {
+      switch (this.state.state) {
+        case GameState.PROGRESS:
+          if (
+            this.state.ball.x < this.redGoalLine ||
+            this.state.ball.x > this.blueGoalLine
+          ) {
+            this.state.state = GameState.GOAL;
+            this.state.ball.x < this.redGoalLine
+              ? this.room.broadcast(GameRoomMessageType.GOAL, {
+                  team: Team.RED,
+                })
+              : this.room.broadcast(GameRoomMessageType.GOAL, {
+                  team: Team.BLUE,
+                });
+
+            setTimeout(() => {
+              this.layoutKickoff();
+            }, 3500);
+          }
+          break;
+
+        case GameState.KICK_OFF:
+          if (
+            this.state.ball.x !== this.ball.position.x ||
+            this.state.ball.y !== this.ball.position.y
+          ) {
+            this.state.state = GameState.PROGRESS;
+          }
+          break;
+      }
+
+      this.state.ball.x = this.ball.position.x;
+      this.state.ball.y = this.ball.position.y;
+
       for (const key in this.players) {
-        // Make sure we still have the player in the world or state.
         const worldPlayer = this.players[key];
         const player = this.state.players.get(key);
         if (!worldPlayer || !player) {
@@ -80,18 +119,14 @@ export class GameEngine {
           this.processPlayerShoot(worldPlayer, player);
         }
       }
-
-      this.state.ball.x = this.ball.position.x;
-      this.state.ball.y = this.ball.position.y;
     });
   }
 
   initCollisionEvents() {
     // The collision events
-    Matter.Events.on(this.engine, 'collisionStart', event => {
-      const pairs = event.pairs;
-      // console.log(pairs);
-    });
+    // Matter.Events.on(this.engine, 'collisionStart', event => {
+    //   const pairs = event.pairs;
+    // });
   }
 
   update(delta: number) {
@@ -166,6 +201,42 @@ export class GameEngine {
         player.entityState = PlayerEntityState.IDLE;
         break;
     }
+  }
+
+  private layoutKickoff() {
+    /** FIXME: duplicate logic */
+    const height = this.room.setting.map.height;
+    const centerLine = this.room.setting.map.width / 2;
+    const redTeamCount = this.room.setting.redTeamCount;
+    const blueTeamCount = this.room.setting.blueTeamCount;
+
+    for (const key in this.players) {
+      const worldPlayer = this.players[key];
+      const player = this.state.players.get(key);
+
+      if (!worldPlayer || !player) continue;
+
+      const engagedTeamCount =
+        player.team === Team.RED ? redTeamCount : blueTeamCount;
+      const x =
+        centerLine + ((player.team === Team.RED ? -1 : 1) * centerLine) / 2;
+      const y = (height * (player.index + 1)) / (engagedTeamCount + 1);
+
+      Matter.Body.setPosition(worldPlayer, { x, y });
+      Matter.Body.setVelocity(worldPlayer, { x: 0, y: 0 });
+    }
+
+    const groundX = this.room.setting.map.ground.x;
+    const groundY = this.room.setting.map.ground.y;
+    const groundWidth = this.room.setting.map.ground.width;
+    const groundHeight = this.room.setting.map.ground.height;
+    Matter.Body.setPosition(this.ball, {
+      x: groundX + groundWidth / 2,
+      y: groundY + groundHeight / 2,
+    });
+    Matter.Body.setVelocity(this.ball, { x: 0, y: 0 });
+    this.state.state = GameState.KICK_OFF;
+    this.room.broadcast(GameRoomMessageType.KICK_OFF);
   }
 
   private processPlayerDirection(

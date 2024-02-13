@@ -102,6 +102,14 @@ export class GameScene extends Phaser.Scene {
     this.room.onMessage<GameRoomAction>(GameRoomMessageType.SHOOT, () => {
       shootAudio.play();
     });
+
+    this.room.onMessage<GameRoomAction>(GameRoomMessageType.GOAL, () => {
+      whistleAudio.play();
+    });
+
+    this.room.onMessage<GameRoomAction>(GameRoomMessageType.KICK_OFF, () => {
+      whistleAudio.play();
+    });
   }
 
   private initStateChangedEvents(): void {
