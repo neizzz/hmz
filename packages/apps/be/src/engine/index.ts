@@ -174,8 +174,8 @@ export class GameEngine {
     this.ball = Matter.Bodies.circle(x, y, radius);
     this.ball.mass = 25.0;
     this.ball.friction = 0;
-    this.ball.frictionStatic = 0;
-    this.ball.frictionAir = 0.02;
+    this.ball.frictionStatic = 5;
+    this.ball.frictionAir = 0.024;
     this.ball.inertia = Infinity;
     this.ball.collisionFilter = {
       group: COLLISION_WITH_BALL_GROUP,

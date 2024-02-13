@@ -212,7 +212,7 @@ export class MapBuilder {
       ),
     ].map(body => {
       body.isStatic = true;
-      body.restitution = 0.9;
+      body.restitution = 0.7;
       body.collisionFilter = {
         group: COLLISION_WITH_BALL_GROUP,
         category: GROUND_OUTLINE_MASK,
