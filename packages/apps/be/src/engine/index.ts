@@ -26,6 +26,7 @@ import {
   PLAYER_MASK,
   RED_PLAYER_MASK,
   STADIUM_OUTLINE_MASK,
+  PLAYER_GROUP,
 } from '@constants';
 import { MapBuilder } from '@utils/map/builder.ts';
 import { GameRoom } from '../rooms/GameRoom.ts';
@@ -193,14 +194,14 @@ export class GameEngine {
     worldPlayer.frictionAir = 0;
     worldPlayer.inertia = Infinity;
     worldPlayer.collisionFilter = {
+      group: PLAYER_GROUP,
       category: team === Team.RED ? RED_PLAYER_MASK : BLUE_PLAYER_MASK,
       mask:
         STADIUM_OUTLINE_MASK |
         GROUND_OUTLINE_MASK |
         GROUND_CENTERLINE_MASK |
         GOAL_POST_MASK |
-        BALL_MASK |
-        PLAYER_MASK,
+        BALL_MASK,
     };
     this.players[sessionId] = worldPlayer;
     Matter.Composite.add(this.world, [worldPlayer]);
@@ -281,7 +282,10 @@ export class GameEngine {
     player: PlayerState,
     payload: GameRoomActionPayload[GameRoomActionType.DIRECTION]
   ): void {
-    const speedLimit = PlayerState.SPEED_LIMIT;
+    const speedLimit =
+      player.entityState === PlayerEntityState.SHOOTING
+        ? PlayerState.SHOOTING_SPEED_LIMIT
+        : PlayerState.SPEED_LIMIT;
     const friction = PlayerState.FRICTION;
     const currVelocity = worldPlayer.velocity;
     const [accelX, accelY] = player.accelrate(payload.direction);

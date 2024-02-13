@@ -11,7 +11,7 @@ import {
 } from '@constants';
 import Matter from 'matter-js';
 
-const WALL_THICK = 20;
+const WALL_THICK = 40;
 const lineWidth = 4; // FIXME:
 
 export class MapBuilder {
@@ -75,7 +75,8 @@ export class MapBuilder {
       this.world,
       [
         // top
-        Matter.Bodies.rectangle(width / 2, -WALL_THICK / 2, width, WALL_THICK),
+        // Matter.Bodies.rectangle(width / 2, -WALL_THICK / 2, width, WALL_THICK),
+        Matter.Bodies.rectangle(width / 2, 0, width, WALL_THICK),
         // bottom
         Matter.Bodies.rectangle(
           width / 2,
@@ -162,14 +163,11 @@ export class MapBuilder {
 
   private drawGroundOutLines(mask = 0) {
     const width = this.map.width;
-    const height = this.map.height;
     const groundWidth = this.map.ground.width;
     const groundHeight = this.map.ground.height;
-    const groundX = (width - groundWidth) / 2;
-    const groundY = (height - groundHeight) / 2;
-    const goalPostWidth = this.map.ground.goalPostWidth;
-    const goalPostTopPositionY = (height - goalPostWidth) / 2;
-    const goalPostBottomPositionY = (height + goalPostWidth) / 2;
+    const groundX = this.map.ground.x;
+    const groundY = this.map.ground.y;
+    const { goalPostTopPositionY, goalPostBottomPositionY } = this.map.ground;
 
     const groundOutLines = [
       // top

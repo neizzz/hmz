@@ -2,10 +2,8 @@ import { Schema, type, MapSchema } from '@colyseus/schema';
 import { Direction, GameState, PlayerEntityState, Team } from '@shared/types';
 
 export class PlayerState extends Schema {
-  // static SPEED_LIMIT = 5.8; // pixel per step
-  // static ACCELERATION = 1.12; // speed per step
-  // static SHOOTING_ACCLERATION = 1.0;
   static SPEED_LIMIT = 3.5; // pixel per step
+  static SHOOTING_SPEED_LIMIT = 3.1; // pixel per step
   static ACCELERATION = 0.16; // speed per step
   static SHOOTING_ACCLERATION = 0.12; // speed per step
   static FRICTION = 0.04; // rate per step

@@ -1,5 +1,6 @@
 export const DEFAULT_GROUP = 0;
 export const COLLISION_WITH_BALL_GROUP = 1;
+export const PLAYER_GROUP = 2;
 
 export const DEFAULT_MASK = 0xffffffff;
 export const STADIUM_OUTLINE_MASK = 1 << 0;
