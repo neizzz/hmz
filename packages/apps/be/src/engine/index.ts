@@ -164,10 +164,10 @@ export class GameEngine {
   addBall(state: BallState): void {
     const { x, y, radius } = state;
     this.ball = Matter.Bodies.circle(x, y, radius);
-    this.ball.mass = 25.0;
+    this.ball.mass = 5.0;
     this.ball.friction = 0;
     this.ball.frictionStatic = 5;
-    this.ball.frictionAir = 0.024;
+    this.ball.frictionAir = 0.018;
     this.ball.inertia = Infinity;
     this.ball.collisionFilter = {
       group: COLLISION_WITH_BALL_GROUP,
@@ -183,6 +183,7 @@ export class GameEngine {
     const worldPlayer = Matter.Bodies.circle(x, y, radius);
     worldPlayer.mass = 40.0;
     worldPlayer.friction = 0;
+    worldPlayer.frictionStatic = 0;
     worldPlayer.frictionAir = 0;
     worldPlayer.inertia = Infinity;
     worldPlayer.collisionFilter = {
@@ -294,12 +295,12 @@ export class GameEngine {
       ? (newVx =
           (Math.sign(newVx + accelX) || 1) *
           Math.min(speedLimit, Math.abs(newVx + accelX)))
-      : (newVx -= newVx * (friction + accelY ? 0.02 : 0));
+      : (newVx -= newVx * (friction + accelY ? 0.01 : 0));
     accelY
       ? (newVy =
           (Math.sign(newVy + accelY) || 1) *
           Math.min(speedLimit, Math.abs(newVy + accelY)))
-      : (newVy -= newVy * (friction + accelX ? 0.02 : 0));
+      : (newVy -= newVy * (friction + accelX ? 0.01 : 0));
 
     const speed = Math.sqrt(newVx * newVx + newVy * newVy);
     const overSpeedRatio = speed / speedLimit;
@@ -313,7 +314,7 @@ export class GameEngine {
 
   private processPlayerShoot(worldPlayer: Matter.Body, player: PlayerState) {
     const contactThreshold = 1;
-    const shootForce = 1.0;
+    const shootForce = 0.04;
     const worldBall = this.ball;
 
     // NOTE: vector 방향 중요

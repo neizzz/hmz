@@ -150,7 +150,7 @@ export class MapBuilder {
         ),
       ].map(body => {
         body.isStatic = true;
-        body.restitution = 0.9;
+        body.restitution = 0.8;
         body.collisionFilter = {
           group: COLLISION_WITH_BALL_GROUP,
           category: GOAL_POST_MASK,
@@ -212,7 +212,7 @@ export class MapBuilder {
       ),
     ].map(body => {
       body.isStatic = true;
-      body.restitution = 0.7;
+      body.restitution = 0.6;
       body.collisionFilter = {
         group: COLLISION_WITH_BALL_GROUP,
         category: GROUND_OUTLINE_MASK,
