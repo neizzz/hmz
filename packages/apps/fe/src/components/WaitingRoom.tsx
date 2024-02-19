@@ -174,7 +174,10 @@ const WaitingRoom = () => {
               <button
                 className={'start-btn'}
                 onClick={() => {
-                  const map = HmzMap.SMALL;
+                  const playerCount =
+                    Object.keys(awaitersByTeam.blue).length +
+                    Object.keys(awaitersByTeam.blue).length;
+                  const map = playerCount > 6 ? HmzMap.MEDIUM : HmzMap.SMALL;
                   client
                     .create(RoomType.GAME_ROOM, {
                       hostJoinInfo: getMyJoinInfo(),

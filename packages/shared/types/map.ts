@@ -18,14 +18,22 @@ export type HmzMapInfo = {
       y: number;
     };
   };
+  tile: {
+    width: number;
+    height: number;
+  };
   width: number;
   height: number;
 };
 
-export type HmzMapSize = 'SMALL';
+export type HmzMapSize = 'SMALL' | 'MEDIUM';
 
 export const HmzMap: Record<HmzMapSize, HmzMapInfo> = {
   SMALL: {
+    tile: {
+      width: 10,
+      height: 5,
+    },
     width: 1600,
     height: 800,
     kickoff: {
@@ -42,6 +50,34 @@ export const HmzMap: Record<HmzMapSize, HmzMapInfo> = {
       goalPostWidth: 210,
       goalPostTopPositionY: (800 - 210) / 2,
       goalPostBottomPositionY: (800 + 210) / 2,
+      goalPostNetThickness: 5,
+      goalPostDepth: 50,
+      goalPostNetCornerRadius: 50 * 0.75, // 'goalPostDepth' based
+      goalPostRadius: 16,
+    },
+  } as const,
+
+  MEDIUM: {
+    tile: {
+      width: 12,
+      height: 6,
+    },
+    width: 1840,
+    height: 920,
+    kickoff: {
+      ball: {
+        x: 920,
+        y: 460,
+      },
+    },
+    ground: {
+      x: 200,
+      y: 100,
+      width: 1440,
+      height: 720,
+      goalPostWidth: 210,
+      goalPostTopPositionY: (920 - 210) / 2,
+      goalPostBottomPositionY: (920 + 210) / 2,
       goalPostNetThickness: 5,
       goalPostDepth: 50,
       goalPostNetCornerRadius: 50 * 0.75, // 'goalPostDepth' based

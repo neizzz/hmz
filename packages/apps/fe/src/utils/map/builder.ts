@@ -98,12 +98,13 @@ export class MapBuilder {
 
   private drawGrass() {
     const { x: groundX, y: groundY, width: groundWidth } = this.map.ground;
+    const { width: tileWidth, height: tileHeight } = this.map.tile;
 
     const tilemap = this.scene.make.tilemap({
-      tileWidth: groundWidth / 10,
-      tileHeight: groundWidth / 10,
-      width: 10,
-      height: 5,
+      tileWidth: groundWidth / tileWidth,
+      tileHeight: groundWidth / tileWidth,
+      width: tileWidth,
+      height: tileHeight,
     });
     const tiles = tilemap.addTilesetImage('ground-tile');
     const layer = tilemap.createBlankLayer(

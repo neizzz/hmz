@@ -11,7 +11,7 @@ import {
 } from '@constants';
 import Matter from 'matter-js';
 
-const WALL_THICK = 40;
+const WALL_THICK = 80;
 const lineWidth = 4; // FIXME:
 
 export class MapBuilder {
@@ -75,12 +75,12 @@ export class MapBuilder {
       this.world,
       [
         // top
-        // Matter.Bodies.rectangle(width / 2, -WALL_THICK / 2, width, WALL_THICK),
         Matter.Bodies.rectangle(width / 2, 0, width, WALL_THICK),
         // bottom
         Matter.Bodies.rectangle(
           width / 2,
-          height + WALL_THICK / 2,
+          // height + WALL_THICK / 2,
+          height,
           width,
           WALL_THICK
         ),
