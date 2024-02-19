@@ -10,7 +10,7 @@ type InitParams = {
 };
 
 export class Player extends Phaser.GameObjects.Container {
-  static radius = 28; // FIXME:
+  static radius = 32; // FIXME:
   static lineWidth = 3; // FIXME:
 
   static generateTexture(
@@ -96,8 +96,8 @@ export class Player extends Phaser.GameObjects.Container {
     this.bodySprite = scene.add.sprite(0, 0, `${this.schema.team}:player`);
     this.avatarText = scene.add.text(0, 0, this.schema.name.slice(0, 2), {
       fontFamily: 'Verdana',
-      fontSize: 30,
-      strokeThickness: 2,
+      fontSize: 28,
+      strokeThickness: 2.0,
       align: 'center',
     });
     this.avatarText.setOrigin(0.5, 0.5);
@@ -117,25 +117,24 @@ export class Player extends Phaser.GameObjects.Container {
     scene.add.existing(this);
   }
 
-  update(serverState: PlayerState) {
+  update(serverState: PlayerState, me = false) {
     const { x, y, entityState } = serverState;
 
     this.x = x;
     this.y = y;
-
-    if (this.entityState === entityState) return;
-
-    // entity state mutation logic
-    switch (entityState) {
-      case PlayerEntityState.IDLE:
-        this.idle();
-        break;
-
-      case PlayerEntityState.SHOOTING:
-        this.shooting();
-        break;
-    }
     this.entityState = entityState;
+
+    if (me) {
+      switch (entityState) {
+        case PlayerEntityState.IDLE:
+          this.idle();
+          break;
+
+        case PlayerEntityState.SHOOTING:
+          this.shooting();
+          break;
+      }
+    }
   }
 
   shooting() {

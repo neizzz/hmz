@@ -139,7 +139,7 @@ export class GameScene extends Phaser.Scene {
 
   private updateFromState = (state: GameRoomState) => {
     state.players.forEach((playerServerState, id) => {
-      this.players[id].update(playerServerState);
+      this.players[id].update(playerServerState, id === this.me);
     });
 
     this.ball.x = state.ball.x;
