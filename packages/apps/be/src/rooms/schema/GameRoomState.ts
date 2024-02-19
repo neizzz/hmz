@@ -16,7 +16,7 @@ export class PlayerState extends Schema {
   @type('string') team: Team;
   @type('number') x = 0;
   @type('number') y = 0;
-  @type('number') radius = 32;
+  @type('number') radius = 27;
   @type('number') entityState: PlayerEntityState = PlayerEntityState.IDLE;
 
   accelrate(direction: Direction): [number, number] {

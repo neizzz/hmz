@@ -8,7 +8,7 @@ import {
   GameRoomMessageType,
   GameState,
 } from '@shared/types';
-import Matter, { Collision } from 'matter-js';
+import Matter from 'matter-js';
 import {
   BallState,
   GameRoomState,
