@@ -8,7 +8,7 @@ import {
   GameRoomMessageType,
   GameState,
 } from '@shared/types';
-import Matter from 'matter-js';
+import Matter, { Collision } from 'matter-js';
 import {
   BallState,
   GameRoomState,
@@ -127,14 +127,6 @@ export class GameEngine {
           break;
 
         case GameState.KICK_OFF:
-          if (
-            this.ball.position.x !== this.room.setting.map.kickoff.ball.x ||
-            this.ball.position.y !== this.room.setting.map.kickoff.ball.y
-          ) {
-            this.state.state = GameState.PROGRESS;
-            this.mapBuilder.openCenterLine();
-            this.mapBuilder.openGroundLines();
-          }
           break;
       }
 
@@ -273,6 +265,11 @@ export class GameEngine {
 
     Matter.Body.setPosition(this.ball, this.room.setting.map.kickoff.ball);
     Matter.Body.setVelocity(this.ball, { x: 0, y: 0 });
+    this.onceDetectBallTouch(() => {
+      this.state.state = GameState.PROGRESS;
+      this.mapBuilder.openCenterLine();
+      this.mapBuilder.openGroundLines();
+    });
     this.state.state = GameState.KICK_OFF;
     this.room.broadcast(GameRoomMessageType.KICK_OFF);
   }
@@ -345,5 +342,18 @@ export class GameEngine {
 
     player.entityState = PlayerEntityState.IDLE;
     this.room.broadcast(GameRoomMessageType.SHOOT);
+  }
+
+  private onceDetectBallTouch(onBallTouch: () => void) {
+    const cb = (event: Matter.IEventCollision<Matter.Engine>) => {
+      for (const { bodyA, bodyB } of event.pairs) {
+        if (bodyA === this.ball || bodyB === this.ball) {
+          Matter.Events.off(this.engine, 'collisionStart', cb);
+          onBallTouch();
+        }
+      }
+    };
+
+    Matter.Events.on(this.engine, 'collisionStart', cb);
   }
 }
