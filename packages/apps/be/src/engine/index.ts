@@ -52,7 +52,10 @@ export class GameEngine {
     this.room = room;
     this.state = room.state;
 
-    this.engine = Matter.Engine.create();
+    this.engine = Matter.Engine.create({
+      positionIterations: 8,
+      velocityIterations: 6,
+    });
     this.world = this.engine.world;
     this.init();
   }
