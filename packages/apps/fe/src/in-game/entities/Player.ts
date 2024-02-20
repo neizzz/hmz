@@ -1,3 +1,4 @@
+import { Text } from '@components/common/Text';
 import { PlayerEntityState, Team } from '@shared/types';
 import { Color } from '@constants';
 import { GameScene } from '@in-game/scenes/GameScene';
@@ -82,7 +83,7 @@ export class Player extends Phaser.GameObjects.Container {
   entityState: PlayerEntityState;
 
   bodySprite: Phaser.GameObjects.Sprite;
-  avatarText: Phaser.GameObjects.Text | Phaser.GameObjects.BitmapText;
+  avatarText: Phaser.GameObjects.Sprite;
   shootArea?: Phaser.GameObjects.Sprite;
   nameText: Phaser.GameObjects.Text;
 
@@ -94,12 +95,33 @@ export class Player extends Phaser.GameObjects.Container {
     this.entityState = state.entityState;
 
     this.bodySprite = scene.add.sprite(0, 0, `${this.schema.team}:player`);
-    this.avatarText = scene.add.text(0, 0, this.schema.name.slice(0, 2), {
-      fontFamily: 'Verdana',
-      fontSize: 20,
-      strokeThickness: 2.0,
-      align: 'center',
-    });
+
+    const slicedName = this.schema.name.slice(0, 2);
+    const avatarTextureKey = `avatar:${slicedName}`;
+
+    if (!scene.textures.exists(avatarTextureKey)) {
+      const text = scene.make.text({
+        add: false,
+        x: 0,
+        y: 0,
+        text: this.schema.name.slice(0, 2),
+        style: {
+          fontFamily: 'Sans-serif',
+          fontSize: 20,
+          strokeThickness: 2.0,
+          fixedWidth: 30,
+          fixedHeight: 24,
+          align: 'center',
+        },
+      });
+      scene.textures.addCanvas(avatarTextureKey, text.canvas);
+    }
+
+    this.avatarText = scene.add.sprite(
+      0,
+      0,
+      scene.textures.get(avatarTextureKey)
+    );
     this.avatarText.setOrigin(0.5, 0.5);
 
     const children = [this.bodySprite, this.avatarText];
