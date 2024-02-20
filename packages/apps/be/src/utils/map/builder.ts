@@ -315,7 +315,7 @@ export class MapBuilder {
     const radius = groundHeight * 0.222222;
     const rightHalfCircleVertices = this.createRightHalfCircleVertices();
     const leftHalfCircleBody = Matter.Bodies.fromVertices(
-      cx - (radius / 2 + lineWidth * 4),
+      cx - (radius / 2 + lineWidth * 4 + 2),
       cy,
       [rightHalfCircleVertices],
       {
@@ -342,7 +342,7 @@ export class MapBuilder {
     const radius = groundHeight * 0.222222;
     const rightHalfCircleVertices = this.createRightHalfCircleVertices();
     const rightHalfCircleBody = Matter.Bodies.fromVertices(
-      cx + radius / 2 + lineWidth * 4,
+      cx + radius / 2 + lineWidth * 4 + 2,
       cy,
       [rightHalfCircleVertices],
       {

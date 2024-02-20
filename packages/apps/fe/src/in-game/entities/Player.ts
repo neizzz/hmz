@@ -1,5 +1,4 @@
-import { Text } from '@components/common/Text';
-import { PlayerEntityState, Team } from '@shared/types';
+import { PlayerEntityState } from '@shared/types';
 import { Color } from '@constants';
 import { GameScene } from '@in-game/scenes/GameScene';
 import { PlayerState } from '@schema';
