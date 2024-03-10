@@ -2,6 +2,7 @@ import { ConfigOptions } from '@colyseus/tools';
 import { monitor } from '@colyseus/monitor';
 import { playground } from '@colyseus/playground';
 import { Express } from 'express';
+import { createProxyMiddleware } from 'http-proxy-middleware';
 
 /**
  * Import your Room files
@@ -10,6 +11,8 @@ import { WaitingRoom } from './rooms/WaitingRoom.ts';
 import { Server } from 'colyseus';
 import { RoomType } from '@shared/types';
 import { GameRoom } from './rooms/GameRoom.ts';
+
+const { FE_PORT } = process.env;
 
 const config: ConfigOptions = {
   initializeGameServer: (gameServer: Server) => {
@@ -27,7 +30,10 @@ const config: ConfigOptions = {
      * (It is not recommended to expose this route in a production environment)
      */
     if (process.env.NODE_ENV !== 'production') {
-      app.use('/', playground);
+      app.use('/playground', playground);
+      app.use(
+        createProxyMiddleware('/', { target: `http://localhost:${FE_PORT}/` })
+      );
     }
 
     /**
@@ -35,7 +41,7 @@ const config: ConfigOptions = {
      * It is recommended to protect this route with a password
      * Read more: https://docs.colyseus.io/tools/monitor/#restrict-access-to-the-panel-using-a-password
      */
-    app.use('/colyseus', monitor());
+    app.use('/monitor', monitor());
   },
 
   beforeListen: () => {
