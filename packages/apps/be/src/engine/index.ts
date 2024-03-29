@@ -77,14 +77,12 @@ export class GameEngine {
 
   initUpdateEvents() {
     Matter.Events.on(this.engine, 'afterUpdate', () => {
+      const { x: ballX } = this.ball.position;
       switch (this.state.state) {
         case GameState.PROGRESS:
-          if (
-            this.state.ball.x < this.redGoalLine ||
-            this.state.ball.x > this.blueGoalLine
-          ) {
+          if (ballX < this.redGoalLine || ballX > this.blueGoalLine) {
             this.state.state = GameState.GOAL;
-            const isRedTeamGoal = this.state.ball.x > this.blueGoalLine;
+            const isRedTeamGoal = ballX > this.blueGoalLine;
 
             if (isRedTeamGoal) {
               this.state.redTeamScore += 1;
@@ -119,7 +117,7 @@ export class GameEngine {
                   });
 
               setTimeout(() => {
-                this.destory();
+                this.destroy();
               }, 3000);
             } else {
               setTimeout(() => {
@@ -133,8 +131,7 @@ export class GameEngine {
           break;
       }
 
-      this.state.ball.x = this.ball.position.x;
-      this.state.ball.y = this.ball.position.y;
+      this.state.ball.pushPosition(this.ball.position);
 
       for (const key in this.players) {
         const worldPlayer = this.players[key];
@@ -143,8 +140,7 @@ export class GameEngine {
           continue;
         }
 
-        player.x = this.players[key].position.x;
-        player.y = this.players[key].position.y;
+        player.pushPosition(worldPlayer.position);
 
         if (player.entityState === PlayerEntityState.SHOOTING) {
           this.processPlayerShoot(worldPlayer, player);
@@ -161,11 +157,21 @@ export class GameEngine {
   }
 
   update(delta: number) {
+    this.state.players.forEach(player => {
+      let action: any;
+
+      // dequeue player inputs
+
+      while ((action = player.actionQueue.shift())) {
+        this.processPlayerAction(player.id, action);
+      }
+    });
+
     Matter.Engine.update(this.engine, delta);
   }
 
   addBall(state: BallState): void {
-    const { x, y, radius } = state;
+    const { kickoffX: x, kickoffY: y, radius } = state;
     this.ball = Matter.Bodies.circle(x, y, radius);
     this.ball.mass = 5.0;
     this.ball.friction = 0;
@@ -182,7 +188,7 @@ export class GameEngine {
   }
 
   addPlayer(sessionId: string, state: PlayerState): void {
-    const { x, y, radius, team } = state;
+    const { kickoffX: x, kickoffY: y, radius, team } = state;
     const worldPlayer = Matter.Bodies.circle(x, y, radius);
     worldPlayer.mass = 40.0;
     worldPlayer.friction = 0;
@@ -234,7 +240,7 @@ export class GameEngine {
     }
   }
 
-  destory() {
+  destroy() {
     Matter.World.clear(this.world, false);
     Matter.Engine.clear(this.engine);
     this.room.broadcast(GameRoomMessageType.DISPOSE);
@@ -246,10 +252,10 @@ export class GameEngine {
     this.mapBuilder.blockGroundOutLines();
     this.mapBuilder.blockCenterLine(team === Team.RED ? 'right' : 'left');
 
-    const height = this.room.setting.map.height;
-    const centerLine = this.room.setting.map.width / 2;
-    const redTeamCount = this.room.setting.redTeamCount;
-    const blueTeamCount = this.room.setting.blueTeamCount;
+    // const height = this.room.setting.map.height;
+    // const centerLine = this.room.setting.map.width / 2;
+    // const redTeamCount = this.room.setting.redTeamCount;
+    // const blueTeamCount = this.room.setting.blueTeamCount;
 
     for (const key in this.players) {
       const worldPlayer = this.players[key];
@@ -257,17 +263,24 @@ export class GameEngine {
 
       if (!worldPlayer || !player) continue;
 
-      const engagedTeamCount =
-        player.team === Team.RED ? redTeamCount : blueTeamCount;
-      const x =
-        centerLine + ((player.team === Team.RED ? -1 : 1) * centerLine) / 2;
-      const y = (height * (player.index + 1)) / (engagedTeamCount + 1);
+      // /** player arrangement */
+      // const engagedTeamCount =
+      //   player.team === Team.RED ? redTeamCount : blueTeamCount;
+      // const x =
+      //   centerLine + ((player.team === Team.RED ? -1 : 1) * centerLine) / 2;
+      // const y = (height * (player.index + 1)) / (engagedTeamCount + 1);
 
-      Matter.Body.setPosition(worldPlayer, { x, y });
+      Matter.Body.setPosition(worldPlayer, {
+        x: player.kickoffX,
+        y: player.kickoffY,
+      });
       Matter.Body.setVelocity(worldPlayer, { x: 0, y: 0 });
     }
 
-    Matter.Body.setPosition(this.ball, this.room.setting.map.kickoff.ball);
+    Matter.Body.setPosition(this.ball, {
+      x: this.state.ball.kickoffX,
+      y: this.state.ball.kickoffY,
+    });
     Matter.Body.setVelocity(this.ball, { x: 0, y: 0 });
     this.onceDetectBallTouch(() => {
       this.state.state = GameState.PROGRESS;
@@ -291,28 +304,34 @@ export class GameEngine {
     const currVelocity = worldPlayer.velocity;
     const [accelX, accelY] = player.accelrate(payload.direction);
 
-    let newVx = currVelocity.x;
-    let newVy = currVelocity.y;
+    // let newVx = currVelocity.x;
+    // let newVy = currVelocity.y;
 
-    accelX
-      ? (newVx =
-          (Math.sign(newVx + accelX) || 1) *
-          Math.min(speedLimit, Math.abs(newVx + accelX)))
-      : (newVx -= newVx * (friction + accelY ? 0.01 : 0));
-    accelY
-      ? (newVy =
-          (Math.sign(newVy + accelY) || 1) *
-          Math.min(speedLimit, Math.abs(newVy + accelY)))
-      : (newVy -= newVy * (friction + accelX ? 0.01 : 0));
+    // accelX
+    //   ? (newVx =
+    //       (Math.sign(newVx + accelX) || 1) *
+    //       Math.min(speedLimit, Math.abs(newVx + accelX)))
+    //   : (newVx -= newVx * (friction + accelY ? 0.01 : 0));
+    // accelY
+    //   ? (newVy =
+    //       (Math.sign(newVy + accelY) || 1) *
+    //       Math.min(speedLimit, Math.abs(newVy + accelY)))
+    //   : (newVy -= newVy * (friction + accelX ? 0.01 : 0));
 
-    const speed = Math.sqrt(newVx * newVx + newVy * newVy);
-    const overSpeedRatio = speed / speedLimit;
-    if (overSpeedRatio > 1) {
-      newVx /= overSpeedRatio;
-      newVy /= overSpeedRatio;
-    }
+    // const speed = Math.sqrt(newVx * newVx + newVy * newVy);
+    // const overSpeedRatio = speed / speedLimit;
+    // if (overSpeedRatio > 1) {
+    //   newVx /= overSpeedRatio;
+    //   newVy /= overSpeedRatio;
+    // }
 
-    Matter.Body.setVelocity(worldPlayer, { x: newVx, y: newVy });
+    // Matter.Body.setVelocity(worldPlayer, { x: newVx, y: newVy });
+
+    // FIXME: 디버깅용으로 임시로 가속도를 속도로 취급
+    Matter.Body.setVelocity(worldPlayer, {
+      x: accelX,
+      y: accelY,
+    });
   }
 
   private processPlayerShoot(worldPlayer: Matter.Body, player: PlayerState) {

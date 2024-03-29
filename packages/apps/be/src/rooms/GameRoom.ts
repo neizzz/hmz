@@ -28,14 +28,26 @@ export class GameRoom extends Room<GameRoomState> {
     this.setting = setting;
     this.setState(new GameRoomState());
     this.engine = new GameEngine(this);
-    this.setPatchRate(16.6);
-    this.setSimulationInterval(deltaTime => this.engine.update(deltaTime));
+    this.setPatchRate(33.33);
+    this.setSimulationInterval(delta => this.engine.update(delta));
 
     const { map } = this.setting;
     this.engine.buildMap(map);
-    this.engine.addBall(new BallState(map.kickoff.ball));
+    this.engine.addBall(
+      new BallState({
+        kickoffX: map.kickoff.ball.x,
+        kickoffY: map.kickoff.ball.y,
+      })
+    );
 
     this.initMessageHandlers();
+  }
+
+  onBeforePatch() {
+    this.state.players.forEach(playerState => {
+      playerState.flushPosition();
+    });
+    this.state.ball.flushPosition();
   }
 
   /** NOTE: host의 경우 create타고 바로 여기 탐 */
@@ -70,8 +82,14 @@ export class GameRoom extends Room<GameRoomState> {
   private initMessageHandlers(): void {
     this.onMessage(
       GameRoomMessageType.ACTION,
-      (client: Client, action: GameRoomAction) =>
-        this.engine.processPlayerAction(client.sessionId, action)
+      (client: Client, action: GameRoomAction) => {
+        // handle player input
+        const player = this.state.players.get(client.sessionId);
+        // enqueue input to user input buffer.
+        player?.actionQueue.push(action);
+
+        // this.engine.processPlayerAction(client.sessionId, action)
+      }
     );
   }
 
@@ -84,27 +102,28 @@ export class GameRoom extends Room<GameRoomState> {
     }
   ): void {
     const { team, name, index } = params;
+    const height = this.setting.map.height;
+    const centerLine = this.setting.map.width / 2;
+    const redTeamCount = this.setting.redTeamCount;
+    const blueTeamCount = this.setting.blueTeamCount;
+    const engagedTeamCount = team === Team.RED ? redTeamCount : blueTeamCount;
+
+    const playerState = new PlayerState({
+      id: sessionId,
+      index,
+      team,
+      name,
+      kickoffX: centerLine + ((team === Team.RED ? -1 : 1) * centerLine) / 2,
+      kickoffY: (height * (index + 1)) / (engagedTeamCount + 1),
+    });
+
     switch (team) {
       case Team.RED:
-        this.engine.addPlayer(
-          sessionId,
-          new PlayerState({
-            index,
-            team,
-            name,
-          })
-        );
+        this.engine.addPlayer(sessionId, playerState);
         break;
 
       case Team.BLUE:
-        this.engine.addPlayer(
-          sessionId,
-          new PlayerState({
-            index,
-            team,
-            name,
-          })
-        );
+        this.engine.addPlayer(sessionId, playerState);
         break;
     }
   }

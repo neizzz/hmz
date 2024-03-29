@@ -13,6 +13,15 @@ import Phaser from 'phaser';
 import { MapBuilder } from '@utils/map/builder';
 import { Color } from '@constants';
 
+// FIXME:
+const testQ = [];
+let testQSizes = {};
+// const testEl = document.getElementById('test');
+// testEl.style.position = 'absolute';
+// testEl.style.top = '40%';
+// testEl.style.left = '40%';
+// testEl.style.zIndex = '999';
+
 export type GameSceneInitParams = {
   observer?: boolean;
   map: HmzMapInfo;
@@ -92,13 +101,41 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
+  private elapsedTime = 0;
+  // private fixedTimeStep = 1000 / 60;
+  private fixedTimeStep = 1000 / 60;
   update(time: number, delta: number): void {
+    this.elapsedTime += delta;
+    while (this.elapsedTime >= this.fixedTimeStep) {
+      this.elapsedTime -= this.fixedTimeStep;
+      this.fixedTick(time, this.fixedTimeStep);
+    }
+  }
+
+  private fixedTick(time: number, delta: number): void {
     this.room.send(GameRoomMessageType.ACTION, {
       type: GameRoomActionType.DIRECTION,
       payload: {
         direction: this.getDirectionFromInput(),
       },
     });
+
+    Object.values(this.players).forEach(player => player.update());
+    this.ball.update();
+
+    //// test
+    const testQSize = testQ.length;
+    if (testQSizes[testQSize] === undefined) {
+      testQSizes[testQSize] = 1;
+    } else {
+      testQSizes[testQSize]++;
+    }
+    // testEl.innerHTML = `${JSON.stringify(testQSizes)}`;
+    const state = testQ.pop();
+    if (!state) return;
+    this.syncWithServer(state);
+    testQ.length = 0;
+    //////
   }
 
   private initEffectEvents(): void {
@@ -115,6 +152,10 @@ export class GameScene extends Phaser.Scene {
     });
     this.room.onMessage<GameRoomAction>(GameRoomMessageType.KICK_OFF, () => {
       whistleAudio.play();
+      Object.values(this.players).forEach(player => {
+        player.reset();
+      });
+      this.ball.reset();
     });
   }
 
@@ -126,7 +167,6 @@ export class GameScene extends Phaser.Scene {
     });
 
     this.room.state.players.onAdd((state: PlayerState, id) => {
-      console.log(state);
       // const { x, y, radius } = state;
       // this.playerSprites[id] = this.matter.add.circle(x, y, radius);
       this.players[id] = new Player(this, { state, me: id === this.me });
@@ -134,16 +174,17 @@ export class GameScene extends Phaser.Scene {
 
     // TODO: player remove
 
-    this.room.onStateChange(this.updateFromState);
+    this.room.onStateChange((state: GameRoomState) => {
+      testQ.push(state);
+    });
   }
 
-  private updateFromState = (state: GameRoomState) => {
+  private syncWithServer = (state: GameRoomState) => {
     state.players.forEach((playerServerState, id) => {
-      this.players[id].update(playerServerState, id === this.me);
+      this.players[id].syncWithServer(playerServerState, id === this.me);
     });
 
-    this.ball.x = state.ball.x;
-    this.ball.y = state.ball.y;
+    this.ball.syncWithServer(state.ball);
   };
 
   private getDirectionFromInput(): Direction {

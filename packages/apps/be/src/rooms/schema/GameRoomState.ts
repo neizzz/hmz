@@ -1,5 +1,11 @@
-import { Schema, type, MapSchema } from '@colyseus/schema';
-import { Direction, GameState, PlayerEntityState, Team } from '@shared/types';
+import { Schema, type, MapSchema, ArraySchema } from '@colyseus/schema';
+import {
+  Direction,
+  GameState,
+  PlayerEntityState,
+  Position,
+  Team,
+} from '@shared/types';
 
 export class PlayerState extends Schema {
   static SPEED_LIMIT = 3.2; // pixel per step
@@ -8,22 +14,45 @@ export class PlayerState extends Schema {
   static SHOOTING_ACCLERATION = 0.025; // speed per step
   static FRICTION = 0.004; // rate per step
 
+  id: string;
+  actionQueue: any[] = []; // input from the client
+
   accelX: number = 0;
   accelY: number = 0;
-  index: number;
+  index: number; /** like player's number */
 
   @type('string') name: string;
   @type('string') team: Team;
-  @type('number') x = 0;
-  @type('number') y = 0;
   @type('number') radius = 27;
   @type('number') entityState: PlayerEntityState = PlayerEntityState.IDLE;
+  @type('number') kickoffX: number;
+  @type('number') kickoffY: number;
+
+  positionHistoriesBeforePatch: string /** `${x},{y}` format */[] = [];
+
+  // FIXME: schema array가 안돼서 임시처리
+  @type({ array: 'string' }) positionHistories =
+    new ArraySchema<string /** `${x},{y}` format */>();
+  pushPosition(position: Position) {
+    this.positionHistoriesBeforePatch.push(`${position.x},${position.y}`);
+  }
+  flushPosition() {
+    this.positionHistories.clear();
+    this.positionHistoriesBeforePatch.forEach(positionString => {
+      this.positionHistories.push(positionString);
+    });
+    this.positionHistoriesBeforePatch = [];
+  }
+  // FIXME:
 
   accelrate(direction: Direction): [number, number] {
-    const acceleration =
-      this.entityState === PlayerEntityState.SHOOTING
-        ? PlayerState.SHOOTING_ACCLERATION
-        : PlayerState.ACCELERATION;
+    // const acceleration =
+    //   this.entityState === PlayerEntityState.SHOOTING
+    //     ? PlayerState.SHOOTING_ACCLERATION
+    //     : PlayerState.ACCELERATION;
+
+    // FIXME: 임시로 속력으로 사용
+    const acceleration = 3;
 
     switch (direction) {
       case '':
@@ -69,9 +98,26 @@ export class PlayerState extends Schema {
 }
 
 export class BallState extends Schema {
-  @type('number') x: number;
-  @type('number') y: number;
   @type('number') radius: number = 19;
+  @type('number') kickoffX: number;
+  @type('number') kickoffY: number;
+
+  positionHistoriesBeforePatch: string /** `${x},{y}` format */[] = [];
+
+  // FIXME: schema array가 안돼서 임시처리
+  @type({ array: 'string' }) positionHistories =
+    new ArraySchema<string /** `${x},{y}` format */>();
+  pushPosition(position: Position) {
+    this.positionHistoriesBeforePatch.push(`${position.x},${position.y}`);
+  }
+  flushPosition() {
+    this.positionHistories.clear();
+    this.positionHistoriesBeforePatch.forEach(positionString => {
+      this.positionHistories.push(positionString);
+    });
+    this.positionHistoriesBeforePatch = [];
+  }
+  // FIXME:
 }
 
 export class GameRoomState extends Schema {

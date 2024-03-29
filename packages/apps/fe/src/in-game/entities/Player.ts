@@ -3,6 +3,7 @@ import { Color } from '@constants';
 import { GameScene } from '@in-game/scenes/GameScene';
 import { PlayerState } from '@schema';
 import Phaser from 'phaser';
+import { PositionManager } from '@utils/entity';
 
 type InitParams = {
   state: PlayerState;
@@ -10,7 +11,7 @@ type InitParams = {
 };
 
 export class Player extends Phaser.GameObjects.Container {
-  static radius = 27; // FIXME:
+  static radius = 27; // FIXME: use thing from server
   static lineWidth = 3; // FIXME:
 
   static generateTexture(
@@ -86,6 +87,8 @@ export class Player extends Phaser.GameObjects.Container {
   shootArea?: Phaser.GameObjects.Sprite;
   nameText: Phaser.GameObjects.Text;
 
+  positionManager = new PositionManager();
+
   constructor(scene: Phaser.Scene, params: InitParams) {
     const { state, me } = params;
     super(scene);
@@ -131,18 +134,29 @@ export class Player extends Phaser.GameObjects.Container {
       children.push(this.shootArea);
     }
 
+    const { kickoffX: x, kickoffY: y } = state;
+
     this.add(children);
     this.setSize(state.radius * 2, state.radius * 2);
-    this.setPosition(state.x, state.y);
+    this.setPosition(x, y);
+    this.positionManager.setKickoffPosition({ x, y });
 
     scene.add.existing(this);
   }
 
-  update(serverState: PlayerState, me = false) {
-    const { x, y, entityState } = serverState;
+  reset() {
+    const { x, y } = this.positionManager.kickoffPosition();
+    this.setPosition(x, y);
+  }
 
-    this.x = x;
-    this.y = y;
+  update() {
+    const newPosition = this.positionManager.nextPosition();
+    newPosition && this.setPosition(newPosition.x, newPosition.y);
+  }
+
+  syncWithServer(serverState: PlayerState, me = false) {
+    const { entityState, positionHistories } = serverState;
+    this.positionManager.setPositionHistories(positionHistories);
     this.entityState = entityState;
 
     if (me) {

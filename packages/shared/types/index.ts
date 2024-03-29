@@ -4,6 +4,11 @@ export const enum Team {
   BLUE = 'blue',
 }
 
+export type Position = {
+  x: number;
+  y: number;
+};
+
 export type Direction =
   | ''
   | 'left'
