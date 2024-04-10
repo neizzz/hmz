@@ -60,7 +60,9 @@ export class GameRoom extends Room<GameRoomState> {
 
     if (this.isReady()) {
       this.engine.kickoff(Team.RED);
-      this.broadcast(GameRoomMessageType.KICK_OFF);
+      setTimeout(() => {
+        this.broadcast(GameRoomMessageType.KICK_OFF);
+      }, 200);
     }
   }
 

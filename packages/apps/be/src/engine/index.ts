@@ -121,6 +121,7 @@ export class GameEngine {
               }, 3000);
             } else {
               setTimeout(() => {
+                // TODO: 리플레이
                 this.kickoff(isRedTeamGoal ? Team.BLUE : Team.RED);
               }, 3000);
             }
@@ -161,7 +162,6 @@ export class GameEngine {
       let action: any;
 
       // dequeue player inputs
-
       while ((action = player.actionQueue.shift())) {
         this.processPlayerAction(player.id, action);
       }
@@ -256,7 +256,7 @@ export class GameEngine {
       const worldPlayer = this.players[key];
       const player = this.state.players.get(key);
 
-      if (!worldPlayer || !player) continue;index + 1)) / (engagedTeamCount + 1);
+      if (!worldPlayer || !player) continue;
 
       Matter.Body.setPosition(worldPlayer, {
         x: player.kickoffX,
