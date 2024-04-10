@@ -7,15 +7,15 @@ import {
   PlayerEntityState,
   GameRoomMessageType,
   GameState,
-} from "@shared/types";
-import Matter from "matter-js";
+} from '@shared/types';
+import Matter from 'matter-js';
 import {
   BallState,
   GameRoomState,
   PlayerState,
-} from "../rooms/schema/GameRoomState.ts";
+} from '../rooms/schema/GameRoomState.ts';
 
-import decomp from "poly-decomp-es";
+import decomp from 'poly-decomp-es';
 import {
   BALL_MASK,
   BLUE_PLAYER_MASK,
@@ -27,9 +27,9 @@ import {
   RED_PLAYER_MASK,
   STADIUM_OUTLINE_MASK,
   PLAYER_GROUP,
-} from "@constants";
-import { MapBuilder } from "@utils/map/builder.ts";
-import { GameRoom } from "../rooms/GameRoom.ts";
+} from '@constants';
+import { MapBuilder } from '@utils/map/builder.ts';
+import { GameRoom } from '../rooms/GameRoom.ts';
 
 // @ts-ignore
 global.decomp = decomp; // for concave hull
@@ -76,7 +76,7 @@ export class GameEngine {
   }
 
   initUpdateEvents() {
-    Matter.Events.on(this.engine, "afterUpdate", () => {
+    Matter.Events.on(this.engine, 'afterUpdate', () => {
       const { x: ballX } = this.ball.position;
       switch (this.state.state) {
         case GameState.PROGRESS:
@@ -157,7 +157,7 @@ export class GameEngine {
   }
 
   update(delta: number) {
-    this.state.players.forEach((player) => {
+    this.state.players.forEach(player => {
       let action: any;
 
       // dequeue player inputs
@@ -250,25 +250,13 @@ export class GameEngine {
   /** FIXME: duplicate logic */
   kickoff(team: Team) {
     this.mapBuilder.blockGroundOutLines();
-    this.mapBuilder.blockCenterLine(team === Team.RED ? "right" : "left");
-
-    // const height = this.room.setting.map.height;
-    // const centerLine = this.room.setting.map.width / 2;
-    // const redTeamCount = this.room.setting.redTeamCount;
-    // const blueTeamCount = this.room.setting.blueTeamCount;
+    this.mapBuilder.blockCenterLine(team === Team.RED ? 'right' : 'left');
 
     for (const key in this.players) {
       const worldPlayer = this.players[key];
       const player = this.state.players.get(key);
 
-      if (!worldPlayer || !player) continue;
-
-      // /** player arrangement */
-      // const engagedTeamCount =
-      //   player.team === Team.RED ? redTeamCount : blueTeamCount;
-      // const x =
-      //   centerLine + ((player.team === Team.RED ? -1 : 1) * centerLine) / 2;
-      // const y = (height * (player.index + 1)) / (engagedTeamCount + 1);
+      if (!worldPlayer || !player) continue;index + 1)) / (engagedTeamCount + 1);
 
       Matter.Body.setPosition(worldPlayer, {
         x: player.kickoffX,
@@ -326,12 +314,6 @@ export class GameEngine {
     }
 
     Matter.Body.setVelocity(worldPlayer, { x: newVx, y: newVy });
-
-    // FIXME: 디버깅용으로 임시로 가속도를 속도로 취급
-    // Matter.Body.setVelocity(worldPlayer, {
-    //   x: accelX,
-    //   y: accelY,
-    // });
   }
 
   private processPlayerShoot(worldPlayer: Matter.Body, player: PlayerState) {
@@ -371,12 +353,12 @@ export class GameEngine {
     const cb = (event: Matter.IEventCollision<Matter.Engine>) => {
       for (const { bodyA, bodyB } of event.pairs) {
         if (bodyA === this.ball || bodyB === this.ball) {
-          Matter.Events.off(this.engine, "collisionStart", cb);
+          Matter.Events.off(this.engine, 'collisionStart', cb);
           onBallTouch();
         }
       }
     };
 
-    Matter.Events.on(this.engine, "collisionStart", cb);
+    Matter.Events.on(this.engine, 'collisionStart', cb);
   }
 }
