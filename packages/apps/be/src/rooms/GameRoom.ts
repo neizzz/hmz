@@ -59,6 +59,7 @@ export class GameRoom extends Room<GameRoomState> {
 
     if (this.isReady()) {
       this.engine.setupKickoff(Team.RED);
+      this.engine.mapBuilder.blockCenterLine('left');
       setTimeout(() => {
         console.log('ready_to_start');
         this.broadcast(GameRoomMessageType.READY_TO_START);
@@ -95,6 +96,7 @@ export class GameRoom extends Room<GameRoomState> {
 
         return (client: Client) => {
           if (++count === this.getTotalPlayerCount()) {
+            this.engine.mapBuilder.openCenterLine();
             this.broadcast(GameRoomMessageType.KICKOFF);
           }
         };
