@@ -21,7 +21,8 @@ export type Direction =
   | 'rightdown';
 
 export const enum GameState {
-  KICK_OFF,
+  PREPARATION,
+  KICKOFF,
   PROGRESS,
   GOAL,
   END,

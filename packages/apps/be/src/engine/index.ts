@@ -122,13 +122,13 @@ export class GameEngine {
             } else {
               setTimeout(() => {
                 // TODO: 리플레이
-                this.kickoff(isRedTeamGoal ? Team.BLUE : Team.RED);
+                this.setupKickoff(isRedTeamGoal ? Team.BLUE : Team.RED);
               }, 3000);
             }
           }
           break;
 
-        case GameState.KICK_OFF:
+        case GameState.KICKOFF:
           break;
       }
 
@@ -248,7 +248,8 @@ export class GameEngine {
   }
 
   /** FIXME: duplicate logic */
-  kickoff(team: Team) {
+  // TODO: layout 로직 분리
+  setupKickoff(team: Team) {
     this.mapBuilder.blockGroundOutLines();
     this.mapBuilder.blockCenterLine(team === Team.RED ? 'right' : 'left');
 
@@ -275,8 +276,10 @@ export class GameEngine {
       this.mapBuilder.openCenterLine();
       this.mapBuilder.openGroundLines();
     });
-    this.state.state = GameState.KICK_OFF;
-    this.room.broadcast(GameRoomMessageType.KICK_OFF);
+    this.state.state = GameState.KICKOFF;
+    setTimeout(() => {
+      this.room.broadcast(GameRoomMessageType.KICKOFF);
+    }, 100);
   }
 
   private processPlayerDirection(

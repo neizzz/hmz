@@ -1,22 +1,13 @@
 import { Position } from '@shared/types';
 
 export class PositionManager {
-  private _kickoffPosition: Position;
   private _positionHistories: string[] = [];
   private _resultPosition?: Position;
 
-  setKickoffPosition(position: Position) {
-    this._kickoffPosition = position;
-  }
+  setKickoffPosition() {}
 
   setPositionHistories(positionHistories: string[]) {
     this._positionHistories = positionHistories;
-  }
-
-  kickoffPosition(): Position {
-    this._positionHistories = [];
-    this._resultPosition = this._kickoffPosition;
-    return this._resultPosition;
   }
 
   nextPosition(): Position | undefined {

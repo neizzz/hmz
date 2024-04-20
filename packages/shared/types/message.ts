@@ -37,9 +37,11 @@ export type FromWaitingRoomMessagePayload = {
 };
 
 export const enum GameRoomMessageType {
-  ACTION = 'action',
+  USER_READY_TO_KICKOFF = 'user-ready-to-kickoff',
+  USER_ACTION = 'user-action',
   GOAL = 'goal',
-  KICK_OFF = 'start-touch',
+  READY_TO_START = 'ready-to-start',
+  KICKOFF = 'kickoff',
   SHOOT = 'shoot',
   TIMESTAMP = 'timestamp',
   END = 'end',
@@ -47,7 +49,8 @@ export const enum GameRoomMessageType {
 }
 
 export type GameRoomMessagePayload = {
-  [GameRoomMessageType.ACTION]: Action<
+  [GameRoomMessageType.USER_READY_TO_KICKOFF]: undefined;
+  [GameRoomMessageType.USER_ACTION]: Action<
     GameRoomActionType,
     GameRoomActionPayload
   >;
@@ -57,7 +60,7 @@ export type GameRoomMessagePayload = {
     blueTeamScore: number;
   };
   [GameRoomMessageType.SHOOT]: undefined;
-  [GameRoomMessageType.KICK_OFF]: undefined;
+  [GameRoomMessageType.KICKOFF]: undefined;
   [GameRoomMessageType.TIMESTAMP]: { timestamp: number };
   [GameRoomMessageType.END]: { victoryTeam: Team };
   [GameRoomMessageType.DISPOSE]: undefined;

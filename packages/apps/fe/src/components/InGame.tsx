@@ -17,7 +17,10 @@ const config: Phaser.Types.Core.GameConfig = {
   antialias: true,
   transparent: true,
   parent: GAME_SCENE_PARENT_ID,
-  physics: { default: 'matter', matter: { debug: true, gravity: { y: 0 } } },
+  physics: {
+    default: 'matter',
+    matter: { debug: true, gravity: { x: 0, y: 0 } },
+  },
   pixelArt: false,
   scene: [BootstrapScene, GameScene],
 } as const;

@@ -144,10 +144,10 @@ export class Player extends Phaser.GameObjects.Container {
     scene.add.existing(this);
   }
 
-  reset() {
-    const { x, y } = this.positionManager.kickoffPosition();
-    this.setPosition(x, y);
-  }
+  // reset() {
+  //   const { x, y } = this.positionManager.kickoffPosition();
+  //   this.setPosition(x, y);
+  // }
 
   update() {
     const newPosition = this.positionManager.nextPosition();
