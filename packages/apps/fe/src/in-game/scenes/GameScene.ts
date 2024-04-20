@@ -12,6 +12,7 @@ import { Room } from 'colyseus.js';
 import Phaser from 'phaser';
 import { MapBuilder } from '@utils/map/builder';
 import { Color } from '@constants';
+import StartCounter from '@in-game/effects/StartCounter';
 
 // FIXME:
 const testQ = [];
@@ -90,20 +91,19 @@ export class GameScene extends Phaser.Scene {
     });
 
     this.input.keyboard.on('keydown-SPACE', event => {
-      this.room.send(GameRoomMessageType.ACTION, {
+      this.room.send(GameRoomMessageType.USER_ACTION, {
         type: GameRoomActionType.SHOOT_START,
       });
     });
     this.input.keyboard.on('keyup-SPACE', event => {
-      this.room.send(GameRoomMessageType.ACTION, {
+      this.room.send(GameRoomMessageType.USER_ACTION, {
         type: GameRoomActionType.SHOOT_END,
       });
     });
   }
 
   private elapsedTime = 0;
-  // private fixedTimeStep = 1000 / 60;
-  private fixedTimeStep = 1000 / 60;
+  private fixedTimeStep = 1000 / 30;
   update(time: number, delta: number): void {
     this.elapsedTime += delta;
     while (this.elapsedTime >= this.fixedTimeStep) {
@@ -113,7 +113,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private fixedTick(time: number, delta: number): void {
-    this.room.send(GameRoomMessageType.ACTION, {
+    this.room.send(GameRoomMessageType.USER_ACTION, {
       type: GameRoomActionType.DIRECTION,
       payload: {
         direction: this.getDirectionFromInput(),
@@ -142,7 +142,16 @@ export class GameScene extends Phaser.Scene {
     const shootAudio = this.sound.add('kick');
     const whistleAudio = this.sound.add('whistle');
     const croudScoreAudio = this.sound.add('crowd-score');
-    const hitGoalpost = this.sound.add('hit-goalpost'); // TODO:
+    // TODO: const hitGoalpost = this.sound.add('hit-goalpost');
+
+    this.room.onMessage<GameRoomMessageType>(
+      GameRoomMessageType.READY_TO_START,
+      () => {
+        new StartCounter(this).startFrom(3, () => {
+          this.room.send(GameRoomMessageType.USER_READY_TO_KICKOFF);
+        });
+      }
+    );
 
     this.room.onMessage<GameRoomAction>(GameRoomMessageType.SHOOT, () => {
       shootAudio.play();
@@ -150,25 +159,17 @@ export class GameScene extends Phaser.Scene {
     this.room.onMessage<GameRoomAction>(GameRoomMessageType.GOAL, () => {
       croudScoreAudio.play(undefined);
     });
-    this.room.onMessage<GameRoomAction>(GameRoomMessageType.KICK_OFF, () => {
+    this.room.onMessage<GameRoomAction>(GameRoomMessageType.KICKOFF, () => {
       whistleAudio.play();
-      Object.values(this.players).forEach(player => {
-        player.reset();
-      });
-      this.ball.reset();
     });
   }
 
   private initStateChangedEvents(): void {
     this.room.state.listen('ball', (state: BallState) => {
-      // const { x, y, radius } = state;
-      // this.ballSprite = this.matter.add.circle(x, y, radius);
       this.ball = new Ball(this, { state });
     });
 
     this.room.state.players.onAdd((state: PlayerState, id) => {
-      // const { x, y, radius } = state;
-      // this.playerSprites[id] = this.matter.add.circle(x, y, radius);
       this.players[id] = new Player(this, { state, me: id === this.me });
     });
 

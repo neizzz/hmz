@@ -31,10 +31,10 @@ export class Ball extends Phaser.GameObjects.Sprite {
     scene.add.existing(this);
   }
 
-  reset() {
-    const { x, y } = this.positionManager.kickoffPosition();
-    this.setPosition(x, y);
-  }
+  // reset() {
+  //   const { x, y } = this.positionManager.kickoffPosition();
+  //   this.setPosition(x, y);
+  // }
 
   update() {
     const newPosition = this.positionManager.nextPosition();

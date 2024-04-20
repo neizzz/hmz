@@ -18,7 +18,6 @@ export class GameRoom extends Room<GameRoomState> {
   maxClients = 10;
   engine: GameEngine;
 
-  playerCount: number;
   setting: GameRoomSetting;
 
   onCreate(params: GameRoomCreateInfo) {
@@ -59,8 +58,12 @@ export class GameRoom extends Room<GameRoomState> {
     this.addPlayer(client.sessionId, { team, name, index });
 
     if (this.isReady()) {
-      this.engine.kickoff(Team.RED);
-      this.broadcast(GameRoomMessageType.KICK_OFF);
+      this.engine.setupKickoff(Team.RED);
+      this.engine.mapBuilder.blockCenterLine('left');
+      setTimeout(() => {
+        console.log('ready_to_start');
+        this.broadcast(GameRoomMessageType.READY_TO_START);
+      }, 1000);
     }
   }
 
@@ -72,16 +75,36 @@ export class GameRoom extends Room<GameRoomState> {
     console.log('game room', this.roomId, 'disposing...');
   }
 
+  getTotalPlayerCount(): number {
+    return this.setting.redTeamCount + this.setting.blueTeamCount;
+  }
+
+  getActivePlayerCount(): number {
+    return this.state.players.size;
+  }
+
   private isReady(): boolean {
-    return (
-      this.setting.redTeamCount + this.setting.blueTeamCount ===
-      this.state.players.size
-    );
+    return this.getTotalPlayerCount() === this.getActivePlayerCount();
   }
 
   private initMessageHandlers(): void {
     this.onMessage(
-      GameRoomMessageType.ACTION,
+      GameRoomMessageType.USER_READY_TO_KICKOFF,
+      (() => {
+        // TODO: 최초 발생 유저 이후로 timeout 로직
+        let count = 0;
+
+        return (client: Client) => {
+          if (++count === this.getTotalPlayerCount()) {
+            this.engine.mapBuilder.openCenterLine();
+            this.broadcast(GameRoomMessageType.KICKOFF);
+          }
+        };
+      })()
+    );
+
+    this.onMessage(
+      GameRoomMessageType.USER_ACTION,
       (client: Client, action: GameRoomAction) => {
         // handle player input
         const player = this.state.players.get(client.sessionId);
