@@ -1,5 +1,4 @@
 import { BallState } from '@schema';
-import { PositionManager } from '@utils/entity';
 
 type InitParams = {
   state: BallState;
@@ -20,29 +19,16 @@ export class Ball extends Phaser.GameObjects.Sprite {
       .destroy();
   }
 
-  positionManager = new PositionManager();
-
   constructor(scene: Phaser.Scene, params: InitParams) {
     const { state } = params;
     const { kickoffX: x, kickoffY: y } = state;
     super(scene, x, y, 'ball');
     this.setPosition(x, y);
-    this.positionManager.setKickoffPosition({ x, y });
     scene.add.existing(this);
   }
 
-  // reset() {
-  //   const { x, y } = this.positionManager.kickoffPosition();
-  //   this.setPosition(x, y);
-  // }
-
-  update() {
-    const newPosition = this.positionManager.nextPosition();
-    newPosition && this.setPosition(newPosition.x, newPosition.y);
-  }
-
-  syncWithServer(serverState: BallState) {
-    const { positionHistories } = serverState;
-    this.positionManager.setPositionHistories(positionHistories);
+  syncTo(state: BallState) {
+    const { x, y } = state;
+    this.setPosition(x, y);
   }
 }

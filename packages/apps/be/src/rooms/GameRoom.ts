@@ -42,13 +42,6 @@ export class GameRoom extends Room<GameRoomState> {
     this.initMessageHandlers();
   }
 
-  onBeforePatch() {
-    this.state.players.forEach(playerState => {
-      playerState.flushPosition();
-    });
-    this.state.ball.flushPosition();
-  }
-
   /** NOTE: host의 경우 create타고 바로 여기 탐 */
   onJoin(client: Client, params: GameRoomJoinInfo | GameRoomCreateInfo) {
     console.log(client.sessionId, 'joined!', params);

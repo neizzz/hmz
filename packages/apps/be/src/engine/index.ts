@@ -27,6 +27,7 @@ import {
   RED_PLAYER_MASK,
   STADIUM_OUTLINE_MASK,
   PLAYER_GROUP,
+  GOAL_POST_NET_MASK,
 } from '@constants';
 import { MapBuilder } from '@utils/map/builder.ts';
 import { GameRoom } from '../rooms/GameRoom.ts';
@@ -132,7 +133,9 @@ export class GameEngine {
           break;
       }
 
-      this.state.ball.pushPosition(this.ball.position);
+      const { x, y } = this.ball.position;
+      this.state.ball.x = x;
+      this.state.ball.y = y;
 
       for (const key in this.players) {
         const worldPlayer = this.players[key];
@@ -141,7 +144,9 @@ export class GameEngine {
           continue;
         }
 
-        player.pushPosition(worldPlayer.position);
+        const { x, y } = worldPlayer.position;
+        player.x = x;
+        player.y = y;
 
         if (player.entityState === PlayerEntityState.SHOOTING) {
           this.processPlayerShoot(worldPlayer, player);
@@ -203,6 +208,7 @@ export class GameEngine {
         GROUND_OUTLINE_MASK |
         GROUND_CENTERLINE_MASK |
         GOAL_POST_MASK |
+        GOAL_POST_NET_MASK |
         BALL_MASK,
     };
     this.players[sessionId] = worldPlayer;
@@ -252,6 +258,7 @@ export class GameEngine {
   setupKickoff(team: Team) {
     this.mapBuilder.blockGroundOutLines();
     this.mapBuilder.blockCenterLine(team === Team.RED ? 'right' : 'left');
+    this.mapBuilder.blockGoalPostNets();
 
     for (const key in this.players) {
       const worldPlayer = this.players[key];
@@ -275,6 +282,7 @@ export class GameEngine {
       this.state.state = GameState.PROGRESS;
       this.mapBuilder.openCenterLine();
       this.mapBuilder.openGroundLines();
+      this.mapBuilder.openGoalPostNets();
     });
     this.state.state = GameState.KICKOFF;
     setTimeout(() => {

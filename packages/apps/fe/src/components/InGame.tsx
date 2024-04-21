@@ -19,7 +19,13 @@ const config: Phaser.Types.Core.GameConfig = {
   parent: GAME_SCENE_PARENT_ID,
   physics: {
     default: 'matter',
-    matter: { debug: true, gravity: { x: 0, y: 0 } },
+    matter: {
+      debug: true,
+      gravity: { x: 0, y: 0 },
+      runner: {
+        fps: 60,
+      },
+    },
   },
   pixelArt: false,
   scene: [BootstrapScene, GameScene],

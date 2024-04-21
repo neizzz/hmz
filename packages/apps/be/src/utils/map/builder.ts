@@ -4,6 +4,7 @@ import {
   COLLISION_WITH_BALL_GROUP,
   DEFAULT_GROUP,
   GOAL_POST_MASK,
+  GOAL_POST_NET_MASK,
   GROUND_CENTERLINE_MASK,
   GROUND_OUTLINE_MASK,
   PLAYER_MASK,
@@ -22,6 +23,7 @@ export class MapBuilder {
   private groundOutLines: Matter.Body[] = [];
   private leftSideCenterLines: Matter.Body[] = [];
   private rightSideCenterLines: Matter.Body[] = [];
+  private goalPostNets: Matter.Body[] = [];
 
   constructor(world: Matter.World, map: HmzMapInfo) {
     this.world = world;
@@ -67,6 +69,20 @@ export class MapBuilder {
     });
   }
 
+  blockGoalPostNets() {
+    this.goalPostNets.forEach(netBody => {
+      netBody.collisionFilter.mask =
+        (netBody.collisionFilter.mask ?? 0) | PLAYER_MASK;
+    });
+  }
+
+  openGoalPostNets() {
+    this.goalPostNets.forEach(netBody => {
+      netBody.collisionFilter.mask =
+        (netBody.collisionFilter.mask ?? 0) & ~PLAYER_MASK;
+    });
+  }
+
   build() {
     const width = this.map.width;
     const height = this.map.height;
@@ -77,13 +93,7 @@ export class MapBuilder {
         // top
         Matter.Bodies.rectangle(width / 2, 0, width, WALL_THICK),
         // bottom
-        Matter.Bodies.rectangle(
-          width / 2,
-          // height + WALL_THICK / 2,
-          height,
-          width,
-          WALL_THICK
-        ),
+        Matter.Bodies.rectangle(width / 2, height, width, WALL_THICK),
         // left
         Matter.Bodies.rectangle(
           -WALL_THICK / 2,
@@ -116,7 +126,7 @@ export class MapBuilder {
     this.leftSideCenterLines = [...centerLines, leftHalfCircle];
     this.rightSideCenterLines = [...centerLines, rightHalfCircle];
 
-    this.drawGoalPostNets();
+    this.goalPostNets = this.drawGoalPostNets();
     this.drawGoalPosts();
   }
 
@@ -297,10 +307,13 @@ export class MapBuilder {
       [leftNetBody, rightNetBody].map(body => {
         body.collisionFilter = {
           group: COLLISION_WITH_BALL_GROUP,
+          category: GOAL_POST_NET_MASK,
         };
         return body;
       })
     );
+
+    return [leftNetBody, rightNetBody];
   }
 
   private drawCenterLeftHalfCircle(mask = 0): Matter.Body {
