@@ -14,6 +14,7 @@ import { MapBuilder } from '@utils/map/builder';
 import { Color } from '@constants';
 import StartCounter from '@in-game/effects/StartCounter';
 import GameStateQueue from '@utils/GameStateQueue';
+import cloneDeep from 'lodash.clonedeep';
 
 export type GameSceneInitParams = {
   observer?: boolean;
@@ -35,7 +36,19 @@ export class GameScene extends Phaser.Scene {
 
   stateQueue = new GameStateQueue({
     onLerp: (a: GameRoomState, b: GameRoomState): GameRoomState => {
-      // TODO:
+      const result: GameRoomState = cloneDeep(b);
+
+      a.players.forEach((playerStateA, idx) => {
+        const playerStateB = b.players[idx];
+
+        result.players[idx].x = (playerStateA.x + playerStateB.y) / 2;
+        result.players[idx].y = (playerStateA.y + playerStateB.y) / 2;
+      });
+
+      result.ball.x = (a.ball.x + b.ball.x) / 2;
+      result.ball.y = (a.ball.y + b.ball.y) / 2;
+
+      return result;
     },
   });
   fixedUpdate = this.generateFixedUpdator();
