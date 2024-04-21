@@ -33,6 +33,5 @@ export class BallState {
   public y: number;
   public kickoffX: number;
   public kickoffY: number;
-  // public positionHistories: string[];
   public radius!: number;
 }
