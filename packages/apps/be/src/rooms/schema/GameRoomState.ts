@@ -1,17 +1,11 @@
-import { Schema, type, MapSchema, ArraySchema } from '@colyseus/schema';
-import {
-  Direction,
-  GameState,
-  PlayerEntityState,
-  Position,
-  Team,
-} from '@shared/types';
+import { Schema, type, MapSchema } from '@colyseus/schema';
+import { Direction, GameState, PlayerEntityState, Team } from '@shared/types';
 
 export class PlayerState extends Schema {
   static SPEED_LIMIT = 2.8; // pixel per step
   static SHOOTING_SPEED_LIMIT = 2.0; // pixel per step
-  static ACCELERATION = 0.08; // speed per step
-  static SHOOTING_ACCLERATION = 0.05; // speed per step
+  static ACCELERATION = 0.16; // speed per step
+  static SHOOTING_ACCLERATION = 0.1; // speed per step
   static FRICTION = 0.004; // rate per step
 
   id: string;
@@ -29,23 +23,6 @@ export class PlayerState extends Schema {
   @type('number') y: number;
   @type('number') kickoffX: number;
   @type('number') kickoffY: number;
-
-  // positionHistoriesBeforePatch: string /** `${x},{y}` format */[] = [];
-
-  // // FIXME: schema array가 안돼서 임시처리
-  // @type({ array: 'string' }) positionHistories =
-  //   new ArraySchema<string /** `${x},{y}` format */>();
-  // pushPosition(position: Position) {
-  //   this.positionHistoriesBeforePatch.push(`${position.x},${position.y}`);
-  // }
-  // flushPosition() {
-  //   this.positionHistories.clear();
-  //   this.positionHistoriesBeforePatch.forEach(positionString => {
-  //     this.positionHistories.push(positionString);
-  //   });
-  //   this.positionHistoriesBeforePatch = [];
-  // }
-  // // FIXME:
 
   accelrate(direction: Direction): [number, number] {
     const acceleration =
@@ -102,23 +79,6 @@ export class BallState extends Schema {
   @type('number') y: number;
   @type('number') kickoffX: number;
   @type('number') kickoffY: number;
-
-  // positionHistoriesBeforePatch: string /** `${x},{y}` format */[] = [];
-
-  // // FIXME: schema array가 안돼서 임시처리
-  // @type({ array: 'string' }) positionHistories =
-  //   new ArraySchema<string /** `${x},{y}` format */>();
-  // pushPosition(position: Position) {
-  //   this.positionHistoriesBeforePatch.push(`${position.x},${position.y}`);
-  // }
-  // flushPosition() {
-  //   this.positionHistories.clear();
-  //   this.positionHistoriesBeforePatch.forEach(positionString => {
-  //     this.positionHistories.push(positionString);
-  //   });
-  //   this.positionHistoriesBeforePatch = [];
-  // }
-  // // FIXME:
 }
 
 export class GameRoomState extends Schema {
