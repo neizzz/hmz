@@ -25,25 +25,27 @@ export class PlayerState extends Schema {
   @type('string') team: Team;
   @type('number') radius = 27;
   @type('number') entityState: PlayerEntityState = PlayerEntityState.IDLE;
+  @type('number') x: number;
+  @type('number') y: number;
   @type('number') kickoffX: number;
   @type('number') kickoffY: number;
 
-  positionHistoriesBeforePatch: string /** `${x},{y}` format */[] = [];
+  // positionHistoriesBeforePatch: string /** `${x},{y}` format */[] = [];
 
-  // FIXME: schema array가 안돼서 임시처리
-  @type({ array: 'string' }) positionHistories =
-    new ArraySchema<string /** `${x},{y}` format */>();
-  pushPosition(position: Position) {
-    this.positionHistoriesBeforePatch.push(`${position.x},${position.y}`);
-  }
-  flushPosition() {
-    this.positionHistories.clear();
-    this.positionHistoriesBeforePatch.forEach(positionString => {
-      this.positionHistories.push(positionString);
-    });
-    this.positionHistoriesBeforePatch = [];
-  }
-  // FIXME:
+  // // FIXME: schema array가 안돼서 임시처리
+  // @type({ array: 'string' }) positionHistories =
+  //   new ArraySchema<string /** `${x},{y}` format */>();
+  // pushPosition(position: Position) {
+  //   this.positionHistoriesBeforePatch.push(`${position.x},${position.y}`);
+  // }
+  // flushPosition() {
+  //   this.positionHistories.clear();
+  //   this.positionHistoriesBeforePatch.forEach(positionString => {
+  //     this.positionHistories.push(positionString);
+  //   });
+  //   this.positionHistoriesBeforePatch = [];
+  // }
+  // // FIXME:
 
   accelrate(direction: Direction): [number, number] {
     const acceleration =
@@ -96,25 +98,27 @@ export class PlayerState extends Schema {
 
 export class BallState extends Schema {
   @type('number') radius: number = 19;
+  @type('number') x: number;
+  @type('number') y: number;
   @type('number') kickoffX: number;
   @type('number') kickoffY: number;
 
-  positionHistoriesBeforePatch: string /** `${x},{y}` format */[] = [];
+  // positionHistoriesBeforePatch: string /** `${x},{y}` format */[] = [];
 
-  // FIXME: schema array가 안돼서 임시처리
-  @type({ array: 'string' }) positionHistories =
-    new ArraySchema<string /** `${x},{y}` format */>();
-  pushPosition(position: Position) {
-    this.positionHistoriesBeforePatch.push(`${position.x},${position.y}`);
-  }
-  flushPosition() {
-    this.positionHistories.clear();
-    this.positionHistoriesBeforePatch.forEach(positionString => {
-      this.positionHistories.push(positionString);
-    });
-    this.positionHistoriesBeforePatch = [];
-  }
-  // FIXME:
+  // // FIXME: schema array가 안돼서 임시처리
+  // @type({ array: 'string' }) positionHistories =
+  //   new ArraySchema<string /** `${x},{y}` format */>();
+  // pushPosition(position: Position) {
+  //   this.positionHistoriesBeforePatch.push(`${position.x},${position.y}`);
+  // }
+  // flushPosition() {
+  //   this.positionHistories.clear();
+  //   this.positionHistoriesBeforePatch.forEach(positionString => {
+  //     this.positionHistories.push(positionString);
+  //   });
+  //   this.positionHistoriesBeforePatch = [];
+  // }
+  // // FIXME:
 }
 
 export class GameRoomState extends Schema {

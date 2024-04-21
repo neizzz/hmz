@@ -13,15 +13,7 @@ import Phaser from 'phaser';
 import { MapBuilder } from '@utils/map/builder';
 import { Color } from '@constants';
 import StartCounter from '@in-game/effects/StartCounter';
-
-// FIXME:
-const testQ = [];
-let testQSizes = {};
-// const testEl = document.getElementById('test');
-// testEl.style.position = 'absolute';
-// testEl.style.top = '40%';
-// testEl.style.left = '40%';
-// testEl.style.zIndex = '999';
+import GameStateQueue from '@utils/GameStateQueue';
 
 export type GameSceneInitParams = {
   observer?: boolean;
@@ -40,6 +32,13 @@ export class GameScene extends Phaser.Scene {
   // ballSprite: MatterJS.BodyType; // FIXME: just for debug
 
   cursorKeys: Phaser.Types.Input.Keyboard.CursorKeys;
+
+  stateQueue = new GameStateQueue({
+    onLerp: (a: GameRoomState, b: GameRoomState): GameRoomState => {
+      // TODO:
+    },
+  });
+  fixedUpdate = this.generateFixedUpdator();
 
   constructor() {
     super('game-scene');
@@ -102,40 +101,39 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
-  private elapsedTime = 0;
-  private fixedTimeStep = 1000 / 30;
   update(time: number, delta: number): void {
-    this.elapsedTime += delta;
-    while (this.elapsedTime >= this.fixedTimeStep) {
-      this.elapsedTime -= this.fixedTimeStep;
-      this.fixedTick(time, this.fixedTimeStep);
+    const state = this.stateQueue.popForRender();
+
+    if (state) {
+      Object.values(this.players).forEach(player => player.update());
+      this.ball.update();
+      this.syncTo(state);
     }
+
+    // 30hz
+    this.fixedUpdate(time, delta);
   }
 
-  private fixedTick(time: number, delta: number): void {
-    this.room.send(GameRoomMessageType.USER_ACTION, {
-      type: GameRoomActionType.DIRECTION,
-      payload: {
-        direction: this.getDirectionFromInput(),
-      },
-    });
+  private generateFixedUpdator() {
+    let elapsedTime = 0;
+    const FIXED_TIME_STEP = 1000 / 30; // ms/hz
 
-    Object.values(this.players).forEach(player => player.update());
-    this.ball.update();
+    const fixedTick = () => {
+      this.room.send(GameRoomMessageType.USER_ACTION, {
+        type: GameRoomActionType.DIRECTION,
+        payload: {
+          direction: this.getDirectionFromInput(),
+        },
+      });
+    };
 
-    //// test
-    const testQSize = testQ.length;
-    if (testQSizes[testQSize] === undefined) {
-      testQSizes[testQSize] = 1;
-    } else {
-      testQSizes[testQSize]++;
-    }
-    // testEl.innerHTML = `${JSON.stringify(testQSizes)}`;
-    const state = testQ.pop();
-    if (!state) return;
-    this.syncWithServer(state);
-    testQ.length = 0;
-    //////
+    return (time, delta) => {
+      elapsedTime += delta;
+      while (elapsedTime >= FIXED_TIME_STEP) {
+        elapsedTime -= FIXED_TIME_STEP;
+        fixedTick();
+      }
+    };
   }
 
   private initEffectEvents(): void {
@@ -176,16 +174,16 @@ export class GameScene extends Phaser.Scene {
     // TODO: player remove
 
     this.room.onStateChange((state: GameRoomState) => {
-      testQ.push(state);
+      this.stateQueue.pushFromServer(state);
     });
   }
 
-  private syncWithServer = (state: GameRoomState) => {
+  private syncTo = (state: GameRoomState) => {
     state.players.forEach((playerServerState, id) => {
-      this.players[id].syncWithServer(playerServerState, id === this.me);
+      this.players[id].syncTo(playerServerState, id === this.me);
     });
 
-    this.ball.syncWithServer(state.ball);
+    this.ball.syncTo(state.ball);
   };
 
   private getDirectionFromInput(): Direction {

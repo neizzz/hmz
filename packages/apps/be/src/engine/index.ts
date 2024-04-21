@@ -132,7 +132,9 @@ export class GameEngine {
           break;
       }
 
-      this.state.ball.pushPosition(this.ball.position);
+      const { x, y } = this.ball.position;
+      this.state.ball.x = x;
+      this.state.ball.y = y;
 
       for (const key in this.players) {
         const worldPlayer = this.players[key];
@@ -141,7 +143,9 @@ export class GameEngine {
           continue;
         }
 
-        player.pushPosition(worldPlayer.position);
+        const { x, y } = worldPlayer.position;
+        player.x = x;
+        player.y = y;
 
         if (player.entityState === PlayerEntityState.SHOOTING) {
           this.processPlayerShoot(worldPlayer, player);
