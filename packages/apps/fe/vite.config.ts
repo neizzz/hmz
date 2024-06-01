@@ -11,6 +11,7 @@ console.log(`Server address: ${IP_ADDR}:${PORT}`);
 export default defineConfig({
   server: {
     port: +FE_PORT,
+    hmr: { port: +FE_PORT },
   },
   plugins: [tsconfigPaths(), react()],
   define: {
