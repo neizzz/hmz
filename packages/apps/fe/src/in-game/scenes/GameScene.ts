@@ -34,7 +34,7 @@ export class GameScene extends Phaser.Scene {
 
   cursorKeys: Phaser.Types.Input.Keyboard.CursorKeys;
 
-  stateQueue = new GameStateQueue({
+  private stateQueue = new GameStateQueue({
     onLerp: (a: GameRoomState, b: GameRoomState): GameRoomState => {
       const result: GameRoomState = cloneDeep(b);
 
@@ -51,7 +51,27 @@ export class GameScene extends Phaser.Scene {
       return result;
     },
   });
-  fixedUpdate = this.generateFixedUpdator();
+  private fixedUpdate = (() => {
+    let elapsedTime = 0;
+    const FIXED_TIME_STEP = 1000 / 30; // ms/hz
+
+    const fixedTick = () => {
+      this.room.send(GameRoomMessageType.USER_ACTION, {
+        type: GameRoomActionType.DIRECTION,
+        payload: {
+          direction: this.getDirectionFromInput(),
+        },
+      });
+    };
+
+    return (time, delta) => {
+      elapsedTime += delta;
+      while (elapsedTime >= FIXED_TIME_STEP) {
+        elapsedTime -= FIXED_TIME_STEP;
+        fixedTick();
+      }
+    };
+  })();
 
   constructor() {
     super('game-scene');
@@ -127,27 +147,7 @@ export class GameScene extends Phaser.Scene {
     this.fixedUpdate(time, delta);
   }
 
-  private generateFixedUpdator() {
-    let elapsedTime = 0;
-    const FIXED_TIME_STEP = 1000 / 30; // ms/hz
-
-    const fixedTick = () => {
-      this.room.send(GameRoomMessageType.USER_ACTION, {
-        type: GameRoomActionType.DIRECTION,
-        payload: {
-          direction: this.getDirectionFromInput(),
-        },
-      });
-    };
-
-    return (time, delta) => {
-      elapsedTime += delta;
-      while (elapsedTime >= FIXED_TIME_STEP) {
-        elapsedTime -= FIXED_TIME_STEP;
-        fixedTick();
-      }
-    };
-  }
+  // private generateFixedUpdator()
 
   private initEffectEvents(): void {
     const shootAudio = this.sound.add('kick');
