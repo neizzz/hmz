@@ -1,7 +1,7 @@
 import './App.css';
 
 import {
-  createBrowserRouter,
+  // createBrowserRouter,
   redirect,
   RouterProvider,
 } from 'react-router-dom';
@@ -9,13 +9,13 @@ import {
 import WelcomePage from './pages/WelcomePage';
 import LobbyPage from './pages/LobbyPage';
 import { useHmzClient } from '@hooks/useHmzClient';
-import { RoomType } from '@shared/types';
 import WaitingRoom, { WaitingRoomInitParams } from '@components/WaitingRoom';
 import { getUserNickname } from '@utils/user';
+import { initRouter } from '@utils/route';
 
 const client = useHmzClient();
 
-const router = createBrowserRouter([
+const router = initRouter([
   {
     path: '/',
     element: <WelcomePage />,
@@ -39,27 +39,27 @@ const router = createBrowserRouter([
     },
     Component: WaitingRoom,
   },
-  {
-    path: '/room/create/neiz0000',
-    loader: async (): Promise<WaitingRoomInitParams | Response> => {
-      if (getUserNickname()) {
-        return {
-          room: await client
-            .create(RoomType.WAITING_ROOM, {
-              hostJoinInfo: { name: getUserNickname() },
-              maxAwaiters: 12,
-            })
-            .then(room => {
-              history.replaceState(null, null, `/room/${room.roomId}`);
-              return room;
-            }),
-        };
-      } else {
-        return redirect('/');
-      }
-    },
-    Component: WaitingRoom,
-  },
+  // {
+  //   path: '/room/create/neiz0000',
+  //   loader: async (): Promise<WaitingRoomInitParams | Response> => {
+  //     if (getUserNickname()) {
+  //       return {
+  //         room: await client
+  //           .create(RoomType.WAITING_ROOM, {
+  //             hostJoinInfo: { name: getUserNickname() },
+  //             maxAwaiters: 12,
+  //           })
+  //           .then(room => {
+  //             history.replaceState(null, null, `/room/${room.roomId}`);
+  //             return room;
+  //           }),
+  //       };
+  //     } else {
+  //       return redirect('/');
+  //     }
+  //   },
+  //   Component: WaitingRoom,
+  // },
   // {
   //   path: '/test/:roomId?',
   //   loader: async ({ params }) => {
