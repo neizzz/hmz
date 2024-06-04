@@ -1,10 +1,10 @@
-import { GameRoomState } from '@schema';
+import { GameRenderState } from '@in-game/types';
 
 type ConstructorParams<T> = {
   onLerp?: (a: T, b: T) => T;
 };
 
-export default class GameStateQueue<T = GameRoomState> {
+export default class GameStateQueue<T = GameRenderState> {
   private statesFromServer: T[] = []; // 게임 진행중에는 항상 2개를 유지
   private statesForRender: T[] = []; //
 
