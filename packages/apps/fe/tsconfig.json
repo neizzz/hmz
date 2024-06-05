@@ -19,10 +19,10 @@
       "@components/*": ["./src/components/*"],
       "@utils/*": ["./src/utils/*"],
       "@schema": ["./src/schema"],
-      "@constants": ["./src/constants"],
-    },
+      "@constants": ["./src/constants"]
+    }
   },
   "include": ["src"],
   "exclude": ["node_modules"],
-  "references": [{ "path": "./tsconfig.node.json" }],
+  "references": [{ "path": "./tsconfig.node.json" }]
 }
