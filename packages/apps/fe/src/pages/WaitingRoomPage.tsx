@@ -17,11 +17,11 @@ import { Room } from 'colyseus.js';
 import { AwaiterState } from '@schema';
 import { useLoaderData } from 'react-router-dom';
 import { useHmzClient } from '@hooks/useHmzClient';
-import InGame, { InGameParams } from './InGame';
+import InGame, { InGameParams } from '../components/InGameWrapper';
 import cloneDeep from 'lodash.clonedeep';
 import clsx from 'clsx';
 
-export type WaitingRoomInitParams = {
+export type WaitingRoomPageInitParams = {
   room: Room;
 };
 
@@ -43,9 +43,9 @@ const buildAwaitersByTeam = (
   );
 };
 
-const WaitingRoom = () => {
+const WaitingRoomPage = () => {
   const client = useHmzClient();
-  const { room } = useLoaderData() as WaitingRoomInitParams;
+  const { room } = useLoaderData() as WaitingRoomPageInitParams;
   const [hostSessionId, setHostSessionId] = useState();
   const [awaitersByTeam, setAwaitersByTeam] = useState<AwaitersByTeam>({
     [Team.RED]: [],
@@ -127,7 +127,7 @@ const WaitingRoom = () => {
   return (
     <>
       <div className={'centering-layer'}>
-        <div className={'waiting-room-cont'}>
+        <div className={'waiting-room-cont comm-cont'}>
           <ul className={'team-list'}>
             <li className={'team-item'}>
               <button // TODO: disable when active
@@ -217,4 +217,4 @@ const WaitingRoom = () => {
   );
 };
 
-export default WaitingRoom;
+export default WaitingRoomPage;
