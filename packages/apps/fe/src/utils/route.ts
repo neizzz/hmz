@@ -22,5 +22,9 @@ export const navigateToLobbyPage = () => {
 };
 
 export const navigateToWaitingRoomPage = (roomId: string) => {
-  ThisContext.router.navigate(`/rooms/${roomId}`);
+  ThisContext.router.navigate(`/room/${roomId}`);
+};
+
+export const navigateToWaitingRoomPageWithCreation = () => {
+  ThisContext.router.navigate(`/room/create`);
 };
