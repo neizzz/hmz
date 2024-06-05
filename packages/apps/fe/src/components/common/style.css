@@ -1,0 +1,9 @@
+/* intented to imported from the 'index-able' file like (index.tsx, App.tsx, etc.) */
+
+.comm-btn {
+  color: blue;
+}
+
+.comm-btn:disabled {
+  opacity: 0.5;
+}

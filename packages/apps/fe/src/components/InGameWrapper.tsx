@@ -43,7 +43,14 @@ type Props = {
   onEnd?: () => void;
 } & InGameParams;
 
-const InGame = ({ host, room, roomId, map, myJoinInfo, onEnd }: Props) => {
+const InGameWrapper = ({
+  host,
+  room,
+  roomId,
+  map,
+  myJoinInfo,
+  onEnd,
+}: Props) => {
   const client = useHmzClient();
   const gameInstanceRef = useRef<Phaser.Game>();
   const [gameRoom, setGameRoom] = useState<Room>(undefined);
@@ -99,4 +106,4 @@ const InGame = ({ host, room, roomId, map, myJoinInfo, onEnd }: Props) => {
   );
 };
 
-export default InGame;
+export default InGameWrapper;

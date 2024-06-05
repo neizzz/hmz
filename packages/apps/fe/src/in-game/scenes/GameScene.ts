@@ -15,6 +15,7 @@ import { Color } from '@constants';
 import StartCounter from '@in-game/effects/StartCounter';
 import GameStateQueue from '@utils/GameStateQueue';
 import cloneDeep from 'lodash.clonedeep';
+import { GameRenderState } from '@in-game/types';
 
 export type GameSceneInitParams = {
   observer?: boolean;
@@ -35,14 +36,14 @@ export class GameScene extends Phaser.Scene {
   cursorKeys: Phaser.Types.Input.Keyboard.CursorKeys;
 
   stateQueue = new GameStateQueue({
-    onLerp: (a: GameRoomState, b: GameRoomState): GameRoomState => {
-      const result: GameRoomState = cloneDeep(b);
+    onLerp: (a: GameRenderState, b: GameRenderState): GameRenderState => {
+      const result: GameRenderState = cloneDeep(b);
 
-      a.players.forEach((playerStateA, idx) => {
-        const playerStateB = b.players[idx];
+      Object.entries(a.players).forEach(([id, playerStateA]) => {
+        const playerStateB = b.players[id];
 
-        result.players[idx].x = (playerStateA.x + playerStateB.y) / 2;
-        result.players[idx].y = (playerStateA.y + playerStateB.y) / 2;
+        result.players[id].x = (playerStateA.x + playerStateB.x) / 2;
+        result.players[id].y = (playerStateA.y + playerStateB.y) / 2;
       });
 
       result.ball.x = (a.ball.x + b.ball.x) / 2;
@@ -187,12 +188,42 @@ export class GameScene extends Phaser.Scene {
     // TODO: player remove
 
     this.room.onStateChange((state: GameRoomState) => {
-      this.stateQueue.pushFromServer(state);
+      const players: GameRenderState['players'] = [
+        ...state.players.entries(),
+      ].reduce((result, [id, playerServerState]) => {
+        const {
+          name,
+          team,
+          x,
+          y,
+          kickoffX,
+          kickoffY,
+          radius,
+          entityState,
+        }: PlayerState = playerServerState;
+        result[id] = {
+          name,
+          team,
+          x,
+          y,
+          kickoffX,
+          kickoffY,
+          radius,
+          entityState,
+        };
+        return result;
+      }, {});
+      const { x, y, kickoffX, kickoffY, radius } = state.ball;
+      const renderState: GameRenderState = {
+        players,
+        ball: { x, y, kickoffX, kickoffY, radius },
+      };
+      this.stateQueue.pushFromServer(renderState);
     });
   }
 
-  private syncTo = (state: GameRoomState) => {
-    state.players.forEach((playerServerState, id) => {
+  private syncTo = (state: GameRenderState) => {
+    Object.entries(state.players).forEach(([id, playerServerState]) => {
       this.players[id].syncTo(playerServerState, id === this.me);
     });
 

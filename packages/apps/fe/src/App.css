@@ -1,3 +1,11 @@
+:root {
+  --hover-opacity: 0.8;
+  --glb-bg-color: #7da888;
+  --avlb-room-bg-color: #aae3b8;
+  --avlb-room-active-bg-color: #6be88a;
+  --avlb-room-bdr-color: #74826b;
+}
+
 html,
 body {
   min-width: 320px;
@@ -6,15 +14,16 @@ body {
   height: 100%;
 }
 
+* {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
 button {
   padding: 0.4em 0.8em;
 }
 button:hover {
-  opacity: 0.8;
-}
-
-.glb-bg-color {
-  background-color: #7da888;
+  opacity: var(--hover-opacity);
 }
 
 #root,
@@ -23,6 +32,7 @@ button:hover {
   height: 100%;
   margin: 0;
   padding: 0;
+  background-color: var(--glb-bg-color);
 }
 
 .dimm {
@@ -43,6 +53,13 @@ button:hover {
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.comm-cont {
+  max-width: 800px;
+  aspect-ratio: 5 / 3;
+  width: 80%;
+  padding: 1.5em 2em;
 }
 
 .hori-centering {
@@ -69,11 +86,77 @@ button:hover {
   font-weight: bold;
 }
 
-.waiting-room-cont {
-  max-width: 800px;
-  aspect-ratio: 5 / 3;
-  width: 80%;
-  padding: 1.5em 2em;
+.lobby-page-cont {
+  display: flex;
+  flex-direction: column;
+  border: 2px solid burlywood;
+  border-radius: 0.6em;
+  background-color: floralwhite;
+}
+
+.lobby-page-cont .avlb-room-list {
+  min-width: 10vw;
+  height: 90vh;
+  min-height: 240px;
+  max-height: 400px;
+}
+
+.lobby-page-cont .avlb-room {
+  border: 2px solid var(--avlb-room-bdr-color);
+  background-color: var(--avlb-room-bg-color);
+  border-radius: 0.4em;
+  padding: 0.6em 0.4em;
+}
+
+.lobby-page-cont .avlb-room:hover {
+  opacity: var(--hover-opacity);
+}
+
+.lobby-page-cont .avlb-room.selected {
+  background-color: var(--avlb-room-active-bg-color);
+}
+
+.avlb-room + .avlb-room {
+  margin-top: 0.2em;
+}
+
+.lobby-page-cont .lobby-page-act-btns {
+  flex-grow: 0;
+  flex-shrink: 0;
+  margin: 1em 0 0 0;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.lobby-page-cont .lobby-page-act-btns .secondary-act-btn-sect,
+.lobby-page-cont .lobby-page-act-btns .primary-act-btn-sect {
+  gap: 0.6em;
+  display: flex;
+  flex-direction: row;
+}
+
+@media screen and (min-width: 40rem) {
+  .lobby-page-cont {
+    flex-direction: row;
+  }
+
+  .lobby-page-cont .avlb-room-list {
+    flex-grow: 1;
+    flex-shrink: 1;
+  }
+
+  .lobby-page-cont .lobby-page-act-btns {
+    gap: 1.8em;
+    margin: 0 0 0 1em;
+    flex-direction: column-reverse;
+    justify-content: flex-end;
+  }
+
+  .lobby-page-cont .lobby-page-act-btns .secondary-act-btn-sect,
+  .lobby-page-cont .lobby-page-act-btns .primary-act-btn-sect {
+    flex-direction: column;
+  }
 }
 
 .waiting-room-cont .team-list {

@@ -1,21 +1,21 @@
 import './App.css';
 
-import {
-  createBrowserRouter,
-  redirect,
-  RouterProvider,
-} from 'react-router-dom';
+import { redirect, RouterProvider } from 'react-router-dom';
 
 import WelcomePage from './pages/WelcomePage';
 import LobbyPage from './pages/LobbyPage';
 import { useHmzClient } from '@hooks/useHmzClient';
-import { RoomType } from '@shared/types';
-import WaitingRoom, { WaitingRoomInitParams } from '@components/WaitingRoom';
+import WaitingRoomPage, {
+  WaitingRoomPageInitParams,
+} from './pages/WaitingRoomPage';
 import { getUserNickname } from '@utils/user';
+import { initRouter } from '@utils/route';
+import { LoadingProvider } from './contexts/LoadingContext';
+import { RoomType } from '@shared/types';
 
 const client = useHmzClient();
 
-const router = createBrowserRouter([
+const router = initRouter([
   {
     path: '/',
     element: <WelcomePage />,
@@ -26,7 +26,9 @@ const router = createBrowserRouter([
   },
   {
     path: '/room/:roomId',
-    loader: async ({ params }): Promise<WaitingRoomInitParams | Response> => {
+    loader: async ({
+      params,
+    }): Promise<WaitingRoomPageInitParams | Response> => {
       if (getUserNickname()) {
         return {
           room: await client.joinById(params.roomId, {
@@ -37,11 +39,11 @@ const router = createBrowserRouter([
         return redirect('/');
       }
     },
-    Component: WaitingRoom,
+    Component: WaitingRoomPage,
   },
   {
-    path: '/room/create/neiz0000',
-    loader: async (): Promise<WaitingRoomInitParams | Response> => {
+    path: '/room/create',
+    loader: async (): Promise<WaitingRoomPageInitParams | Response> => {
       if (getUserNickname()) {
         return {
           room: await client
@@ -50,6 +52,9 @@ const router = createBrowserRouter([
               maxAwaiters: 12,
             })
             .then(room => {
+              /** NOTE:
+               * react router를 안태우기위해, history API를 직접적으로 사용.
+               * */
               history.replaceState(null, null, `/room/${room.roomId}`);
               return room;
             }),
@@ -58,7 +63,7 @@ const router = createBrowserRouter([
         return redirect('/');
       }
     },
-    Component: WaitingRoom,
+    Component: WaitingRoomPage,
   },
   // {
   //   path: '/test/:roomId?',
@@ -93,9 +98,11 @@ const router = createBrowserRouter([
 
 function App() {
   return (
-    <div className={'app'}>
-      <RouterProvider router={router} />
-    </div>
+    <LoadingProvider>
+      <div className={'app'}>
+        <RouterProvider router={router} />
+      </div>
+    </LoadingProvider>
   );
 }
 
