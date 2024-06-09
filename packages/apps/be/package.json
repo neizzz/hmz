@@ -11,7 +11,8 @@
   "scripts": {
     "start": "tsx watch src/index.ts",
     "loadtest": "tsx loadtest/example.ts --room my_room --numClients 2",
-    "build": "rimraf dist && vite build",
+    "build:development": "rimraf dist && vite build -m development",
+    "build:production": "rimraf dist && vite build",
     "test": "mocha -r tsx test/**_test.ts --exit --timeout 15000"
   },
   "author": "",

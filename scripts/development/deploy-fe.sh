@@ -9,7 +9,7 @@ TARGET_DIR=/var/www/$NGINX_SERVER_NAME/html;
 cd $WORKING_DIR;
 
 npm install;
-BE_HOST=$BE_HOST BE_PORT=$BE_PORT npm run build;
+BE_HOST=$BE_HOST BE_PORT=$BE_PORT npm run build:development;
 
 mkdir -p $TARGET_DIR;
 mv dist/* $TARGET_DIR;
