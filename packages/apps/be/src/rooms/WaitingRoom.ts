@@ -1,5 +1,5 @@
 import { Room, Client } from '@colyseus/core';
-import { AwaiterState, WaitingRoomState } from './schema/WaitingRoomState.ts';
+import { AwaiterState, WaitingRoomState } from './schema/WaitingRoomState';
 import {
   Team,
   ToWaitingRoomMessageType,

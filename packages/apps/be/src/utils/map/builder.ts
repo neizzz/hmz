@@ -1,5 +1,5 @@
 import { HmzMapInfo, Team } from '@shared/types';
-import { createRoundedPath } from '@utils/path.ts';
+import { createRoundedPath } from '@utils/path.js';
 import {
   COLLISION_WITH_BALL_GROUP,
   DEFAULT_GROUP,

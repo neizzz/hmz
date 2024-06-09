@@ -7,10 +7,10 @@ import { createProxyMiddleware } from 'http-proxy-middleware';
 /**
  * Import your Room files
  */
-import { WaitingRoom } from './rooms/WaitingRoom.ts';
+import { WaitingRoom } from './rooms/WaitingRoom.js';
 import { Server } from 'colyseus';
 import { RoomType } from '@shared/types';
-import { GameRoom } from './rooms/GameRoom.ts';
+import { GameRoom } from './rooms/GameRoom.js';
 
 const { FE_PORT } = process.env;
 
@@ -36,7 +36,7 @@ const config: ConfigOptions = {
      * Use @colyseus/playground
      * (It is not recommended to expose this route in a production environment)
      */
-    if (process.env.NODE_ENV !== 'production') {
+    if (process.env.NODE_ENV !== 'production' && FE_PORT) {
       app.use('/playground', playground);
       app.use(
         createProxyMiddleware('/', { target: `http://localhost:${FE_PORT}/` })
