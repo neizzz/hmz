@@ -1,7 +1,7 @@
 #!/bin/bash
 
 BE_PORT=3333;
-WORKING_DIR=/var/webhook/tmp/hmz/packages/app/be;
+WORKING_DIR=/var/webhook/tmp/hmz/packages/apps/be;
 
 cd $WORKING_DIR;
 
