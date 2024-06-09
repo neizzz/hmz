@@ -36,7 +36,7 @@ const config: ConfigOptions = {
      * Use @colyseus/playground
      * (It is not recommended to expose this route in a production environment)
      */
-    if (process.env.NODE_ENV !== 'production' && FE_PORT) {
+    if (FE_PORT) {
       app.use('/playground', playground);
       app.use(
         createProxyMiddleware('/', { target: `http://localhost:${FE_PORT}/` })
