@@ -3,7 +3,7 @@ import {
   BallState,
   GameRoomState,
   PlayerState,
-} from './schema/GameRoomState.ts';
+} from './schema/GameRoomState.js';
 import {
   GameRoomAction,
   GameRoomCreateInfo,
@@ -12,7 +12,7 @@ import {
   GameRoomSetting,
   Team,
 } from '@shared/types';
-import { GameEngine } from '../engine/index.ts';
+import { GameEngine } from '../engine/index.js';
 
 export class GameRoom extends Room<GameRoomState> {
   maxClients = 10;

@@ -13,7 +13,7 @@ import {
   BallState,
   GameRoomState,
   PlayerState,
-} from '../rooms/schema/GameRoomState.ts';
+} from '../rooms/schema/GameRoomState.js';
 
 import decomp from 'poly-decomp-es';
 import {
@@ -29,8 +29,8 @@ import {
   PLAYER_GROUP,
   GOAL_POST_NET_MASK,
 } from '@constants';
-import { MapBuilder } from '@utils/map/builder.ts';
-import { GameRoom } from '../rooms/GameRoom.ts';
+import { MapBuilder } from '@utils/map/builder.js';
+import { GameRoom } from '../rooms/GameRoom.js';
 
 // @ts-ignore
 global.decomp = decomp; // for concave hull

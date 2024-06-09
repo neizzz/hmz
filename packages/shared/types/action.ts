@@ -1,4 +1,4 @@
-import { Direction } from './index.ts';
+import { Direction } from './index';
 
 export type Action<T extends string, P extends Record<T, any>> = {
   type: T;

@@ -1,5 +1,5 @@
-import { Team } from './index.ts';
-import { HmzMapInfo } from './map.ts';
+import { Team } from './index';
+import { HmzMapInfo } from './map';
 
 export type WaitingRoomCreateInfo = {
   hostJoinInfo: WaitingRoomJoinInfo;

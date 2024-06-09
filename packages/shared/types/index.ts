@@ -33,7 +33,7 @@ export const enum PlayerEntityState {
   SHOOTING,
 }
 
-export * from './map.ts';
-export * from './message.ts';
-export * from './action.ts';
-export * from './room.ts';
+export * from './map';
+export * from './message';
+export * from './action';
+export * from './room';

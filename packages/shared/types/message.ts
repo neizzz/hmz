@@ -1,5 +1,5 @@
-import { Action, GameRoomActionPayload, GameRoomActionType } from './action.ts';
-import { HmzMapInfo, Team } from './index.ts';
+import { Action, GameRoomActionPayload, GameRoomActionType } from './action';
+import { HmzMapInfo, Team } from './index';
 
 export const enum RoomType {
   WAITING_ROOM = 'waiting-room',
