@@ -1,15 +1,16 @@
 #!/bin/bash
 set -e;
 
-BE_HOST=cchsv.iptime.org;
-BE_PORT=33333;
-NGINX_SERVER_NAME=cchsv.iptime.org;
-WORKING_DIR=/var/webhook/tmp/hmz/packages/apps/fe;
-TARGET_DIR=/var/www/$NGINX_SERVER_NAME/html;
+be_host=cchsv.iptime.org
+be_port=33333
+nginx_server_name=cchsv.iptime.org;
+working_dir=/var/webhook/tmp/hmz/packages/apps/fe;
+target_dir=/var/www/$nginx_server_name/html;
 
-cd $WORKING_DIR;
+cd $working_dir;
 
-BE_HOST=$BE_HOST BE_PORT=$BE_PORT npm run build:development;
+BE_HOST=$be_host BE_PORT=$be_port npm run build:development;
 
-mkdir -p $TARGET_DIR;
-mv dist/* $TARGET_DIR;
+rm -rf $target_dir;
+mkdir -p $target_dir;
+mv dist/* $target_dir;

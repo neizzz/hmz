@@ -1,9 +1,9 @@
 #!/bin/bash
 set -e;
 
-BE_PORT=3333;
-WORKING_DIR=/var/webhook/tmp/hmz/packages/apps/be;
+be_port=3333;
+working_dir=/var/webhook/tmp/hmz/packages/apps/be;
 
-cd $WORKING_DIR;
+cd $working_dir;
 
-BE_PORT=$BE_PORT npm run build:development;
+BE_PORT=$be_port npm run build:development;
