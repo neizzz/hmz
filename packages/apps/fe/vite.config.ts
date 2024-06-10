@@ -9,7 +9,11 @@ console.log(`Server address: ${BE_HOST}:${BE_PORT}`);
 // https://vitejs.dev/config/
 export default defineConfig(({ command, mode, isPreview }) => {
   console.log(`Vite mode: ${mode}`);
+  const isDev = mode === 'development';
   return {
+    build: {
+      minify: !isDev,
+    },
     server: {
       port: +FE_PORT,
       hmr: { port: +FE_PORT },
