@@ -54,6 +54,8 @@ export class WaitingRoom extends Room<WaitingRoomState> {
         );
       }
     );
+
+    console.log(123, this.state);
   }
 
   onJoin(client: Client, options: WaitingRoomCreateInfo | WaitingRoomJoinInfo) {
@@ -65,6 +67,8 @@ export class WaitingRoom extends Room<WaitingRoomState> {
     awaiter.name = info.name;
     awaiter.team = Team.OBSERVER;
     this.state.awaiters.set(client.sessionId, awaiter);
+
+    console.log(456, this.state);
 
     if (!this.state.hostSessionId) {
       this.state.hostSessionId = client.sessionId;
