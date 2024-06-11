@@ -12,9 +12,13 @@ import {
 export class WaitingRoom extends Room<WaitingRoomState> {
   maxClients = 10;
 
+  constructor() {
+    super();
+    this.setState(new WaitingRoomState());
+  }
+
   onCreate(option: WaitingRoomCreateInfo) {
     console.log('waiting room', this.roomId, 'creating...');
-    this.setState(new WaitingRoomState());
 
     this.onMessage<ToWaitingRoomMessagePayload['CHANGE_TEAM']>(
       ToWaitingRoomMessageType.CHANGE_TEAM,
@@ -54,8 +58,6 @@ export class WaitingRoom extends Room<WaitingRoomState> {
         );
       }
     );
-
-    console.log(123, this.state);
   }
 
   onJoin(client: Client, options: WaitingRoomCreateInfo | WaitingRoomJoinInfo) {
@@ -67,8 +69,6 @@ export class WaitingRoom extends Room<WaitingRoomState> {
     awaiter.name = info.name;
     awaiter.team = Team.OBSERVER;
     this.state.awaiters.set(client.sessionId, awaiter);
-
-    console.log(456, this.state);
 
     if (!this.state.hostSessionId) {
       this.state.hostSessionId = client.sessionId;
