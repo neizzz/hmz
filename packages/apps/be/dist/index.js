@@ -7191,6 +7191,7 @@ class Schema {
                 changeTree.discard();
             }
         }
+        console.log('encode', bytes);
         return bytes;
     }
     encodeAll(useFilters) {
@@ -12130,7 +12131,6 @@ class SchemaSerializer {
         while (numClients--) {
           const client = clients[numClients];
           if (client.state === ClientState.JOINED) {
-            debugger;
             client.raw(patches);
           }
         }
@@ -12139,7 +12139,6 @@ class SchemaSerializer {
           const client = clients[numClients];
           if (client.state === ClientState.JOINED) {
             const filteredPatches = this.state.applyFilters(client);
-            debugger;
             client.raw([Protocol.ROOM_STATE_PATCH, ...filteredPatches]);
           }
         }
