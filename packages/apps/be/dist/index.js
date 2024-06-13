@@ -6521,7 +6521,7 @@ class Fc {
     return t;
   }
   handshake() {
-    return this.handshakeCache || (this.handshakeCache = this.state && dt.encode(this.state)), this.handshakeCache;
+    return console.log("mjs", "handshakeCache", this.handshakeCache), this.handshakeCache || (this.handshakeCache = this.state && dt.encode(this.state)), this.handshakeCache;
   }
 }
 const Bc = 1e3 / 20, Uc = 1e3 / 60, jc = new Pc(), Vc = Number(process.env.COLYSEUS_SEAT_RESERVATION_TIME || 15);
