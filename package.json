@@ -9,7 +9,7 @@
     "generate-schema-ts": "schema-codegen packages/apps/be/src/rooms/schema/* --ts --output packages/apps/fe/schema/",
     "start:be": "cross-env BE_PORT=3333 lerna run start --scope @app/be",
     "start:fe": " lerna run start --scope @app/fe",
-    "start": "cross-env BE_HOST=\"$(ipconfig getifaddr en0)\" BE_PORT=3333 FE_PORT=8080 lerna run start"
+    "start": "cross-env BE_HOST='localhost' BE_PORT=3333 FE_PORT=8080 lerna run start"
   },
   "devDependencies": {
     "@types/lodash.clonedeep": "^4.5.9",
