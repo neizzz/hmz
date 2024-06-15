@@ -1,10 +1,9 @@
-import { Action, GameRoomActionPayload, GameRoomActionType } from './action';
-import { HmzMapInfo, Team } from './index';
-
-export const enum RoomType {
-  WAITING_ROOM = 'waiting-room',
-  GAME_ROOM = 'game-room',
-}
+import {
+  type Action,
+  type GameRoomActionPayload,
+  GameRoomActionType,
+} from './action';
+import { type HmzMapInfo, Team } from './index';
 
 export const enum ToWaitingRoomMessageType {
   CHANGE_TEAM = 'to-change-team',

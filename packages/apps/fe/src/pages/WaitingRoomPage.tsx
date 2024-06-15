@@ -83,14 +83,6 @@ const WaitingRoomPage = () => {
   }, []);
 
   useEffect(() => {
-    console.log(123, room);
-  }, [room]);
-
-  useEffect(() => {
-    if (!room.state) {
-      console.log('room.state is empty');
-      return;
-    }
     room.state.awaiters.onAdd((awaiter: AwaiterState, sessionId: string) => {
       console.log('awaiter add', awaiter, sessionId);
       setAwaitersByTeam(prev => ({

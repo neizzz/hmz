@@ -1,15 +1,15 @@
-import { Room, Client } from '@colyseus/core';
+import { Room, type Client } from '@colyseus/core';
 import {
   BallState,
   GameRoomState,
   PlayerState,
 } from './schema/GameRoomState.js';
 import {
-  GameRoomAction,
-  GameRoomCreateInfo,
-  GameRoomJoinInfo,
+  type GameRoomAction,
+  type GameRoomCreateInfo,
+  type GameRoomJoinInfo,
   GameRoomMessageType,
-  GameRoomSetting,
+  type GameRoomSetting,
   Team,
 } from '@shared/types';
 import { GameEngine } from '../engine/index.js';

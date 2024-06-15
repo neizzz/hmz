@@ -1,5 +1,10 @@
 import { Team } from './index';
-import { HmzMapInfo } from './map';
+import { type HmzMapInfo } from './map';
+
+export const enum RoomType {
+  WAITING_ROOM = 'waiting-room',
+  GAME_ROOM = 'game-room',
+}
 
 export type WaitingRoomCreateInfo = {
   hostJoinInfo: WaitingRoomJoinInfo;
