@@ -1,11 +1,5 @@
 {
-  // "extends": "../../../tsconfig.json",
-  "compilerOptions": {
-    "module": "ES2020",
-    "moduleResolution": "Bundler",
-    "allowImportingTsExtensions": true,
-    "noEmit": true
-  },
+  "extends": "../../../tsconfig.json",
   "include": ["index.ts"],
   "exclude": ["node_modules"]
 }

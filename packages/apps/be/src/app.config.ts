@@ -1,16 +1,16 @@
-import { ConfigOptions } from '@colyseus/tools';
+import { type ConfigOptions } from '@colyseus/tools';
 import { monitor } from '@colyseus/monitor';
-import { playground } from '@colyseus/playground';
-import { Express } from 'express';
+import { type Express } from 'express';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 
 /**
  * Import your Room files
  */
 import { WaitingRoom } from './rooms/WaitingRoom.js';
-import { Server } from 'colyseus';
+import { Server } from '@colyseus/core';
 import { RoomType } from '@shared/types';
 import { GameRoom } from './rooms/GameRoom.js';
+import { BunWebSockets } from '@colyseus/bun-websockets';
 
 const { FE_PORT } = process.env;
 
@@ -20,8 +20,18 @@ const config: ConfigOptions = {
      * Define your room handlers:
      */
     // TODO: LobbyRoom
+
+    // NOTE: 왜 ts에러나는지 모르겠음.
+    // @ts-ignore
     gameServer.define(RoomType.WAITING_ROOM, WaitingRoom);
+    // @ts-ignore
     gameServer.define(RoomType.GAME_ROOM, GameRoom);
+  },
+
+  initializeTransport: function () {
+    return new BunWebSockets({
+      /* Bun.serve options */
+    });
   },
 
   initializeExpress: (app: Express) => {
@@ -37,7 +47,6 @@ const config: ConfigOptions = {
      * (It is not recommended to expose this route in a production environment)
      */
     if (FE_PORT) {
-      app.use('/playground', playground);
       app.use(
         createProxyMiddleware('/', { target: `http://localhost:${FE_PORT}/` })
       );
