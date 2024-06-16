@@ -9,11 +9,15 @@ import {
   type WaitingRoomJoinInfo,
 } from '@shared/types';
 
-export class WaitingRoom extends Room<WaitingRoomState, undefined> {
+export class WaitingRoom extends Room<WaitingRoomState, { title: string }> {
   maxClients = 10;
 
-  onCreate(option: WaitingRoomCreateInfo) {
+  onCreate(options: WaitingRoomCreateInfo) {
     console.log('waiting room', this.roomId, 'creating...');
+    this.maxClients = options.maxPlayers;
+    this.setMetadata({
+      title: options.title,
+    });
     this.setState(new WaitingRoomState());
 
     this.onMessage<ToWaitingRoomMessagePayload['CHANGE_TEAM']>(

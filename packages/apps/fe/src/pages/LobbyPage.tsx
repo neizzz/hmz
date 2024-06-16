@@ -2,15 +2,16 @@ import { MouseEventHandler, useCallback, useEffect, useState } from 'react';
 import { useHmzClient } from '@hooks/useHmzClient';
 import { RoomAvailable } from 'colyseus.js';
 import Button from '@components/common/Button';
-import clsx from 'clsx';
 import { RoomType } from '@shared/types';
 import { getUserNickname } from '@utils/user';
 import {
   navigateToWaitingRoomPage,
   navigateToWaitingRoomPageWithCreation,
 } from '@utils/route';
-import { useLoading } from '../contexts/LoadingContext';
+import AvailableRoom from '@components/AvailableRoom';
 // import MakeRoomForm from '@components/MakeRoomForm';
+
+const client = useHmzClient();
 
 const RefreshButton = () => {
   return (
@@ -39,14 +40,14 @@ const CreationButton = () => {
 };
 
 const QuickRoomButton = () => {
-  // const client = useHmzClient();
-  const { loadingFor } = useLoading();
-
   return (
     <Button
       onClick={() => {
-        loadingFor(async () => {
-          navigateToWaitingRoomPageWithCreation();
+        const nickname = getUserNickname();
+        navigateToWaitingRoomPageWithCreation({
+          title: `${nickname}'s room`,
+          hostJoinInfo: { name: getUserNickname() },
+          maxPlayers: 12,
         });
       }}
     >
@@ -70,9 +71,9 @@ const JoinButton = ({
 };
 
 const LobbyPage = () => {
-  const [selectedRoom, setSelectedRoom] = useState<RoomAvailable>();
-  const [rooms, setRooms] = useState<RoomAvailable[]>([]);
-  const client = useHmzClient();
+  const [selectedAvailableRoom, setSelectedAvailableRoom] =
+    useState<RoomAvailable>();
+  const [availableRooms, setAvailableRooms] = useState<RoomAvailable[]>([]);
 
   // const makeRoomModalController = useModalController({
   //   children: <MakeRoomForm />,
@@ -82,7 +83,7 @@ const LobbyPage = () => {
   // });
 
   useEffect(() => {
-    client.getAvailableRooms(RoomType.WAITING_ROOM).then(setRooms);
+    client.getAvailableRooms(RoomType.WAITING_ROOM).then(setAvailableRooms);
   }, []);
 
   return (
@@ -91,20 +92,18 @@ const LobbyPage = () => {
         {/* <button onClick={() => makeRoomModalController.show()}>Make room</button>
       <makeRoomModalController.AutoModal /> */}
         <ul className={'avlb-room-list'}>
-          {rooms.length > 0
-            ? rooms.map(room => (
-                <li
-                  key={room.roomId}
-                  className={clsx(
-                    'avlb-room',
-                    selectedRoom?.roomId === room.roomId && 'selected'
-                  )}
+          {availableRooms.length > 0
+            ? availableRooms.map(availableRoom => (
+                <AvailableRoom
+                  key={availableRoom.roomId}
+                  availableRoom={availableRoom}
+                  selected={
+                    selectedAvailableRoom?.roomId === availableRoom.roomId
+                  }
                   onClick={() => {
-                    setSelectedRoom(room);
+                    setSelectedAvailableRoom(availableRoom);
                   }}
-                >
-                  {JSON.stringify(room)}
-                </li>
+                />
               ))
             : 'no rooms'}
         </ul>
@@ -117,9 +116,9 @@ const LobbyPage = () => {
           </div>
           <div className={'primary-act-btn-sect'}>
             <JoinButton
-              disabled={!selectedRoom}
+              disabled={!selectedAvailableRoom}
               onClick={() => {
-                navigateToWaitingRoomPage(selectedRoom.roomId);
+                navigateToWaitingRoomPage(selectedAvailableRoom.roomId);
               }}
             />
           </div>
