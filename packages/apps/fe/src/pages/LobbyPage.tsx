@@ -60,9 +60,8 @@ const JoinButton = ({
   onClick,
 }: {
   disabled?: boolean;
-  onClick?: MouseEventHandler;
+  onClick: MouseEventHandler;
 }) => {
-  // const { loadingFor } = useLoading();
   return (
     <Button disabled={disabled} onClick={onClick}>
       Join
@@ -83,7 +82,7 @@ const LobbyPage = () => {
   // });
 
   useEffect(() => {
-    client.getAvailableRooms().then(setRooms);
+    client.getAvailableRooms(RoomType.WAITING_ROOM).then(setRooms);
   }, []);
 
   return (
@@ -117,7 +116,12 @@ const LobbyPage = () => {
             <RefreshButton />
           </div>
           <div className={'primary-act-btn-sect'}>
-            <JoinButton disabled={!selectedRoom} />
+            <JoinButton
+              disabled={!selectedRoom}
+              onClick={() => {
+                navigateToWaitingRoomPage(selectedRoom.roomId);
+              }}
+            />
           </div>
         </div>
       </section>
