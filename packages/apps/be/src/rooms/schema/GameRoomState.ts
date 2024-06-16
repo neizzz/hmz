@@ -1,5 +1,10 @@
 import { Schema, type, MapSchema } from '@colyseus/schema';
-import { Direction, GameState, PlayerEntityState, Team } from '@shared/types';
+import {
+  type Direction,
+  GameState,
+  PlayerEntityState,
+  Team,
+} from '@shared/types';
 
 export class PlayerState extends Schema {
   static SPEED_LIMIT = 2.8; // pixel per step
@@ -8,13 +13,13 @@ export class PlayerState extends Schema {
   static SHOOTING_ACCLERATION = 0.1; // speed per step
   static FRICTION = 0.004; // rate per step
 
-  id: string;
   actionQueue: any[] = []; // input from the client
 
   accelX: number = 0;
   accelY: number = 0;
-  index: number; /** like player's number */
 
+  @type('string') id: string;
+  @type('number') index: number; /** like player's number */
   @type('string') name: string;
   @type('string') team: Team;
   @type('number') radius = 27;

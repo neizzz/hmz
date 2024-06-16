@@ -1,15 +1,15 @@
-import { Room, Client } from '@colyseus/core';
+import { Room, type Client } from '@colyseus/core';
 import { AwaiterState, WaitingRoomState } from './schema/WaitingRoomState';
 import {
   Team,
   ToWaitingRoomMessageType,
   FromWaitingRoomMessageType,
-  WaitingRoomCreateInfo,
-  ToWaitingRoomMessagePayload,
-  WaitingRoomJoinInfo,
+  type WaitingRoomCreateInfo,
+  type ToWaitingRoomMessagePayload,
+  type WaitingRoomJoinInfo,
 } from '@shared/types';
 
-export class WaitingRoom extends Room<WaitingRoomState> {
+export class WaitingRoom extends Room<WaitingRoomState, undefined> {
   maxClients = 10;
 
   onCreate(option: WaitingRoomCreateInfo) {

@@ -1,8 +1,8 @@
 import {
-  GameRoomActionPayload,
+  type GameRoomActionPayload,
   GameRoomActionType,
-  GameRoomAction,
-  HmzMapInfo,
+  type GameRoomAction,
+  type HmzMapInfo,
   Team,
   PlayerEntityState,
   GameRoomMessageType,

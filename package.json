@@ -7,21 +7,18 @@
   ],
   "scripts": {
     "generate-schema-ts": "schema-codegen packages/apps/be/src/rooms/schema/* --ts --output packages/apps/fe/schema/",
-    "start:be": "cross-env BE_PORT=3333 lerna run start --scope @app/be",
-    "start:fe": " lerna run start --scope @app/fe",
-    "start": "cross-env BE_HOST=\"$(ipconfig getifaddr en0)\" BE_PORT=3333 FE_PORT=8080 lerna run start"
+    "start": "bun --filter '@app/*' start"
   },
   "devDependencies": {
     "@types/lodash.clonedeep": "^4.5.9",
-    "@types/node": "^20.11.7",
-    "cross-env": "^7.0.3",
+    "bun-types": "^1.1.13",
     "eslint": "^8.55.0",
-    "lerna": "^8.0.2",
     "prettier": "^3.2.4",
-    "typescript": "^5.2.2",
-    "vite": "^5.0.12"
+    "typescript": "^5.4.5",
+    "rimraf": "^5.0.0"
   },
   "dependencies": {
+    "@colyseus/bun-websockets": "^0.15.2",
     "lodash.clonedeep": "^4.5.0"
   }
 }
