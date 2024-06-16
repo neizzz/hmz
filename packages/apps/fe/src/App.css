@@ -105,7 +105,10 @@ button:hover {
   border: 2px solid var(--avlb-room-bdr-color);
   background-color: var(--avlb-room-bg-color);
   border-radius: 0.4em;
-  padding: 0.6em 0.4em;
+  padding: 0.6em 1em;
+
+  display: flex;
+  justify-content: space-between;
 }
 
 .lobby-page-cont .avlb-room:hover {

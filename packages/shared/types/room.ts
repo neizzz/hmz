@@ -6,9 +6,12 @@ export const enum RoomType {
   GAME_ROOM = 'game-room',
 }
 
-export type WaitingRoomCreateInfo = {
+export type WaitingRoomMetadata = {
+  title: string;
+};
+export type WaitingRoomCreateInfo = WaitingRoomMetadata & {
   hostJoinInfo: WaitingRoomJoinInfo;
-  maxAwaiters: number;
+  maxPlayers: number;
 };
 export type WaitingRoomJoinInfo = {
   name: string;
