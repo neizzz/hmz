@@ -3,10 +3,17 @@ import Text from '@components/common/Text';
 import { navigateToLobbyPage } from '@utils/route';
 import { setUserNickname } from '@utils/user';
 import { useMemo, useState } from 'react';
+import { useLoaderData, useNavigate } from 'react-router-dom';
 
 const SAVE_KEY_NICKNAME = 'hmz.save.nickname';
 
+export type WelcomeRoomPageInitParams = {
+  pathOnSubmit?: string;
+};
+
 const WelcomePage = () => {
+  const params = useLoaderData() as WelcomeRoomPageInitParams;
+  const navigate = useNavigate();
   const savedNickname = useMemo(() => {
     return localStorage.getItem(SAVE_KEY_NICKNAME) ?? '';
   }, []);
@@ -26,7 +33,9 @@ const WelcomePage = () => {
           onSubmit={nickname => {
             localStorage.setItem(SAVE_KEY_NICKNAME, nickname);
             setUserNickname(nickname);
-            navigateToLobbyPage();
+            params?.pathOnSubmit
+              ? navigate(params.pathOnSubmit)
+              : navigateToLobbyPage();
           }}
           onChange={nickname => {
             nickname.length > 1
