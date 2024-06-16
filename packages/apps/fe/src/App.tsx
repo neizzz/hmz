@@ -55,7 +55,9 @@ const router = initRouter([
               /** NOTE:
                * react router를 안태우기위해, history API를 직접적으로 사용.
                * */
-              history.replaceState(null, null, `/room/${room.roomId}`);
+              setTimeout(() => {
+                history.replaceState(null, null, `/room/${room.roomId}`);
+              });
               return room;
             }),
         };
