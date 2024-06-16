@@ -7,7 +7,8 @@ import { createProxyMiddleware } from 'http-proxy-middleware';
  * Import your Room files
  */
 import { WaitingRoom } from './rooms/WaitingRoom.js';
-import { Server } from '@colyseus/core';
+// import { Server } from '@colyseus/core';
+import { Server } from 'colyseus';
 import { RoomType } from '@shared/types';
 import { GameRoom } from './rooms/GameRoom.js';
 import { BunWebSockets } from '@colyseus/bun-websockets';
