@@ -2,7 +2,9 @@ import './App.css';
 
 import { redirect, RouterProvider } from 'react-router-dom';
 
-import WelcomePage from './pages/WelcomePage';
+import WelcomePage, {
+  type WelcomeRoomPageInitParams,
+} from './pages/WelcomePage';
 import LobbyPage from './pages/LobbyPage';
 import { useHmzClient } from '@hooks/useHmzClient';
 import WaitingRoomPage, {
@@ -21,6 +23,15 @@ const router = initRouter([
     element: <WelcomePage />,
   },
   {
+    path: '/welcome/*',
+    loader: ({ params }): WelcomeRoomPageInitParams => {
+      return {
+        pathOnSubmit: params['*'],
+      };
+    },
+    Component: WelcomePage,
+  },
+  {
     path: '/rooms',
     element: <LobbyPage />,
   },
@@ -36,7 +47,8 @@ const router = initRouter([
           }),
         };
       } else {
-        return redirect('/');
+        const pathOnSubmit = `/room/${params.roomId}`;
+        return redirect(`/welcome/${pathOnSubmit}`);
       }
     },
     Component: WaitingRoomPage,
