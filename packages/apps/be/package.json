@@ -4,8 +4,11 @@
   "version": "1.0.0",
   "main": "dist/index.js",
   "type": "module",
+  "engines": {
+    "bun": ">=1.1.13"
+  },
   "scripts": {
-    "start": "tsc && BE_PORT=3333 bun --hot --inspect src/index.ts",
+    "start": "tsc && NODE_ENV=test BE_PORT=3333 bun --hot --inspect src/index.ts",
     "build:development": "tsc && bun build src/index.ts",
     "test": "mocha -r tsx test/**_test.ts --exit --timeout 15000"
   },

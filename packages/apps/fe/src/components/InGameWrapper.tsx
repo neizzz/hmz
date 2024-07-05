@@ -1,11 +1,7 @@
 import { useHmzClient } from '@hooks/useHmzClient';
 import { BootstrapScene } from '@in-game/scenes/BootstrapScene';
 import { GameScene } from '@in-game/scenes/GameScene.ts';
-import {
-  GameRoomJoinInfo,
-  GameRoomMessageType,
-  HmzMapInfo,
-} from '@shared/types';
+import { HmzMapInfo, WaitingRoomJoinInfo } from '@shared/types';
 import clsx from 'clsx';
 import { Room } from 'colyseus.js';
 import { useEffect, useRef, useState } from 'react';
@@ -36,7 +32,7 @@ export type InGameParams = {
   room?: Room; // for host
   roomId: string;
   map: HmzMapInfo;
-  myJoinInfo: GameRoomJoinInfo;
+  myJoinInfo: WaitingRoomJoinInfo;
 };
 
 type Props = {
@@ -79,16 +75,16 @@ const InGameWrapper = ({
   useEffect(() => {
     if (!gameRoom) return;
 
-    gameRoom.onMessage(
-      GameRoomMessageType.GOAL,
-      ({ team, redTeamScore, blueTeamScore }) => {
-        setRedScore(redTeamScore);
-        setBlueScore(blueTeamScore);
-      }
-    );
-    gameRoom.onMessage(GameRoomMessageType.DISPOSE, () => {
-      onEnd?.();
-    });
+    // gameRoom.onMessage(
+    //   GameRoomMessageType.GOAL,
+    //   ({ team, redTeamScore, blueTeamScore }) => {
+    //     setRedScore(redTeamScore);
+    //     setBlueScore(blueTeamScore);
+    //   }
+    // );
+    // gameRoom.onMessage(GameRoomMessageType.DISPOSE, () => {
+    //   onEnd?.();
+    // });
   }, [gameRoom]);
 
   return (

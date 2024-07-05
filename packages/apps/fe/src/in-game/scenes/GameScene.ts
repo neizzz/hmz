@@ -1,31 +1,31 @@
 import { Ball } from '@in-game/entities/Ball';
 import { Player } from '@in-game/entities/Player';
-import { BallState, GameRoomState, PlayerState } from '@schema';
+// import { BallState, GameRoomState, PlayerState } from '@schema';
 import {
+  BallState,
   Direction,
-  GameRoomAction,
-  GameRoomActionType,
-  GameRoomMessageType,
+  GameSceneState,
+  GameSystemMessageType,
+  GameUserAction,
+  GameUserActionType,
   HmzMapInfo,
+  PlayerState,
 } from '@shared/types';
 import { Room } from 'colyseus.js';
 import Phaser from 'phaser';
 import { MapBuilder } from '@utils/map/builder';
 import { Color } from '@constants';
 import StartCounter from '@in-game/effects/StartCounter';
-import GameStateQueue from '@utils/GameStateQueue';
-import cloneDeep from 'lodash.clonedeep';
-import { GameRenderState } from '@in-game/types';
 
 export type GameSceneInitParams = {
   observer?: boolean;
   map: HmzMapInfo;
-  room: Room;
+  inGameHost: string;
 };
 
 export class GameScene extends Phaser.Scene {
   observer?: boolean;
-  room: Room;
+  // room: Room;
   me: string; // session id
   mapBuilder: MapBuilder;
   ball: Ball;
@@ -34,34 +34,16 @@ export class GameScene extends Phaser.Scene {
   // ballSprite: MatterJS.BodyType; // FIXME: just for debug
 
   cursorKeys: Phaser.Types.Input.Keyboard.CursorKeys;
-
-  stateQueue = new GameStateQueue({
-    onLerp: (a: GameRenderState, b: GameRenderState): GameRenderState => {
-      const result: GameRenderState = cloneDeep(b);
-
-      Object.entries(a.players).forEach(([id, playerStateA]) => {
-        const playerStateB = b.players[id];
-
-        result.players[id].x = (playerStateA.x + playerStateB.x) / 2;
-        result.players[id].y = (playerStateA.y + playerStateB.y) / 2;
-      });
-
-      result.ball.x = (a.ball.x + b.ball.x) / 2;
-      result.ball.y = (a.ball.y + b.ball.y) / 2;
-
-      return result;
-    },
-  });
   fixedUpdate = this.generateFixedUpdator();
 
   constructor() {
     super('game-scene');
   }
 
-  init({ room, map, observer }: GameSceneInitParams) {
+  init({ inGameHost, map, observer }: GameSceneInitParams) {
     this.observer = observer; // TODO:
-    this.room = room;
-    this.me = room.sessionId;
+    // this.room = room;
+    // this.me = room.sessionId;
     this.mapBuilder = new MapBuilder(this, map);
     this.cursorKeys = this.input.keyboard.createCursorKeys();
   }
@@ -99,46 +81,46 @@ export class GameScene extends Phaser.Scene {
     this.initStateChangedEvents();
     this.initEffectEvents();
 
-    this.room.onMessage(GameRoomMessageType.DISPOSE, () => {
-      this.game.destroy(true);
-    });
+    // this.room.onMessage(GameRoomMessageType.DISPOSE, () => {
+    //   this.game.destroy(true);
+    // });
 
-    this.input.keyboard.on('keydown-SPACE', event => {
-      this.room.send(GameRoomMessageType.USER_ACTION, {
-        type: GameRoomActionType.SHOOT_START,
-      });
-    });
-    this.input.keyboard.on('keyup-SPACE', event => {
-      this.room.send(GameRoomMessageType.USER_ACTION, {
-        type: GameRoomActionType.SHOOT_END,
-      });
-    });
+    // this.input.keyboard.on('keydown-SPACE', event => {
+    //   this.room.send(GameRoomMessageType.USER_ACTION, {
+    //     type: GameRoomActionType.SHOOT_START,
+    //   });
+    // });
+    // this.input.keyboard.on('keyup-SPACE', event => {
+    //   this.room.send(GameRoomMessageType.USER_ACTION, {
+    //     type: GameRoomActionType.SHOOT_END,
+    //   });
+    // });
   }
 
-  update(time: number, delta: number): void {
-    const state = this.stateQueue.popForRender();
+  // update(time: number, delta: number): void {
+  //   const state = this.stateQueue.popForRender();
 
-    if (state) {
-      Object.values(this.players).forEach(player => player.update());
-      this.ball.update();
-      this.syncTo(state);
-    }
+  //   if (state) {
+  //     Object.values(this.players).forEach(player => player.update());
+  //     this.ball.update();
+  //     this.syncTo(state);
+  //   }
 
-    // 30hz
-    this.fixedUpdate(time, delta);
-  }
+  //   // 30hz
+  //   this.fixedUpdate(time, delta);
+  // }
 
   private generateFixedUpdator() {
     let elapsedTime = 0;
     const FIXED_TIME_STEP = 1000 / 30; // ms/hz
 
     const fixedTick = () => {
-      this.room.send(GameRoomMessageType.USER_ACTION, {
-        type: GameRoomActionType.DIRECTION,
-        payload: {
-          direction: this.getDirectionFromInput(),
-        },
-      });
+      // this.room.send(GameSystemMessageType.USER_ACTION, {
+      //   type: GameUserActionType.DIRECTION,
+      //   payload: {
+      //     direction: this.getDirectionFromInput(),
+      //   },
+      // });
     };
 
     return (time, delta) => {
@@ -156,79 +138,76 @@ export class GameScene extends Phaser.Scene {
     const croudScoreAudio = this.sound.add('crowd-score');
     // TODO: const hitGoalpost = this.sound.add('hit-goalpost');
 
-    this.room.onMessage<GameRoomMessageType>(
-      GameRoomMessageType.READY_TO_START,
-      () => {
-        new StartCounter(this).startFrom(3, () => {
-          this.room.send(GameRoomMessageType.USER_READY_TO_KICKOFF);
-        });
-      }
-    );
+    // this.room.onMessage<GameSystemMessageType>(
+    //   GameSystemMessageType.READY_TO_START,
+    //   () => {
+    //     new StartCounter(this).startFrom(3, () => {
+    //       this.room.send(GameSystemMessageType.USER_READY_TO_KICKOFF);
+    //     });
+    //   }
+    // );
 
-    this.room.onMessage<GameRoomAction>(GameRoomMessageType.SHOOT, () => {
-      shootAudio.play();
-    });
-    this.room.onMessage<GameRoomAction>(GameRoomMessageType.GOAL, () => {
-      croudScoreAudio.play(undefined);
-    });
-    this.room.onMessage<GameRoomAction>(GameRoomMessageType.KICKOFF, () => {
-      whistleAudio.play();
-    });
+    // this.room.onMessage<GameUserAction>(GameSystemMessageType.SHOOT, () => {
+    //   shootAudio.play();
+    // });
+    // this.room.onMessage<GameUserAction>(GameSystemMessageType.GOAL, () => {
+    //   croudScoreAudio.play(undefined);
+    // });
+    // this.room.onMessage<GameUserAction>(GameSystemMessageType.KICKOFF, () => {
+    //   whistleAudio.play();
+    // });
   }
 
   private initStateChangedEvents(): void {
-    this.room.state.listen('ball', (state: BallState) => {
-      this.ball = new Ball(this, { state });
-    });
-
-    this.room.state.players.onAdd((state: PlayerState, id) => {
-      this.players[id] = new Player(this, { state, me: id === this.me });
-    });
-
+    // this.room.state.listen('ball', (state: BallState) => {
+    //   this.ball = new Ball(this, { state });
+    // });
+    // this.room.state.players.onAdd((state: PlayerState, id) => {
+    //   this.players[id] = new Player(this, { state, me: id === this.me });
+    // });
     // TODO: player remove
-
-    this.room.onStateChange((state: GameRoomState) => {
-      const players: GameRenderState['players'] = [
-        ...state.players.entries(),
-      ].reduce((result, [id, playerServerState]) => {
-        const {
-          name,
-          team,
-          x,
-          y,
-          kickoffX,
-          kickoffY,
-          radius,
-          entityState,
-        }: PlayerState = playerServerState;
-        result[id] = {
-          name,
-          team,
-          x,
-          y,
-          kickoffX,
-          kickoffY,
-          radius,
-          entityState,
-        };
-        return result;
-      }, {});
-      const { x, y, kickoffX, kickoffY, radius } = state.ball;
-      const renderState: GameRenderState = {
-        players,
-        ball: { x, y, kickoffX, kickoffY, radius },
-      };
-      this.stateQueue.pushFromServer(renderState);
-    });
+    // this.room.onStateChange((state: GameSceneState) => {
+    //   const players: GameRenderState['players'] = [
+    //     ...state.players.entries(),
+    //   ].reduce((result, [id, playerServerState]) => {
+    //     const {
+    //       name,
+    //       team,
+    //       x,
+    //       y,
+    //       kickoffX,
+    //       kickoffY,
+    //       radius,
+    //       entityState,
+    //     }: PlayerState = playerServerState;
+    //     result[id] = {
+    //       name,
+    //       team,
+    //       x,
+    //       y,
+    //       kickoffX,
+    //       kickoffY,
+    //       radius,
+    //       entityState,
+    //     };
+    //     return result;
+    //   }, {});
+    //   const { x, y, kickoffX, kickoffY, radius } = state.ball;
+    //   const renderState: GameSceneState = {
+    //     players,
+    //     ball: { x, y, kickoffX, kickoffY, radius },
+    //   };
+    //   this.stateQueue.pushFromServer(renderState);
+    // });
   }
 
-  private syncTo = (state: GameRenderState) => {
-    Object.entries(state.players).forEach(([id, playerServerState]) => {
-      this.players[id].syncTo(playerServerState, id === this.me);
-    });
+  // private syncTo = (state: GameRenderState) => {
+  //   Object.entries(state.players).forEach(([id, playerServerState]) => {
+  //     this.players[id].syncTo(playerServerState, id === this.me);
+  //   });
 
-    this.ball.syncTo(state.ball);
-  };
+  //   this.ball.syncTo(state.ball);
+  // };
 
   private getDirectionFromInput(): Direction {
     const xdir = +this.cursorKeys.right.isDown - +this.cursorKeys.left.isDown;

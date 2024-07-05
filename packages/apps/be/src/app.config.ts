@@ -10,7 +10,6 @@ import { WaitingRoom } from './rooms/WaitingRoom.js';
 // import { Server } from '@colyseus/core';
 import { Server } from 'colyseus';
 import { RoomType } from '@shared/types';
-import { GameRoom } from './rooms/GameRoom.js';
 import { BunWebSockets } from '@colyseus/bun-websockets';
 
 const { FE_PORT } = process.env;
@@ -22,11 +21,8 @@ const config: ConfigOptions = {
      */
     // TODO: LobbyRoom
 
-    // NOTE: 왜 ts에러나는지 모르겠음.
     // @ts-ignore
     gameServer.define(RoomType.WAITING_ROOM, WaitingRoom);
-    // @ts-ignore
-    gameServer.define(RoomType.GAME_ROOM, GameRoom);
   },
 
   initializeTransport: function () {
