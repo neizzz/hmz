@@ -1,9 +1,13 @@
 import { useHmzClient } from '@hooks/useHmzClient';
+import InGameConnection from '@in-game/InGameConnection';
 import { BootstrapScene } from '@in-game/scenes/BootstrapScene';
 import { GameScene } from '@in-game/scenes/GameScene.ts';
-import { HmzMapInfo, WaitingRoomJoinInfo } from '@shared/types';
+import {
+  GameSystemMessageType,
+  HmzMapInfo,
+  WaitingRoomJoinInfo,
+} from '@shared/types';
 import clsx from 'clsx';
-import { Room } from 'colyseus.js';
 import { useEffect, useRef, useState } from 'react';
 
 const GAME_SCENE_PARENT_ID = 'in-game-container';
@@ -28,64 +32,62 @@ const config: Phaser.Types.Core.GameConfig = {
 } as const;
 
 export type InGameParams = {
-  host?: boolean;
-  room?: Room; // for host
-  roomId: string;
+  // host?: boolean;
+  // room?: Room; // for host
+  // roomId: string;
+  myId: string;
+  inGameUrl: string;
   map: HmzMapInfo;
-  myJoinInfo: WaitingRoomJoinInfo;
+  // myJoinInfo: WaitingRoomJoinInfo;
 };
 
 type Props = {
   onEnd?: () => void;
 } & InGameParams;
 
-const InGameWrapper = ({
-  host,
-  room,
-  roomId,
-  map,
-  myJoinInfo,
-  onEnd,
-}: Props) => {
+const InGameWrapper = ({ inGameUrl, map, myId, myJoinInfo, onEnd }: Props) => {
   const client = useHmzClient();
+  const inGameConnectionRef = useRef(
+    new InGameConnection({ myId, url: inGameUrl })
+  );
   const gameInstanceRef = useRef<Phaser.Game>();
-  const [gameRoom, setGameRoom] = useState<Room>(undefined);
 
+  // DEBUG:
   useEffect(() => {
-    host
-      ? setGameRoom(room)
-      : client.joinById(roomId, myJoinInfo).then(setGameRoom);
+    console.log('inGameUrl:', inGameUrl);
   }, []);
 
   useEffect(() => {
-    if (!gameRoom) return;
-
     const gameInstance = new Phaser.Game({
       ...config,
       width: map.width,
       height: map.height,
     });
-    gameInstance.scene.start('game-scene', { room: gameRoom, map });
+    gameInstance.scene.start('game-scene', {
+      myId,
+      connection: inGameConnectionRef.current,
+      map,
+    });
     gameInstanceRef.current = gameInstance;
-  }, [gameRoom]);
+  }, []);
 
   const [redScore, setRedScore] = useState(0);
   const [blueScore, setBlueScore] = useState(0);
 
   useEffect(() => {
-    if (!gameRoom) return;
+    if (!inGameConnectionRef.current) return;
 
-    // gameRoom.onMessage(
-    //   GameRoomMessageType.GOAL,
-    //   ({ team, redTeamScore, blueTeamScore }) => {
-    //     setRedScore(redTeamScore);
-    //     setBlueScore(blueTeamScore);
-    //   }
-    // );
+    inGameConnectionRef.current.addMessageHandler(
+      GameSystemMessageType.GOAL,
+      ({ team, redTeamScore, blueTeamScore }) => {
+        setRedScore(redTeamScore);
+        setBlueScore(blueTeamScore);
+      }
+    );
     // gameRoom.onMessage(GameRoomMessageType.DISPOSE, () => {
     //   onEnd?.();
     // });
-  }, [gameRoom]);
+  }, []);
 
   return (
     <div

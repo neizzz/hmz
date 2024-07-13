@@ -11,6 +11,7 @@ import {
   type WaitingRoomMessageDownstreamPayload,
   WaitingRoomMessageType,
 } from '@shared/types';
+import InGameProcessManageService from '../services/InGameProcessManageService';
 
 export class WaitingRoom extends Room<WaitingRoomState, { title: string }> {
   maxClients = 10;
@@ -25,43 +26,10 @@ export class WaitingRoom extends Room<WaitingRoomState, { title: string }> {
 
     this.onMessage<
       WaitingRoomMessageUpstreamPayload[WaitingRoomMessageType.CHANGE_TEAM]
-    >(WaitingRoomMessageType.CHANGE_TEAM, (client, message) => {
-      console.log(
-        `[${WaitingRoomMessageType.CHANGE_TEAM}]: ${client.sessionId}, ${JSON.stringify(message)}`
-      );
-      const player = this.state.players.get(client.sessionId);
-
-      if (!player) {
-        throw new Error(
-          `The client(sessionId: ${client.sessionId}) not found.`
-        );
-      }
-
-      player.team = message.to;
-      this.state.players.set(client.sessionId, player);
-      this.broadcast(WaitingRoomMessageType.CHANGE_TEAM, {
-        players: this.state.players,
-      });
-    });
-
+    >(WaitingRoomMessageType.CHANGE_TEAM, this._handleMessageChangeTeam);
     this.onMessage<
       WaitingRoomMessageUpstreamPayload[WaitingRoomMessageType.START_GAME]
-    >(WaitingRoomMessageType.START_GAME, (client, { map }) => {
-      console.log(
-        `[${WaitingRoomMessageType.START_GAME}]: ${client.sessionId}`
-      );
-
-      this._createInGameProcess();
-
-      // this.broadcast(
-      //   WaitingRoomMessageType.START_GAME,
-      //   {
-      //     inGameUrl,
-      //     map,
-      //   },
-      //   { except: client }
-      // );
-    });
+    >(WaitingRoomMessageType.START_GAME, this._handleMessageStartGame);
   }
 
   onJoin(client: Client, options: WaitingRoomCreateInfo | WaitingRoomJoinInfo) {
@@ -92,18 +60,51 @@ export class WaitingRoom extends Room<WaitingRoomState, { title: string }> {
     console.log('waiting room', this.roomId, 'disposing...');
   }
 
-  private _createInGameProcess() {
-    const proc = Bun.spawn(['bun', process.env.IN_GAME_PROCESS_PATH], {
-      ipc(message, childProc) {
-        console.log('im parent, receive', message);
-        childProc.send('im parent');
-      },
-      // cwd: './path/to/subdir', // specify a working directory
-      // env: { ...process.env, FOO: 'bar' }, // specify environment variables
-      onExit(proc, exitCode, signalCode, error) {
-        // exit handler
-        console.log('process exit', exitCode, proc, error);
+  private _handleMessageChangeTeam = (
+    client: Client,
+    message: WaitingRoomMessageUpstreamPayload[WaitingRoomMessageType.CHANGE_TEAM]
+  ) => {
+    console.log(
+      `[${WaitingRoomMessageType.CHANGE_TEAM}]: ${client.sessionId}, ${JSON.stringify(message)}`
+    );
+    const player = this.state.players.get(client.sessionId);
+
+    if (!player) {
+      throw new Error(`The client(sessionId: ${client.sessionId}) not found.`);
+    }
+
+    player.team = message.to;
+    this.state.players.set(client.sessionId, player);
+    this.broadcast(WaitingRoomMessageType.CHANGE_TEAM, {
+      players: this.state.players,
+    });
+  };
+
+  private _handleMessageStartGame = (
+    client: Client,
+    {
+      map,
+    }: WaitingRoomMessageUpstreamPayload[WaitingRoomMessageType.START_GAME]
+  ) => {
+    console.log(`[${WaitingRoomMessageType.START_GAME}]: ${client.sessionId}`);
+
+    const inGameProc = InGameProcessManageService.spawnProcess(this.roomId, {
+      players: this.state.players.toJSON(),
+      map,
+      onInit: (inGameUrl: string) => {
+        this.broadcast(WaitingRoomMessageType.START_GAME, {
+          map,
+          inGameUrl,
+        });
       },
     });
-  }
+
+    // this.broadcast(
+    //   WaitingRoomMessageType.START_GAME,
+    //   {
+    //     inGameUrl,
+    //     map,
+    //   },
+    // );
+  };
 }

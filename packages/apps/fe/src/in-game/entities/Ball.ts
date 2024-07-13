@@ -1,4 +1,4 @@
-import { BallState } from '@schema';
+import { BallState } from '@shared/types';
 
 type InitParams = {
   state: BallState;
@@ -21,7 +21,7 @@ export class Ball extends Phaser.GameObjects.Sprite {
 
   constructor(scene: Phaser.Scene, params: InitParams) {
     const { state } = params;
-    const { kickoffX: x, kickoffY: y } = state;
+    const { x, y } = state;
     super(scene, x, y, 'ball');
     this.setPosition(x, y);
     scene.add.existing(this);

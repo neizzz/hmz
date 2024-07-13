@@ -7,7 +7,6 @@ import {
 } from 'react';
 import {
   HmzMap,
-  RoomType,
   Team,
   WaitingRoomJoinInfo,
   WaitingRoomMessageType,
@@ -15,7 +14,7 @@ import {
 import { Room } from 'colyseus.js';
 import { useLoaderData } from 'react-router-dom';
 import { useHmzClient } from '@hooks/useHmzClient';
-import InGame, { InGameParams } from '../components/InGameWrapper';
+import InGameWrapper, { InGameParams } from '../components/InGameWrapper';
 import cloneDeep from 'lodash.clonedeep';
 import clsx from 'clsx';
 import { WaitingRoomPlayerState } from '@schema';
@@ -114,14 +113,16 @@ const WaitingRoomPage = () => {
   }, [room.state]);
 
   useEffect(() => {
+    console.log(room.sessionId, hostSessionId);
     room.sessionId === hostSessionId ||
       room.onMessage(
         WaitingRoomMessageType.START_GAME,
-        ({ roomId: gameRoomId, map }) => {
+        ({ inGameUrl, map }) => {
           setInGameParams({
-            roomId: gameRoomId,
+            myId: room.sessionId,
+            inGameUrl,
             map,
-            myJoinInfo: getMyJoinInfo(),
+            // myJoinInfo: getMyJoinInfo(),
           });
         }
       );
@@ -217,7 +218,10 @@ const WaitingRoomPage = () => {
         </div>
       </div>
       {inGameParams && (
-        <InGame {...inGameParams} onEnd={() => setInGameParams(undefined)} />
+        <InGameWrapper
+          {...inGameParams}
+          onEnd={() => setInGameParams(undefined)}
+        />
       )}
     </>
   );
