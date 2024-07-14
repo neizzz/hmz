@@ -3,7 +3,8 @@
   "compilerOptions": {
     "paths": {
       "@utils/*": ["./src/utils/*"],
-      "@constants": ["./src/constants.ts"]
+      "@constants": ["./src/constants.ts"],
+      "@in-game/*": ["./src/in-game/*"]
     }
   },
   "include": ["src/**/*.ts", "global.d.ts"]

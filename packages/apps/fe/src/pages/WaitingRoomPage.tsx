@@ -113,20 +113,16 @@ const WaitingRoomPage = () => {
   }, [room.state]);
 
   useEffect(() => {
-    console.log(room.sessionId, hostSessionId);
-    room.sessionId === hostSessionId ||
-      room.onMessage(
-        WaitingRoomMessageType.START_GAME,
-        ({ inGameUrl, map }) => {
-          setInGameParams({
-            myId: room.sessionId,
-            inGameUrl,
-            map,
-            // myJoinInfo: getMyJoinInfo(),
-          });
-        }
-      );
-  }, [hostSessionId]);
+    // console.log(room.sessionId, hostSessionId);
+    // room.sessionId === hostSessionId ||
+    room.onMessage(WaitingRoomMessageType.START_GAME, ({ inGameUrl, map }) => {
+      setInGameParams({
+        myId: room.sessionId,
+        inGameUrl,
+        map,
+      });
+    });
+  }, []);
 
   return (
     <>
@@ -185,30 +181,6 @@ const WaitingRoomPage = () => {
                   room.send(WaitingRoomMessageType.START_GAME, {
                     map,
                   });
-                  // client
-                  //   .create(RoomType.GAME_ROOM, {
-                  //     hostJoinInfo: getMyJoinInfo(),
-                  //     setting: {
-                  //       map,
-                  //       redTeamCount: playersByTeam.red.length,
-                  //       blueTeamCount: playersByTeam.blue.length,
-                  //       endScore: 3,
-                  //     },
-                  //   })
-                  //   .then(gameRoom => {
-                  //     const inGameInfo = {
-                  //       host: true,
-                  //       room: gameRoom,
-                  //       roomId: gameRoom.roomId,
-                  //       map,
-                  //       myJoinInfo: getMyJoinInfo(),
-                  //     };
-                  //     setInGameParams(inGameInfo);
-                  //     room.send(WaitingRoomMessageType.START_GAME, {
-                  //       roomId: inGameInfo.roomId,
-                  //       map: inGameInfo.map,
-                  //     });
-                  //   });
                 }}
               >
                 START

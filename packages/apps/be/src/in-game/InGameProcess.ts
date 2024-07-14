@@ -91,14 +91,11 @@ function onMessage(
 ): void | Promise<void> {
   const { type, payload } = JSON.parse(message as string) as GameSystemMessage;
 
-  Ipc.postMessage({ type, payload });
-
   switch (type) {
     case GameSystemMessageType.USER_ENTRANCE:
       Comm.setId(ws, payload.id);
       break;
     case GameSystemMessageType.USER_ACTION:
-      Ipc.postMessage({ wsid: Comm.getId(ws) });
       Action.pushAction(Comm.getId(ws), payload);
       break;
   }
@@ -120,7 +117,6 @@ async function initWebSocketServer(): Promise<Server | undefined> {
         message: onMessage,
         open: ws => {
           Comm.playersWs.push(ws);
-          Ipc.postMessage(`websocket opened: ${JSON.stringify(ws)}`);
         },
         close: (ws, code, message) => {
           Ipc.postMessage(`websocket close: ${code}, ${message}`);
