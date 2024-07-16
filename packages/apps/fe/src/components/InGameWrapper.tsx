@@ -45,8 +45,8 @@ type Props = {
   onEnd?: () => void;
 } & InGameParams;
 
-const InGameWrapper = ({ inGameUrl, map, myId, myJoinInfo, onEnd }: Props) => {
-  const client = useHmzClient();
+const InGameWrapper = ({ inGameUrl, map, myId, onEnd }: Props) => {
+  // const client = useHmzClient();
   const inGameConnectionRef = useRef(
     new InGameConnection({ myId, url: inGameUrl })
   );

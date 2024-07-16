@@ -1,5 +1,4 @@
 import { type HmzMapInfo } from '@shared/types/map';
-import type { Server, ServerWebSocket } from 'bun';
 import { IpcMessageType, type IpcMessage } from './ipc';
 import {
   type GameSceneState,
@@ -13,17 +12,32 @@ import {
   type GameUserAction,
 } from '@shared/types';
 import { GameEngine } from './engine';
-const { PORT, INITIAL_PLAYERS_SERIALIZED, MAP } = process.env;
+import { WebSocketServer } from 'ws';
 
-/** env check */
-if (!PORT || !INITIAL_PLAYERS_SERIALIZED || !MAP) {
-  throw new Error(
-    `Invalid env: ${JSON.stringify({ PORT, INITIAL_PLAYERS_SERIALIZED, MAP })}`
-  );
-}
+const GAME_ENV: {
+  PORT?: number;
+  INITIAL_PLAYERS?: Record<string, InitialPlayerState>;
+  MAP?: HmzMapInfo;
+} = {};
+
+process.once('message', message => {
+  const { PORT, INITIAL_PLAYERS, MAP } = message as typeof GAME_ENV;
+
+  if (!PORT || !INITIAL_PLAYERS || !MAP) {
+    throw new Error(
+      `Invalid GAME_ENV: ${JSON.stringify({ PORT, INITIAL_PLAYERS, MAP })}`
+    );
+  }
+
+  GAME_ENV.PORT = PORT;
+  GAME_ENV.INITIAL_PLAYERS = INITIAL_PLAYERS;
+  GAME_ENV.MAP = MAP;
+
+  initWebSocketServer();
+});
 
 export namespace Ipc {
-  export function postMessage(message: IpcMessage | unknown) {
+  function postMessage(message: IpcMessage | unknown) {
     process.send?.(message);
   }
   export function onError() {
@@ -47,18 +61,16 @@ export namespace Ipc {
 // function layoutKickoff() {}
 
 namespace Comm {
-  const ws2id: Map<ServerWebSocket, string> = new Map();
-  export const playersWs: ServerWebSocket[] = [];
+  let wss: WebSocketServer;
   function broadcast(message: GameSystemMessage) {
-    playersWs.forEach(ws => {
+    wss.clients.forEach(ws => {
       ws.send(JSON.stringify(message));
     });
   }
-  export function setId(ws: ServerWebSocket, id: string) {
-    ws2id.set(ws, id);
-  }
-  export function getId(ws: ServerWebSocket): string {
-    return ws2id.get(ws) as string;
+  export function initServer(initWss: WebSocketServer) {
+    wss = initWss;
+    const { host, port } = wss.options;
+    Ipc.onInitServer(`ws://${host}:${port}`);
   }
   export function broadcastSceneState(sceneState: GameSceneState) {
     broadcast({
@@ -70,63 +82,47 @@ namespace Comm {
   }
 }
 
-namespace Action {
-  let actionsMap: Record<string, GameUserAction[]> = {};
-  export function pushAction(id: string, action: GameUserAction) {
-    actionsMap[id]?.push(action) ?? (actionsMap[id] = [action]);
+namespace ActionQueue {
+  let queue: GameUserAction[] = [];
+  export function push(action: GameUserAction) {
+    queue.push(action);
   }
-  export function popActions(): Record<string, GameUserAction[]> {
-    const result = actionsMap;
-    actionsMap = {};
-    Object.keys(result).forEach(id => {
-      actionsMap[id] = [];
-    });
+  export function popAll(): GameUserAction[] {
+    const result = queue;
+    queue = [];
     return result;
   }
 }
 
-function onMessage(
-  ws: ServerWebSocket,
-  message: string | Buffer
-): void | Promise<void> {
-  const { type, payload } = JSON.parse(message as string) as GameSystemMessage;
+function onMessage(data: string | Buffer): void | Promise<void> {
+  const { type, payload } = JSON.parse(data as string) as GameSystemMessage;
 
   switch (type) {
     case GameSystemMessageType.USER_ENTRANCE:
-      Comm.setId(ws, payload.id);
+      console.log('User entrance', payload);
       break;
     case GameSystemMessageType.USER_ACTION:
-      Action.pushAction(Comm.getId(ws), payload);
+      ActionQueue.push(payload);
       break;
   }
 }
 
-async function initWebSocketServer(): Promise<Server | undefined> {
+async function initWebSocketServer(): Promise<WebSocketServer | undefined> {
   try {
-    const server = Bun.serve({
-      port: PORT,
-      fetch(req, server) {
-        // upgrade the request to a WebSocket
-        if (server.upgrade(req)) {
-          return; // do not return a Response
-        } else {
-          return new Response('Upgrade failed', { status: 500 });
-        }
-      },
-      websocket: {
-        message: onMessage,
-        open: ws => {
-          Comm.playersWs.push(ws);
-        },
-        close: (ws, code, message) => {
-          Ipc.postMessage(`websocket close: ${code}, ${message}`);
-        },
-        // drain: ws => {}, // the socket is ready to receive more data
-      },
+    const wss = new WebSocketServer({
+      host: 'localhost', // FIXME: 일단 개발용으로만
+      port: GAME_ENV.PORT,
+      clientTracking: true,
+    });
+    wss.on('connection', ws => {
+      console.log('connection!');
+      startGame();
+      ws.on('message', onMessage);
+      // TODO:FIXME: 모든 플레이어가 진입했을때 실행하도록
     });
 
-    Ipc.onInitServer(`ws://${server.url.host}`);
-    return server;
+    Comm.initServer(wss);
+    return wss;
   } catch (e) {
     // TODO: send to parent for re-spawn process
     console.log('error', e);
@@ -134,20 +130,13 @@ async function initWebSocketServer(): Promise<Server | undefined> {
 }
 
 function runLoop(
-  onUpdate: (delta: number, actions: Record<string, GameUserAction[]>) => void,
+  onUpdate: (delta: number, actions: GameUserAction[]) => void,
   getGameSceneState: () => GameSceneState
 ) {
   let prevTime = Date.now();
   return setInterval(() => {
     const now = Date.now();
-    const actions = Action.popActions();
-    // const values = Object.values(actions);
-    // Ipc.postMessage(
-    //   JSON.stringify({
-    //     length: values.length,
-    //     length2: values.pop()?.length ?? 123,
-    //   })
-    // );
+    const actions = ActionQueue.popAll();
     onUpdate(now - prevTime, actions);
     prevTime = now;
 
@@ -156,12 +145,14 @@ function runLoop(
   }, 33);
 }
 
-function initialPlayerStates(
-  initialPlayers: Record<string, InitialPlayerState>
-): Record<string, PlayerState> {
+function initialPlayerStates(): Record<string, PlayerState> {
   const result: Record<string, PlayerState> = {};
   let currRedTeamPlayerIndex = 0;
   let currBlueTeamPlayerIndex = 0;
+  const initialPlayers = GAME_ENV.INITIAL_PLAYERS as Record<
+    string,
+    InitialPlayerState
+  >;
   Object.entries(initialPlayers).map(([id, initaialPlayerState]) => {
     result[id] = {
       ...initaialPlayerState,
@@ -179,23 +170,23 @@ function initialPlayerStates(
   return result;
 }
 
-const players = initialPlayerStates(JSON.parse(INITIAL_PLAYERS_SERIALIZED));
-const engine = new GameEngine({
-  initialSceneState: {
-    state: GameState.PREPARATION,
-    score: {
-      [Team.RED]: 0,
-      [Team.BLUE]: 0,
+async function startGame() {
+  const players = initialPlayerStates();
+  const engine = new GameEngine({
+    initialSceneState: {
+      state: GameState.PREPARATION,
+      score: {
+        [Team.RED]: 0,
+        [Team.BLUE]: 0,
+      },
+      players,
+      ball: {
+        x: 1000,
+        y: 800,
+        radius: 20,
+      },
     },
-    players,
-    ball: {
-      x: 1000,
-      y: 800,
-      radius: 20,
-    },
-  },
-  map: JSON.parse(MAP) as HmzMapInfo,
-});
-
-await initWebSocketServer();
-const loopHandler = runLoop(engine.update, engine.getGameSceneState);
+    map: GAME_ENV.MAP as HmzMapInfo,
+  });
+  runLoop(engine.update, engine.getGameSceneState);
+}

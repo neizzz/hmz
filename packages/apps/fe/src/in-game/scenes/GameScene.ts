@@ -90,13 +90,13 @@ export class GameScene extends Phaser.Scene {
     this.input.keyboard.on('keydown-SPACE', event => {
       this._connection.send(GameSystemMessageType.USER_ACTION, {
         type: GameUserActionType.SHOOT_START,
-        payload: undefined,
+        payload: { id: this._myId },
       });
     });
     this.input.keyboard.on('keyup-SPACE', event => {
       this._connection.send(GameSystemMessageType.USER_ACTION, {
         type: GameUserActionType.SHOOT_END,
-        payload: undefined,
+        payload: { id: this._myId },
       });
     });
     this.input.keyboard.on('keydown-RIGHT', this._handleMove);
@@ -241,7 +241,7 @@ export class GameScene extends Phaser.Scene {
     console.log(direction);
     this._connection.send(GameSystemMessageType.USER_ACTION, {
       type: GameUserActionType.CHANGE_DIRECTION,
-      payload: { direction },
+      payload: { id: this._myId, direction },
     });
   };
 

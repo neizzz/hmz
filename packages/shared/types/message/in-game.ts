@@ -53,6 +53,7 @@ export type GameSystemMessagePayload = {
   };
   [GameSystemMessageType.USER_ACTION]: GameUserAction;
   [GameSystemMessageType.GOAL]: {
+    // goalerId: string; // TODO:
     team: Team;
     redTeamScore: number;
     blueTeamScore: number;
@@ -70,11 +71,11 @@ export type GameUserAction =
     }
   | {
       type: GameUserActionType.SHOOT_START;
-      payload: undefined;
+      payload: GameUserActionPayload[GameUserActionType.SHOOT_START];
     }
   | {
       type: GameUserActionType.SHOOT_END;
-      payload: undefined;
+      payload: GameUserActionPayload[GameUserActionType.SHOOT_END];
     };
 
 export const enum GameUserActionType {
@@ -84,8 +85,11 @@ export const enum GameUserActionType {
 }
 export type GameUserActionPayload = {
   [GameUserActionType.CHANGE_DIRECTION]: {
+    id: string;
     direction: Direction;
   };
-  [GameUserActionType.SHOOT_START]: undefined;
-  [GameUserActionType.SHOOT_END]: undefined; // bidirection
+  [GameUserActionType.SHOOT_START]: {
+    id: string;
+  };
+  [GameUserActionType.SHOOT_END]: { id: string }; // bidirection
 };

@@ -3,13 +3,10 @@ import {
   GameSystemMessage,
   GameSystemMessagePayload,
   GameSystemMessageType,
-  GameUserActionPayload,
-  GameUserActionType,
 } from '@shared/types';
 import GameStateQueue from '@utils/GameStateQueue';
 import cloneDeep from 'lodash.clonedeep';
 
-// type GameSystemMessageHandler<T extends GameSystemMessageType | void> = (payload: T extends GameSystemMessageType ? GameSystemMessagePayload[T] : Pick<GameSystemMessage, 'payload'>) => void;
 type GameSystemMessageHandler<T extends GameSystemMessageType> = (
   payload: GameSystemMessagePayload[T]
 ) => void;
@@ -21,6 +18,7 @@ export type InGameConnectionOptions = {
 
 export default class InGameConnection {
   private _myId: string;
+  private _url: string;
   private _ws?: WebSocket;
   private _stateQueue = new GameStateQueue({
     onLerp: (a: GameSceneState, b: GameSceneState): GameSceneState => {
@@ -49,7 +47,18 @@ export default class InGameConnection {
 
   constructor({ myId, url }: InGameConnectionOptions) {
     this._myId = myId;
-    this._ws = new WebSocket(url);
+    this._url = url;
+    this.init();
+  }
+
+  init() {
+    this._ws = new WebSocket(this._url);
+    this._ws.onerror = e => {
+      console.error(e);
+      setTimeout(() => {
+        this.init();
+      }, 200);
+    };
     this._ws.addEventListener('open', this._onOpen);
     this.addMessageHandler(GameSystemMessageType.SCENE_UPDATE, payload => {
       const { state } = payload;
@@ -101,7 +110,7 @@ export default class InGameConnection {
     return this._messageHandlers[type];
   };
 
-  private _onOpen = (e: Event) => {
+  private _onOpen = () => {
     this._ws.addEventListener('message', this._onMessage);
     // this._ws.addEventListener('close', this.onClose);
     this.send(GameSystemMessageType.USER_ENTRANCE, { id: this._myId });

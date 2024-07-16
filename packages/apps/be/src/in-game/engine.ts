@@ -27,6 +27,7 @@ import {
 } from '@constants';
 import { MapBuilder } from '@utils/map/builder.js';
 import { Ipc } from './InGameProcess';
+import { log } from 'console';
 
 // @ts-ignore
 global.decomp = decomp; // for concave hull
@@ -52,9 +53,10 @@ export class GameEngine {
 
   constructor(options: { initialSceneState: GameSceneState; map: HmzMapInfo }) {
     this._sceneState = options.initialSceneState;
+    console.log(this._sceneState);
     this._engine = Matter.Engine.create({
-      positionIterations: 8,
-      velocityIterations: 6,
+      positionIterations: 2,
+      velocityIterations: 2,
     });
     this._world = this._engine.world;
     this._engine.gravity = { x: 0, y: 0, scale: 1 };
@@ -65,19 +67,10 @@ export class GameEngine {
     // this._initCollisionEvents();
   }
 
-  update = (delta: number, actions: Record<string, GameUserAction[]>) => {
-    Object.entries(actions).forEach(([id, actions]) => {
-      let action: GameUserAction | undefined;
+  update = (delta: number, actions: GameUserAction[]) => {
+    actions.forEach(this._processPlayerAction);
 
-      // dequeue player inputs
-      while ((action = actions.shift())) {
-        this._processPlayerAction(id, action);
-      }
-    });
-
-    // Ipc.postMessage(JSON.stringify(this._sceneState.players));
     Object.entries(this._sceneState.players).forEach(([id, player]) => {
-      // Ipc.postMessage(player.direction);
       this._processPlayerDirection(this._playerBodies[id], player);
     });
 
@@ -153,16 +146,11 @@ export class GameEngine {
   //   // this.sceneState.removePlayer(sessionId);
   // }
 
-  private _processPlayerAction(
-    sessionId: string,
-    action: GameUserAction
-  ): void {
-    const player = this._sceneState.players[sessionId];
+  private _processPlayerAction = (action: GameUserAction) => {
+    const id = action.payload.id;
+    const player = this._sceneState.players[id];
     if (!player) {
-      // FIXME:
-      Ipc.postMessage(
-        `_processPlayerAction: player undefined (id: ${sessionId})`
-      );
+      console.log(`_processPlayerAction: player undefined (id: ${id})`);
       return;
     }
 
@@ -181,7 +169,7 @@ export class GameEngine {
         player.entityState = PlayerEntityState.IDLE;
         break;
     }
-  }
+  };
 
   destroy() {
     Matter.World.clear(this._world, false);
