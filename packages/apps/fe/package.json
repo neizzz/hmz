@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "start": "vite",
+    "start": "BE_HOST=\"$(ipconfig getifaddr en0)\" BE_PORT=3333 FE_PORT=8080 vite",
     "build:development": "tsc && vite build --mode development",
     "build:production": "tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",

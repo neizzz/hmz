@@ -12,10 +12,7 @@ import { listen } from '@colyseus/tools';
 
 // Import Colyseus config
 import app from './app.config.js';
-import InGameProcessManageService from './services/InGameProcessManageService';
 
 // Create and listen on 2567 (or PORT environment variable.)
 const { BE_PORT } = process.env;
 listen(app, BE_PORT ? +BE_PORT : undefined);
-
-// InGameProcessManageService.spawnProcess('test');

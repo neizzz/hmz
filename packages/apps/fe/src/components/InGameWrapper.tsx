@@ -1,12 +1,9 @@
-import { useHmzClient } from '@hooks/useHmzClient';
 import InGameConnection from '@in-game/InGameConnection';
 import { BootstrapScene } from '@in-game/scenes/BootstrapScene';
 import { GameScene } from '@in-game/scenes/GameScene.ts';
-import {
-  GameSystemMessageType,
-  HmzMapInfo,
-  WaitingRoomJoinInfo,
-} from '@shared/types';
+import { HmzMapInfo } from '@shared/types';
+
+import { GameSystemMessageType } from '@shared/types/message/in-game';
 import clsx from 'clsx';
 import { useEffect, useRef, useState } from 'react';
 
@@ -84,9 +81,12 @@ const InGameWrapper = ({ inGameUrl, map, myId, onEnd }: Props) => {
         setBlueScore(blueTeamScore);
       }
     );
-    // gameRoom.onMessage(GameRoomMessageType.DISPOSE, () => {
-    //   onEnd?.();
-    // });
+    inGameConnectionRef.current.addMessageHandler(
+      GameSystemMessageType.DISPOSE,
+      () => {
+        onEnd?.();
+      }
+    );
   }, []);
 
   return (

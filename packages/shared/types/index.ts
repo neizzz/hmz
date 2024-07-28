@@ -25,8 +25,6 @@ export const enum PlayerEntityState {
   SHOOTING,
 }
 
-export * from './message/client';
-export * from './message/in-game';
 export * from './map';
 export * from './room';
 export * from './in-game';

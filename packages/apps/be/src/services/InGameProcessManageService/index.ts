@@ -1,79 +1,83 @@
 import type { HmzMapInfo, InitialPlayerState } from '@shared/types';
-import { ChildProcess, fork, spawnSync } from 'node:child_process';
 
-import findFreePorts from 'find-free-ports';
 import { IpcMessageType, type IpcMessage } from '@in-game/ipc';
+import { getPidsExceptMe, sendMessage } from '@utils/ipc';
 
-const START_PORT = 40000;
-const END_PORT = 50000;
+type InGameConnectionInfo = {
+  pid: number;
+  inGameUrl?: string;
+  onInitGame: (inGameUrl: string) => void;
+  // TODO:
+  // state?:
+  // onEndEnd:
+};
 
 class InGameProcessManageService {
-  private _processMap: Record<string /** WaitingRoomId */, ChildProcess> = {};
+  private _pids: number[];
+  private _roomId2inGameConnInfo: Record<
+    string /** WaitingRoomId */,
+    InGameConnectionInfo
+  > = {};
 
-  async spawnProcess(
+  constructor() {
+    getPidsExceptMe().then(pids => {
+      this._pids = pids;
+      console.log('pids:', pids);
+    });
+    process.on('message', this._onMessage);
+  }
+
+  startGame(
     waitingRoomId: string,
     options: {
       players: Record<string, InitialPlayerState>;
       map: HmzMapInfo;
-      onInit?: (inGameUrl: string) => void;
-      onExit?: () => void;
-      // onGameStart?: (proc: Subprocess) => {};
-      // onGameEnd?: (proc: Subprocess) => {};
+      onInitGame: (inGameUrl: string) => void;
+      // TODO:
+      // onEndGame
+      // onExitGame?: () => void;
     }
-  ): Promise<ChildProcess> {
-    const [port] = await findFreePorts(1, {
-      startPort: START_PORT,
-      endPort: END_PORT,
+  ) {
+    const { players, map, onInitGame } = options;
+    const pid = this._pids[0]; //TODO:FIXME: load balancing
+    sendMessage(pid, {
+      type: IpcMessageType.REQUEST_INIT_GAME_INSTANCE,
+      payload: {
+        roomId: waitingRoomId,
+        players,
+        map,
+      },
     });
 
-    const proc = fork('', {
-      execArgv: [
-        '--import',
-        'tsx/esm',
-        `${process.env.PWD}/${process.env.IN_GAME_PROCESS_PATH}`,
-      ],
-      // stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
-      // onExit: (proc, exitCode, signalCode, error) => {
-      //   // exit handler
-      //   console.log('process exit', exitCode, proc, error);
-      //   delete this._processMap[waitingRoomId];
-      //   options.onExit?.();
-      // },
-    }) as ChildProcess;
-
-    proc.send(
-      {
-        PORT: port,
-        INITIAL_PLAYERS: options.players,
-        MAP: options.map,
-      } /** typeof GAME_ENV (in InGameProcess.ts) */
-    );
-    proc.on('message', (message: IpcMessage) => {
-      //FIXME:
-      console.log('IPC:', message);
-
-      switch (message.type) {
-        case IpcMessageType.INIT_SERVER:
-          options.onInit?.(message.payload.inGameUrl);
-          break;
-        case IpcMessageType.END_GAME:
-          // TODO:
-          break;
-      }
-    });
-
-    this._processMap[waitingRoomId] = proc;
-    return proc;
+    this._roomId2inGameConnInfo[waitingRoomId] = {
+      pid,
+      inGameUrl: undefined,
+      onInitGame,
+    };
   }
 
-  getProcess(waitingRoomId: string): ChildProcess | undefined {
-    return this._processMap[waitingRoomId];
-  }
+  // from in-game
+  private _onMessage = ({ data }: { data: IpcMessage }) => {
+    const { type, payload } = data;
+    const gameConnInfo = this._roomId2inGameConnInfo[payload.roomId];
+    switch (type) {
+      case IpcMessageType.COMPLETE_INIT_GAME_INSTANCE:
+        gameConnInfo.inGameUrl = payload.inGameUrl;
+        gameConnInfo.onInitGame(payload.inGameUrl);
+        break;
+      case IpcMessageType.END_GAME:
+        // TODO:
+        break;
+    }
+  };
 
-  killProcess(waitingRoomId: string) {
-    this._processMap[waitingRoomId].kill();
-    delete this._processMap[waitingRoomId];
-  }
+  // getPid(waitingRoomId: string): number {
+  //   return this._waitingRoom2Pid[waitingRoomId];
+  // }
+  // killProcess(waitingRoomId: string) {
+  //   this._waitingRoom2PmId[waitingRoomId].kill();
+  //   delete this._waitingRoom2PmId[waitingRoomId];
+  // }
 }
 
 export default new InGameProcessManageService();

@@ -5,12 +5,14 @@ import {
   BallState,
   Direction,
   GameSceneState,
-  GameSystemMessageType,
-  GameUserAction,
-  GameUserActionType,
   HmzMapInfo,
   PlayerState,
 } from '@shared/types';
+import {
+  GameSystemMessageType,
+  GameUserAction,
+  GameUserActionType,
+} from '@shared/types/message/in-game';
 import Phaser from 'phaser';
 import { MapBuilder } from '@utils/map/builder';
 import { Color } from '@constants';
@@ -52,6 +54,18 @@ export class GameScene extends Phaser.Scene {
     // this.me = room.sessionId;
     this.mapBuilder = new MapBuilder(this, map);
     this.cursorKeys = this.input.keyboard.createCursorKeys();
+
+    this._connection.addMessageHandler<GameSystemMessageType>(
+      GameSystemMessageType.READY_TO_START,
+      () => {
+        new StartCounter(this).startFrom(3, () => {
+          this._connection.send(
+            GameSystemMessageType.USER_READY_TO_KICKOFF,
+            undefined
+          );
+        });
+      }
+    );
   }
 
   preload() {
@@ -85,7 +99,7 @@ export class GameScene extends Phaser.Scene {
 
     this.mapBuilder.build();
     // this._initStateChangedEvents();
-    this._initEffectEvents();
+    this._initSoundEvents();
 
     this.input.keyboard.on('keydown-SPACE', event => {
       this._connection.send(GameSystemMessageType.USER_ACTION, {
@@ -115,59 +129,32 @@ export class GameScene extends Phaser.Scene {
     if (state) {
       this._syncTo(state);
     }
-
-    // 30hz fixed user input 처리
-    // this.fixedUpdate(delta);
   }
 
-  // private _generateFixedUpdator() {
-  //   let elapsedTime = 0;
-  //   const FIXED_TIME_STEP = 1000 / 30; // ms/hz
-
-  //   const fixedTick = () => {
-  //     console.log('send!');
-  //     this._connection.send(GameSystemMessageType.USER_ACTION, {
-  //       type: GameUserActionType.DIRECTION,
-  //       payload: {
-  //         direction: this._getDirectionFromInput(),
-  //       },
-  //     });
-  //   };
-
-  //   return delta => {
-  //     elapsedTime += delta;
-  //     while (elapsedTime >= FIXED_TIME_STEP) {
-  //       elapsedTime -= FIXED_TIME_STEP;
-  //       console.log(delta);
-  //       fixedTick();
-  //     }
-  //   };
-  // }
-
-  private _initEffectEvents(): void {
+  private _initSoundEvents(): void {
     const shootAudio = this.sound.add('kick');
     const whistleAudio = this.sound.add('whistle');
     const croudScoreAudio = this.sound.add('crowd-score');
     // TODO: const hitGoalpost = this.sound.add('hit-goalpost');
 
-    // this.room.onMessage<GameSystemMessageType>(
-    //   GameSystemMessageType.READY_TO_START,
-    //   () => {
-    //     new StartCounter(this).startFrom(3, () => {
-    //       this.room.send(GameSystemMessageType.USER_READY_TO_KICKOFF);
-    //     });
-    //   }
-    // );
-
-    // this.room.onMessage<GameUserAction>(GameSystemMessageType.SHOOT, () => {
-    //   shootAudio.play();
-    // });
-    // this.room.onMessage<GameUserAction>(GameSystemMessageType.GOAL, () => {
-    //   croudScoreAudio.play(undefined);
-    // });
-    // this.room.onMessage<GameUserAction>(GameSystemMessageType.KICKOFF, () => {
-    //   whistleAudio.play();
-    // });
+    this._connection.addMessageHandler<GameSystemMessageType>(
+      GameSystemMessageType.SHOOT,
+      () => {
+        shootAudio.play();
+      }
+    );
+    this._connection.addMessageHandler<GameSystemMessageType>(
+      GameSystemMessageType.GOAL,
+      () => {
+        croudScoreAudio.play(undefined);
+      }
+    );
+    this._connection.addMessageHandler<GameSystemMessageType>(
+      GameSystemMessageType.KICKOFF,
+      () => {
+        whistleAudio.play();
+      }
+    );
   }
 
   // private _initStateChangedEvents(): void {
@@ -238,7 +225,6 @@ export class GameScene extends Phaser.Scene {
 
   private _handleMove = () => {
     const direction = this._getDirectionFromInput();
-    console.log(direction);
     this._connection.send(GameSystemMessageType.USER_ACTION, {
       type: GameUserActionType.CHANGE_DIRECTION,
       payload: { id: this._myId, direction },

@@ -5,15 +5,10 @@ import {
   useRef,
   useState,
 } from 'react';
-import {
-  HmzMap,
-  Team,
-  WaitingRoomJoinInfo,
-  WaitingRoomMessageType,
-} from '@shared/types';
+import { HmzMap, Team, WaitingRoomJoinInfo } from '@shared/types';
+import { WaitingRoomMessageType } from '@shared/types/message/client';
 import { Room } from 'colyseus.js';
 import { useLoaderData } from 'react-router-dom';
-import { useHmzClient } from '@hooks/useHmzClient';
 import InGameWrapper, { InGameParams } from '../components/InGameWrapper';
 import cloneDeep from 'lodash.clonedeep';
 import clsx from 'clsx';
@@ -42,7 +37,6 @@ const buildPlayersByTeam = (
 };
 
 const WaitingRoomPage = () => {
-  const client = useHmzClient();
   const { room } = useLoaderData() as WaitingRoomPageInitParams;
   const [hostSessionId, setHostSessionId] = useState();
   const [playersByTeam, setPlayersByTeam] = useState<PlayersByTeam>({

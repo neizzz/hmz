@@ -6,9 +6,14 @@ import {
   type GameSceneState,
   type BallState,
   type PlayerState,
+} from '@shared/types';
+import {
   type GameUserAction,
   GameUserActionType,
-} from '@shared/types';
+  GameSystemMessage,
+  GameSystemMessageType,
+  GameSystemMessagePayload,
+} from '@shared/types/message/in-game';
 import Matter from 'matter-js';
 
 import decomp from 'poly-decomp-es';
@@ -26,8 +31,12 @@ import {
   GOAL_POST_NET_MASK,
 } from '@constants';
 import { MapBuilder } from '@utils/map/builder.js';
-import { Ipc } from './InGameProcess';
-import { log } from 'console';
+import cloneDeep from 'lodash.clonedeep';
+
+type GameSystemMessageBroadcaster = <T extends GameSystemMessageType>(
+  type: T,
+  paylaod: GameSystemMessagePayload[T]
+) => void;
 
 // @ts-ignore
 global.decomp = decomp; // for concave hull
@@ -43,27 +52,37 @@ export class GameEngine {
   private _world: Matter.World;
 
   private _mapBuilder: MapBuilder;
+  private _initialSceneState: GameSceneState;
   private _sceneState: GameSceneState;
 
   private _playerBodies: { [sessionId in string]: Matter.Body } = {};
   private _ballBody: Matter.Body;
 
+  private _broadcastMessage: GameSystemMessageBroadcaster;
+
   redGoalLine: number;
   blueGoalLine: number;
 
-  constructor(options: { initialSceneState: GameSceneState; map: HmzMapInfo }) {
+  constructor(options: {
+    initialSceneState: GameSceneState;
+    map: HmzMapInfo;
+    broadcastGameSystemMessage: GameSystemMessageBroadcaster;
+  }) {
+    this._initialSceneState = cloneDeep(options.initialSceneState);
     this._sceneState = options.initialSceneState;
     console.log(this._sceneState);
     this._engine = Matter.Engine.create({
-      positionIterations: 2,
+      positionIterations: 3,
       velocityIterations: 2,
     });
     this._world = this._engine.world;
     this._engine.gravity = { x: 0, y: 0, scale: 1 };
+    this._broadcastMessage = options.broadcastGameSystemMessage;
 
     this._buildMap(options.map);
     this._initBodies(options.initialSceneState);
     this._initUpdateEvents();
+    this._blockAllLine();
     // this._initCollisionEvents();
   }
 
@@ -174,46 +193,72 @@ export class GameEngine {
   destroy() {
     Matter.World.clear(this._world, false);
     Matter.Engine.clear(this._engine);
-    // this.room.broadcast(GameRoomMessageType.DISPOSE);
-    // this.room.disconnect();
   }
 
-  /** FIXME: duplicate logic */
-  // TODO: layout 로직 분리
-  // setupKickoff(team: Team) {
-  //   this.mapBuilder.blockGroundOutLines();
-  //   this.mapBuilder.blockCenterLine(team === Team.RED ? 'right' : 'left');
-  //   this.mapBuilder.blockGoalPostNets();
+  setupFirstKickoff() {
+    this._sceneState.state = GameState.KICKOFF;
 
-  //   for (const key in this.players) {
-  //     const worldPlayer = this.players[key];
-  //     const player = this.state.players.get(key);
+    this._mapBuilder.openCenterLine();
+    this._mapBuilder.blockCenterLine('right');
 
-  //     if (!worldPlayer || !player) continue;
+    this._onceDetectBallTouch(() => {
+      this._sceneState.state = GameState.PROGRESS;
+      this._mapBuilder.openCenterLine();
+      this._mapBuilder.openGroundLines();
+      this._mapBuilder.openGoalPostNets();
+    });
+  }
 
-  //     Matter.Body.setPosition(worldPlayer, {
-  //       x: player.kickoffX,
-  //       y: player.kickoffY,
-  //     });
-  //     Matter.Body.setVelocity(worldPlayer, { x: 0, y: 0 });
-  //   }
+  private _blockAllLine() {
+    this._mapBuilder.blockGroundOutLines();
+    this._mapBuilder.blockCenterLine('right');
+    this._mapBuilder.blockCenterLine('left');
+    this._mapBuilder.blockGoalPostNets();
+  }
 
-  //   Matter.Body.setPosition(this.ball, {
-  //     x: this.state.ball.kickoffX,
-  //     y: this.state.ball.kickoffY,
-  //   });
-  //   Matter.Body.setVelocity(this.ball, { x: 0, y: 0 });
-  //   this._onceDetectBallTouch(() => {
-  //     this.state.state = GameState.PROGRESS;
-  //     this.mapBuilder.openCenterLine();
-  //     this.mapBuilder.openGroundLines();
-  //     this.mapBuilder.openGoalPostNets();
-  //   });
-  //   this.state.state = GameState.KICKOFF;
-  //   setTimeout(() => {
-  //     this.room.broadcast(GameRoomMessageType.KICKOFF);
-  //   }, 100);
-  // }
+  private _blockLine(kickoffTeam: Team) {
+    this._mapBuilder.blockGroundOutLines();
+    this._mapBuilder.blockCenterLine(
+      kickoffTeam === Team.RED ? 'right' : 'left'
+    );
+    this._mapBuilder.blockGoalPostNets();
+
+    this._onceDetectBallTouch(() => {
+      this._sceneState.state = GameState.PROGRESS;
+      this._mapBuilder.openCenterLine();
+      this._mapBuilder.openGroundLines();
+      this._mapBuilder.openGoalPostNets();
+    });
+  }
+
+  private _setupKickoff(kickoffTeam: Team) {
+    this._blockLine(kickoffTeam);
+
+    for (const key in this._playerBodies) {
+      const worldPlayer = this._playerBodies[key];
+      const player = this._sceneState.players[key];
+
+      if (!worldPlayer || !player) continue;
+
+      const { x, y } = this._initialSceneState.players[key];
+
+      Matter.Body.setPosition(worldPlayer, {
+        x,
+        y,
+      });
+      Matter.Body.setVelocity(worldPlayer, { x: 0, y: 0 });
+    }
+
+    Matter.Body.setPosition(this._ballBody, {
+      x: this._initialSceneState.ball.x,
+      y: this._initialSceneState.ball.y,
+    });
+    Matter.Body.setVelocity(this._ballBody, { x: 0, y: 0 });
+    this._sceneState.state = GameState.KICKOFF;
+    setTimeout(() => {
+      this._broadcastMessage(GameSystemMessageType.KICKOFF, undefined);
+    }, 100);
+  }
 
   private _processPlayerDirection(
     worldPlayer: Matter.Body,
@@ -297,7 +342,7 @@ export class GameEngine {
 
   private _processPlayerShoot(worldPlayer: Matter.Body, player: PlayerState) {
     const contactThreshold = 1;
-    const shootForce = 0.04;
+    const shootForce = 0.01;
     const worldBall = this._ballBody;
 
     // NOTE: vector 방향 중요
@@ -325,7 +370,7 @@ export class GameEngine {
     });
 
     player.entityState = PlayerEntityState.IDLE;
-    // this.room.broadcast(GameRoomMessageType.SHOOT);
+    this._broadcastMessage(GameSystemMessageType.SHOOT, undefined);
   }
 
   private _onceDetectBallTouch(onBallTouch: () => void) {
@@ -350,19 +395,19 @@ export class GameEngine {
             this._sceneState.state = GameState.GOAL;
             const isRedTeamGoal = ballX > this.blueGoalLine;
 
-            // if (isRedTeamGoal) {
-            //   this.room.broadcast(GameRoomMessageType.GOAL, {
-            //     team: Team.RED,
-            //     redTeamScore: ++this.sceneState.score[Team.RED],
-            //     blueTeamScore: this.sceneState.score[Team.BLUE],
-            //   });
-            // } else {
-            //   this.room.broadcast(GameRoomMessageType.GOAL, {
-            //     team: Team.BLUE,
-            //     redTeamScore: this.sceneState.score[Team.RED],
-            //     blueTeamScore: ++this.sceneState.score[Team.BLUE],
-            //   });
-            // }
+            if (isRedTeamGoal) {
+              this._broadcastMessage(GameSystemMessageType.GOAL, {
+                team: Team.RED,
+                redTeamScore: ++this._sceneState.score[Team.RED],
+                blueTeamScore: this._sceneState.score[Team.BLUE],
+              });
+            } else {
+              this._broadcastMessage(GameSystemMessageType.GOAL, {
+                team: Team.BLUE,
+                redTeamScore: this._sceneState.score[Team.RED],
+                blueTeamScore: ++this._sceneState.score[Team.BLUE],
+              });
+            }
 
             // FIXME:
             const endScore = 3;
@@ -374,22 +419,22 @@ export class GameEngine {
               const isRedTeamVictory =
                 this._sceneState.score[Team.RED] === endScore;
 
-              // isRedTeamVictory
-              //   ? this.room.broadcast(GameRoomMessageType.END, {
-              //       victoryTeam: Team.RED,
-              //     })
-              //   : this.room.broadcast(GameRoomMessageType.END, {
-              //       victoryTeam: Team.BLUE,
-              //     });
-
               setTimeout(() => {
                 this.destroy();
+
+                isRedTeamVictory
+                  ? this._broadcastMessage(GameSystemMessageType.END, {
+                      victoryTeam: Team.RED,
+                    })
+                  : this._broadcastMessage(GameSystemMessageType.END, {
+                      victoryTeam: Team.BLUE,
+                    });
               }, 3000);
             } else {
-              // setTimeout(() => {
-              //   // TODO: 리플레이
-              //   this.setupKickoff(isRedTeamGoal ? Team.BLUE : Team.RED);
-              // }, 3000);
+              setTimeout(() => {
+                // TODO: 리플레이
+                this._setupKickoff(isRedTeamGoal ? Team.BLUE : Team.RED);
+              }, 3000);
             }
           }
           break;

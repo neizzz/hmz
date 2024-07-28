@@ -1,10 +1,10 @@
 import { Team, type Direction, type GameSceneState } from '../index';
 
 export type GameSystemMessage =
-  | {
-      type: GameSystemMessageType.USER_ENTRANCE;
-      payload: GameSystemMessagePayload[GameSystemMessageType.USER_ENTRANCE];
-    }
+  // | {
+  //     type: GameSystemMessageType.USER_ENTRANCE;
+  //     payload: GameSystemMessagePayload[GameSystemMessageType.USER_ENTRANCE];
+  //   }
   | {
       type: GameSystemMessageType.SCENE_UPDATE;
       payload: GameSystemMessagePayload[GameSystemMessageType.SCENE_UPDATE];
@@ -18,6 +18,10 @@ export type GameSystemMessage =
       payload: GameSystemMessagePayload[GameSystemMessageType.GOAL];
     }
   | {
+      type: GameSystemMessageType.USER_READY_TO_KICKOFF;
+      payload: GameSystemMessagePayload[GameSystemMessageType.USER_READY_TO_KICKOFF];
+    }
+  | {
       type: GameSystemMessageType.READY_TO_START;
       payload: GameSystemMessagePayload[GameSystemMessageType.READY_TO_START];
     }
@@ -28,30 +32,31 @@ export type GameSystemMessage =
   | {
       type: GameSystemMessageType.END;
       payload: GameSystemMessagePayload[GameSystemMessageType.END];
-    }
-  | {
-      type: GameSystemMessageType.DISPOSE;
-      payload: GameSystemMessagePayload[GameSystemMessageType.DISPOSE];
     };
 export const enum GameSystemMessageType {
+  USER_READY_TO_KICKOFF = 'user-ready-to-kickoff',
   // USER_EXIT
   SCENE_UPDATE = 'scene-update',
-  USER_ENTRANCE = 'user-entrance',
+  // USER_ENTRANCE = 'user-entrance',
   USER_ACTION = 'user-action',
+  SHOOT = 'shoot',
   GOAL = 'goal',
   READY_TO_START = 'ready-to-start',
   KICKOFF = 'kickoff',
   END = 'end',
-  DISPOSE = 'dispose',
 }
 export type GameSystemMessagePayload = {
-  [GameSystemMessageType.USER_ENTRANCE]: {
-    id: string;
-  };
+  // [GameSystemMessageType.USER_ENTRANCE]: {
+  //   /** same to waiting room id */
+  //   // roomId: string;
+  //   /** player's id */
+  //   id: string;
+  // };
   [GameSystemMessageType.SCENE_UPDATE]: {
     state: GameSceneState;
   };
   [GameSystemMessageType.USER_ACTION]: GameUserAction;
+  [GameSystemMessageType.SHOOT]: undefined;
   [GameSystemMessageType.GOAL]: {
     // goalerId: string; // TODO:
     team: Team;
@@ -59,9 +64,9 @@ export type GameSystemMessagePayload = {
     blueTeamScore: number;
   };
   [GameSystemMessageType.READY_TO_START]: undefined;
+  [GameSystemMessageType.USER_READY_TO_KICKOFF]: undefined;
   [GameSystemMessageType.KICKOFF]: undefined;
   [GameSystemMessageType.END]: { victoryTeam: Team };
-  [GameSystemMessageType.DISPOSE]: undefined;
 };
 
 export type GameUserAction =

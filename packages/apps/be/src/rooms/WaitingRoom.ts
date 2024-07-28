@@ -7,10 +7,13 @@ import {
   Team,
   type WaitingRoomCreateInfo,
   type WaitingRoomJoinInfo,
+} from '@shared/types';
+
+import {
   type WaitingRoomMessageUpstreamPayload,
   type WaitingRoomMessageDownstreamPayload,
   WaitingRoomMessageType,
-} from '@shared/types';
+} from '@shared/types/message/client';
 import InGameProcessManageService from '../services/InGameProcessManageService';
 
 export class WaitingRoom extends Room<WaitingRoomState, { title: string }> {
@@ -88,10 +91,10 @@ export class WaitingRoom extends Room<WaitingRoomState, { title: string }> {
   ) => {
     console.log(`[${WaitingRoomMessageType.START_GAME}]: ${client.sessionId}`);
 
-    const inGameProc = InGameProcessManageService.spawnProcess(this.roomId, {
+    InGameProcessManageService.startGame(this.roomId, {
       players: this.state.players.toJSON(),
       map,
-      onInit: (inGameUrl: string) => {
+      onInitGame: (inGameUrl: string) => {
         this.broadcast(WaitingRoomMessageType.START_GAME, {
           map,
           inGameUrl,

@@ -1,9 +1,9 @@
+import { GameSceneState } from '@shared/types';
 import {
-  GameSceneState,
   GameSystemMessage,
   GameSystemMessagePayload,
   GameSystemMessageType,
-} from '@shared/types';
+} from '@shared/types/message/in-game';
 import GameStateQueue from '@utils/GameStateQueue';
 import cloneDeep from 'lodash.clonedeep';
 
@@ -56,6 +56,7 @@ export default class InGameConnection {
     this._ws.onerror = e => {
       console.error(e);
       setTimeout(() => {
+        console.log('ws error');
         this.init();
       }, 200);
     };
@@ -111,13 +112,19 @@ export default class InGameConnection {
   };
 
   private _onOpen = () => {
+    // FIXME: 슛 넣을대마다 이 핸들러가 실행됨
     this._ws.addEventListener('message', this._onMessage);
     // this._ws.addEventListener('close', this.onClose);
-    this.send(GameSystemMessageType.USER_ENTRANCE, { id: this._myId });
+    // this.send(GameSystemMessageType.USER_ENTRANCE, { id: this._myId });
   };
 
   private _onMessage = (e: MessageEvent) => {
     const { type, payload } = JSON.parse(e.data) as GameSystemMessage;
+
+    if (type !== GameSystemMessageType.SCENE_UPDATE) {
+      console.log('[InGameConnection] onMessage:', e.data);
+    }
+
     this.getMessageHandlers(type)?.forEach(handler => handler(payload));
   };
   // private onClose = (e: Event) => {};
