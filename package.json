@@ -7,18 +7,21 @@
   ],
   "scripts": {
     "generate-schema-ts": "schema-codegen packages/apps/be/src/rooms/schema/* --ts --output packages/apps/fe/schema/",
-    "start": "bun --filter '@app/*' start"
+    "start:be": "cross-env BE_PORT=3333 lerna run start --scope @app/be",
+    "start:fe": "lerna run start --scope @app/fe",
+    "start": "lerna run start"
   },
   "devDependencies": {
     "@types/lodash.clonedeep": "^4.5.9",
-    "bun-types": "^1.1.13",
+    "@types/node": "^20.11.7",
+    "cross-env": "^7.0.3",
     "eslint": "^8.55.0",
+    "lerna": "^8.0.2",
     "prettier": "^3.2.4",
-    "typescript": "^5.4.5",
-    "rimraf": "^5.0.0"
+    "typescript": "^5.2.2",
+    "vite": "^5.0.12"
   },
   "dependencies": {
-    "@colyseus/bun-websockets": "^0.15.2",
     "lodash.clonedeep": "^4.5.0"
   }
 }

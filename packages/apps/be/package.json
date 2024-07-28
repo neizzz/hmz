@@ -4,28 +4,43 @@
   "version": "1.0.0",
   "main": "dist/index.js",
   "type": "module",
+  "engines": {
+    "node": ">= 16.13.0"
+  },
   "scripts": {
-    "start": "tsc && BE_PORT=3333 bun --hot --inspect src/index.ts",
-    "build:development": "tsc && bun build src/index.ts",
+    "start": "pm2 start --no-daemon ecosystem-test.config.cjs",
+    "loadtest": "tsx loadtest/example.ts --room my_room --numClients 2",
+    "build:development": "rimraf dist && vite build -m development",
+    "build:production": "rimraf dist && vite build",
     "test": "mocha -r tsx test/**_test.ts --exit --timeout 15000"
   },
   "author": "",
   "license": "UNLICENSED",
   "devDependencies": {
+    "@colyseus/loadtest": "^0.15.2",
     "@colyseus/testing": "^0.15.0",
-    "@shared/types": "workspace:*",
+    "@liuli-util/vite-plugin-node": "^0.9.0",
+    "@shared/types": "file:../../shared/types",
     "@types/express": "^4.17.1",
     "@types/matter-js": "^0.19.6",
     "@types/mocha": "^10.0.1",
-    "mocha": "^10.2.0"
+    "@types/ws": "^8.5.11",
+    "mocha": "^10.2.0",
+    "rimraf": "^5.0.0",
+    "ts-node": "^10.9.2",
+    "tsx": "^3.12.6"
   },
   "dependencies": {
     "@colyseus/monitor": "^0.15.0",
-    "@colyseus/tools": "^0.15.39",
-    "colyseus": "^0.15.17",
+    "@colyseus/playground": "^0.15.3",
+    "@colyseus/tools": "^0.15.0",
+    "colyseus": "^0.15.0",
     "express": "^4.18.2",
+    "find-free-ports": "^3.1.1",
     "http-proxy-middleware": "^2.0.6",
     "matter-js": "^0.19.0",
-    "poly-decomp-es": "^0.4.2"
+    "pm2": "^5.4.2",
+    "poly-decomp-es": "^0.4.2",
+    "ws": "^8.18.0"
   }
 }

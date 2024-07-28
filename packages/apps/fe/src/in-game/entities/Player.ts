@@ -1,7 +1,6 @@
-import { PlayerEntityState } from '@shared/types';
+import { PlayerEntityState, PlayerState } from '@shared/types';
 import { Color } from '@constants';
 import { GameScene } from '@in-game/scenes/GameScene';
-import { PlayerState } from '@schema';
 import Phaser from 'phaser';
 
 type InitParams = {
@@ -131,7 +130,7 @@ export class Player extends Phaser.GameObjects.Container {
       children.push(this.shootArea);
     }
 
-    const { kickoffX: x, kickoffY: y } = state;
+    const { x, y } = state;
 
     this.add(children);
     this.setSize(state.radius * 2, state.radius * 2);

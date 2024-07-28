@@ -1,32 +1,36 @@
+import InGameConnection from '@in-game/InGameConnection';
 import { Ball } from '@in-game/entities/Ball';
 import { Player } from '@in-game/entities/Player';
-import { BallState, GameRoomState, PlayerState } from '@schema';
 import {
+  BallState,
   Direction,
-  GameRoomAction,
-  GameRoomActionType,
-  GameRoomMessageType,
+  GameSceneState,
   HmzMapInfo,
+  PlayerState,
 } from '@shared/types';
-import { Room } from 'colyseus.js';
+import {
+  GameSystemMessageType,
+  GameUserAction,
+  GameUserActionType,
+} from '@shared/types/message/in-game';
 import Phaser from 'phaser';
 import { MapBuilder } from '@utils/map/builder';
 import { Color } from '@constants';
 import StartCounter from '@in-game/effects/StartCounter';
-import GameStateQueue from '@utils/GameStateQueue';
-import cloneDeep from 'lodash.clonedeep';
-import { GameRenderState } from '@in-game/types';
 
 export type GameSceneInitParams = {
+  myId: string;
+  connection: InGameConnection;
   observer?: boolean;
   map: HmzMapInfo;
-  room: Room;
+  // inGameHost: string;
 };
 
 export class GameScene extends Phaser.Scene {
   observer?: boolean;
-  room: Room;
-  me: string; // session id
+
+  // me: string; // session id
+  _myId: string;
   mapBuilder: MapBuilder;
   ball: Ball;
   players: { [sessionId: string]: Player } = {};
@@ -34,36 +38,34 @@ export class GameScene extends Phaser.Scene {
   // ballSprite: MatterJS.BodyType; // FIXME: just for debug
 
   cursorKeys: Phaser.Types.Input.Keyboard.CursorKeys;
+  // fixedUpdate = this._generateFixedUpdator();
 
-  stateQueue = new GameStateQueue({
-    onLerp: (a: GameRenderState, b: GameRenderState): GameRenderState => {
-      const result: GameRenderState = cloneDeep(b);
-
-      Object.entries(a.players).forEach(([id, playerStateA]) => {
-        const playerStateB = b.players[id];
-
-        result.players[id].x = (playerStateA.x + playerStateB.x) / 2;
-        result.players[id].y = (playerStateA.y + playerStateB.y) / 2;
-      });
-
-      result.ball.x = (a.ball.x + b.ball.x) / 2;
-      result.ball.y = (a.ball.y + b.ball.y) / 2;
-
-      return result;
-    },
-  });
-  fixedUpdate = this.generateFixedUpdator();
+  private _connection: InGameConnection;
 
   constructor() {
     super('game-scene');
   }
 
-  init({ room, map, observer }: GameSceneInitParams) {
+  init({ myId, connection, map, observer }: GameSceneInitParams) {
+    this._myId = myId;
+    this._connection = connection;
     this.observer = observer; // TODO:
-    this.room = room;
-    this.me = room.sessionId;
+    // this.room = room;
+    // this.me = room.sessionId;
     this.mapBuilder = new MapBuilder(this, map);
     this.cursorKeys = this.input.keyboard.createCursorKeys();
+
+    this._connection.addMessageHandler<GameSystemMessageType>(
+      GameSystemMessageType.READY_TO_START,
+      () => {
+        new StartCounter(this).startFrom(3, () => {
+          this._connection.send(
+            GameSystemMessageType.USER_READY_TO_KICKOFF,
+            undefined
+          );
+        });
+      }
+    );
   }
 
   preload() {
@@ -96,141 +98,140 @@ export class GameScene extends Phaser.Scene {
     console.log('[GameScene] create');
 
     this.mapBuilder.build();
-    this.initStateChangedEvents();
-    this.initEffectEvents();
-
-    this.room.onMessage(GameRoomMessageType.DISPOSE, () => {
-      this.game.destroy(true);
-    });
+    // this._initStateChangedEvents();
+    this._initSoundEvents();
 
     this.input.keyboard.on('keydown-SPACE', event => {
-      this.room.send(GameRoomMessageType.USER_ACTION, {
-        type: GameRoomActionType.SHOOT_START,
+      this._connection.send(GameSystemMessageType.USER_ACTION, {
+        type: GameUserActionType.SHOOT_START,
+        payload: { id: this._myId },
       });
     });
     this.input.keyboard.on('keyup-SPACE', event => {
-      this.room.send(GameRoomMessageType.USER_ACTION, {
-        type: GameRoomActionType.SHOOT_END,
+      this._connection.send(GameSystemMessageType.USER_ACTION, {
+        type: GameUserActionType.SHOOT_END,
+        payload: { id: this._myId },
       });
     });
+    this.input.keyboard.on('keydown-RIGHT', this._handleMove);
+    this.input.keyboard.on('keyup-RIGHT', this._handleMove);
+    this.input.keyboard.on('keydown-LEFT', this._handleMove);
+    this.input.keyboard.on('keyup-LEFT', this._handleMove);
+    this.input.keyboard.on('keydown-UP', this._handleMove);
+    this.input.keyboard.on('keyup-UP', this._handleMove);
+    this.input.keyboard.on('keydown-DOWN', this._handleMove);
+    this.input.keyboard.on('keyup-DOWN', this._handleMove);
   }
 
-  update(time: number, delta: number): void {
-    const state = this.stateQueue.popForRender();
+  update(delta: number): void {
+    const state = this._connection.popGameSceneState();
 
     if (state) {
-      Object.values(this.players).forEach(player => player.update());
-      this.ball.update();
-      this.syncTo(state);
+      this._syncTo(state);
     }
-
-    // 30hz
-    this.fixedUpdate(time, delta);
   }
 
-  private generateFixedUpdator() {
-    let elapsedTime = 0;
-    const FIXED_TIME_STEP = 1000 / 30; // ms/hz
-
-    const fixedTick = () => {
-      this.room.send(GameRoomMessageType.USER_ACTION, {
-        type: GameRoomActionType.DIRECTION,
-        payload: {
-          direction: this.getDirectionFromInput(),
-        },
-      });
-    };
-
-    return (time, delta) => {
-      elapsedTime += delta;
-      while (elapsedTime >= FIXED_TIME_STEP) {
-        elapsedTime -= FIXED_TIME_STEP;
-        fixedTick();
-      }
-    };
-  }
-
-  private initEffectEvents(): void {
+  private _initSoundEvents(): void {
     const shootAudio = this.sound.add('kick');
     const whistleAudio = this.sound.add('whistle');
     const croudScoreAudio = this.sound.add('crowd-score');
     // TODO: const hitGoalpost = this.sound.add('hit-goalpost');
 
-    this.room.onMessage<GameRoomMessageType>(
-      GameRoomMessageType.READY_TO_START,
+    this._connection.addMessageHandler<GameSystemMessageType>(
+      GameSystemMessageType.SHOOT,
       () => {
-        new StartCounter(this).startFrom(3, () => {
-          this.room.send(GameRoomMessageType.USER_READY_TO_KICKOFF);
-        });
+        shootAudio.play();
       }
     );
-
-    this.room.onMessage<GameRoomAction>(GameRoomMessageType.SHOOT, () => {
-      shootAudio.play();
-    });
-    this.room.onMessage<GameRoomAction>(GameRoomMessageType.GOAL, () => {
-      croudScoreAudio.play(undefined);
-    });
-    this.room.onMessage<GameRoomAction>(GameRoomMessageType.KICKOFF, () => {
-      whistleAudio.play();
-    });
+    this._connection.addMessageHandler<GameSystemMessageType>(
+      GameSystemMessageType.GOAL,
+      () => {
+        croudScoreAudio.play(undefined);
+      }
+    );
+    this._connection.addMessageHandler<GameSystemMessageType>(
+      GameSystemMessageType.KICKOFF,
+      () => {
+        whistleAudio.play();
+      }
+    );
   }
 
-  private initStateChangedEvents(): void {
-    this.room.state.listen('ball', (state: BallState) => {
-      this.ball = new Ball(this, { state });
+  // private _initStateChangedEvents(): void {
+  // this.room.state.listen('ball', (state: BallState) => {
+  //   this.ball = new Ball(this, { state });
+  // });
+  // this.room.state.players.onAdd((state: PlayerState, id) => {
+  //   this.players[id] = new Player(this, { state, me: id === this.me });
+  // });
+  // TODO: player remove
+  // this.room.onStateChange((state: GameSceneState) => {
+  //   const players: GameRenderState['players'] = [
+  //     ...state.players.entries(),
+  //   ].reduce((result, [id, playerServerState]) => {
+  //     const {
+  //       name,
+  //       team,
+  //       x,
+  //       y,
+  //       kickoffX,
+  //       kickoffY,
+  //       radius,
+  //       entityState,
+  //     }: PlayerState = playerServerState;
+  //     result[id] = {
+  //       name,
+  //       team,
+  //       x,
+  //       y,
+  //       kickoffX,
+  //       kickoffY,
+  //       radius,
+  //       entityState,
+  //     };
+  //     return result;
+  //   }, {});
+  //   const { x, y, kickoffX, kickoffY, radius } = state.ball;
+  //   const renderState: GameSceneState = {
+  //     players,
+  //     ball: { x, y, kickoffX, kickoffY, radius },
+  //   };
+  //   this.stateQueue.pushFromServer(renderState);
+  // });
+  // }
+
+  private _syncTo = (state: GameSceneState) => {
+    /**
+     * FIXME:
+     * 임시로 entity생성가지 여기서 하기는 함.
+     * 따로 분리한다면 player join, exit 메시지를 추가해서 동기화해야할 것 같은데,
+     * 더 복잡해질 수도 있음.
+     */
+    Object.entries(state.players).forEach(([id, playerState]) => {
+      const me = id === this._myId;
+      this.players[id]
+        ? this.players[id].syncTo(playerState, me)
+        : (this.players[id] = new Player(this, {
+            state: playerState,
+            me,
+          }));
     });
-
-    this.room.state.players.onAdd((state: PlayerState, id) => {
-      this.players[id] = new Player(this, { state, me: id === this.me });
-    });
-
-    // TODO: player remove
-
-    this.room.onStateChange((state: GameRoomState) => {
-      const players: GameRenderState['players'] = [
-        ...state.players.entries(),
-      ].reduce((result, [id, playerServerState]) => {
-        const {
-          name,
-          team,
-          x,
-          y,
-          kickoffX,
-          kickoffY,
-          radius,
-          entityState,
-        }: PlayerState = playerServerState;
-        result[id] = {
-          name,
-          team,
-          x,
-          y,
-          kickoffX,
-          kickoffY,
-          radius,
-          entityState,
-        };
-        return result;
-      }, {});
-      const { x, y, kickoffX, kickoffY, radius } = state.ball;
-      const renderState: GameRenderState = {
-        players,
-        ball: { x, y, kickoffX, kickoffY, radius },
-      };
-      this.stateQueue.pushFromServer(renderState);
-    });
-  }
-
-  private syncTo = (state: GameRenderState) => {
-    Object.entries(state.players).forEach(([id, playerServerState]) => {
-      this.players[id].syncTo(playerServerState, id === this.me);
-    });
-
-    this.ball.syncTo(state.ball);
+    this.ball
+      ? this.ball.syncTo(state.ball)
+      : (this.ball = new Ball(this, {
+          state: state.ball,
+        }));
   };
 
-  private getDirectionFromInput(): Direction {
+  private _handleMove = () => {
+    const direction = this._getDirectionFromInput();
+    this._connection.send(GameSystemMessageType.USER_ACTION, {
+      type: GameUserActionType.CHANGE_DIRECTION,
+      payload: { id: this._myId, direction },
+    });
+  };
+
+  private _getDirectionFromInput(): Direction {
     const xdir = +this.cursorKeys.right.isDown - +this.cursorKeys.left.isDown;
     const ydir = +this.cursorKeys.down.isDown - +this.cursorKeys.up.isDown;
 

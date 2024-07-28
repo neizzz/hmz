@@ -1,10 +1,27 @@
 {
   "extends": "../../../tsconfig.json",
+  "ts-node": {
+    "transpileOnly": true,
+    "files": true,
+    "compilerOptions": {}
+  },
   "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "resolveJsonModule": false,
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "useDefineForClassFields": false,
+    "allowImportingTsExtensions": false,
+    "noEmit": false,
     "paths": {
       "@utils/*": ["./src/utils/*"],
-      "@constants": ["./src/constants.ts"]
+      "@constants": ["./src/constants.ts"],
+      "@in-game/*": ["./src/in-game/*"]
     }
   },
-  "include": ["src"]
+  "include": ["src/**/*.ts", "global.d.ts"],
+  "exclude": ["node_modules"]
 }

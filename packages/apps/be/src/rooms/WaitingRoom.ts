@@ -1,13 +1,20 @@
 import { Room, type Client } from '@colyseus/core';
-import { AwaiterState, WaitingRoomState } from './schema/WaitingRoomState';
+import {
+  WaitingRoomPlayerState,
+  WaitingRoomState,
+} from './schema/WaitingRoomState';
 import {
   Team,
-  ToWaitingRoomMessageType,
-  FromWaitingRoomMessageType,
   type WaitingRoomCreateInfo,
-  type ToWaitingRoomMessagePayload,
   type WaitingRoomJoinInfo,
 } from '@shared/types';
+
+import {
+  type WaitingRoomMessageUpstreamPayload,
+  type WaitingRoomMessageDownstreamPayload,
+  WaitingRoomMessageType,
+} from '@shared/types/message/client';
+import InGameProcessManageService from '../services/InGameProcessManageService';
 
 export class WaitingRoom extends Room<WaitingRoomState, { title: string }> {
   maxClients = 10;
@@ -20,44 +27,12 @@ export class WaitingRoom extends Room<WaitingRoomState, { title: string }> {
     });
     this.setState(new WaitingRoomState());
 
-    this.onMessage<ToWaitingRoomMessagePayload['CHANGE_TEAM']>(
-      ToWaitingRoomMessageType.CHANGE_TEAM,
-      (client, message) => {
-        console.log(
-          `[${ToWaitingRoomMessageType.CHANGE_TEAM}]: ${client.sessionId}, ${JSON.stringify(message)}`
-        );
-        const awaiter = this.state.awaiters.get(client.sessionId);
-
-        if (!awaiter) {
-          throw new Error(
-            `The client(sessionId: ${client.sessionId}) not found.`
-          );
-        }
-
-        awaiter.team = message.to;
-        this.state.awaiters.set(client.sessionId, awaiter);
-        this.broadcast(FromWaitingRoomMessageType.CHANGE_TEAM, {
-          awaiters: this.state.awaiters,
-        });
-      }
-    );
-
-    this.onMessage<ToWaitingRoomMessagePayload['START_GAME']>(
-      ToWaitingRoomMessageType.START_GAME,
-      (client, { roomId: gameRoomId, map }) => {
-        console.log(
-          `[${ToWaitingRoomMessageType.START_GAME}]: ${client.sessionId}`
-        );
-        this.broadcast(
-          FromWaitingRoomMessageType.START_GAME,
-          {
-            roomId: gameRoomId,
-            map,
-          },
-          { except: client }
-        );
-      }
-    );
+    this.onMessage<
+      WaitingRoomMessageUpstreamPayload[WaitingRoomMessageType.CHANGE_TEAM]
+    >(WaitingRoomMessageType.CHANGE_TEAM, this._handleMessageChangeTeam);
+    this.onMessage<
+      WaitingRoomMessageUpstreamPayload[WaitingRoomMessageType.START_GAME]
+    >(WaitingRoomMessageType.START_GAME, this._handleMessageStartGame);
   }
 
   onJoin(client: Client, options: WaitingRoomCreateInfo | WaitingRoomJoinInfo) {
@@ -65,10 +40,10 @@ export class WaitingRoom extends Room<WaitingRoomState, { title: string }> {
 
     // @ts-ignore
     const info = options.hostJoinInfo ?? options;
-    const awaiter = new AwaiterState();
-    awaiter.name = info.name;
-    awaiter.team = Team.OBSERVER;
-    this.state.awaiters.set(client.sessionId, awaiter);
+    const player = new WaitingRoomPlayerState();
+    player.name = info.name;
+    player.team = Team.OBSERVER;
+    this.state.players.set(client.sessionId, player);
 
     if (!this.state.hostSessionId) {
       this.state.hostSessionId = client.sessionId;
@@ -77,14 +52,62 @@ export class WaitingRoom extends Room<WaitingRoomState, { title: string }> {
 
   onLeave(client: Client, consented: boolean) {
     console.log(client.sessionId, 'left!');
-    this.state.awaiters.delete(client.sessionId);
+    this.state.players.delete(client.sessionId);
 
     if (this.state.hostSessionId === client.sessionId) {
-      this.state.hostSessionId = [...this.state.awaiters.keys()][0];
+      this.state.hostSessionId = [...this.state.players.keys()][0];
     }
   }
 
   onDispose() {
     console.log('waiting room', this.roomId, 'disposing...');
   }
+
+  private _handleMessageChangeTeam = (
+    client: Client,
+    message: WaitingRoomMessageUpstreamPayload[WaitingRoomMessageType.CHANGE_TEAM]
+  ) => {
+    console.log(
+      `[${WaitingRoomMessageType.CHANGE_TEAM}]: ${client.sessionId}, ${JSON.stringify(message)}`
+    );
+    const player = this.state.players.get(client.sessionId);
+
+    if (!player) {
+      throw new Error(`The client(sessionId: ${client.sessionId}) not found.`);
+    }
+
+    player.team = message.to;
+    this.state.players.set(client.sessionId, player);
+    this.broadcast(WaitingRoomMessageType.CHANGE_TEAM, {
+      players: this.state.players,
+    });
+  };
+
+  private _handleMessageStartGame = (
+    client: Client,
+    {
+      map,
+    }: WaitingRoomMessageUpstreamPayload[WaitingRoomMessageType.START_GAME]
+  ) => {
+    console.log(`[${WaitingRoomMessageType.START_GAME}]: ${client.sessionId}`);
+
+    InGameProcessManageService.startGame(this.roomId, {
+      players: this.state.players.toJSON(),
+      map,
+      onInitGame: (inGameUrl: string) => {
+        this.broadcast(WaitingRoomMessageType.START_GAME, {
+          map,
+          inGameUrl,
+        });
+      },
+    });
+
+    // this.broadcast(
+    //   WaitingRoomMessageType.START_GAME,
+    //   {
+    //     inGameUrl,
+    //     map,
+    //   },
+    // );
+  };
 }

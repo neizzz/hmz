@@ -12,12 +12,6 @@ export type HmzMapInfo = {
     goalPostTopPositionY: number;
     goalPostBottomPositionY: number;
   };
-  kickoff: {
-    ball: {
-      x: number;
-      y: number;
-    };
-  };
   tile: {
     width: number;
     height: number;
@@ -36,12 +30,6 @@ export const HmzMap: Record<HmzMapSize, HmzMapInfo> = {
     },
     width: 1600,
     height: 800,
-    kickoff: {
-      ball: {
-        x: 800,
-        y: 400,
-      },
-    },
     ground: {
       x: 200,
       y: 100,
@@ -50,7 +38,7 @@ export const HmzMap: Record<HmzMapSize, HmzMapInfo> = {
       goalPostWidth: 210,
       goalPostTopPositionY: (800 - 210) / 2,
       goalPostBottomPositionY: (800 + 210) / 2,
-      goalPostNetThickness: 5,
+      goalPostNetThickness: 10,
       goalPostDepth: 50,
       goalPostNetCornerRadius: 50 * 0.75, // 'goalPostDepth' based
       goalPostRadius: 16,
@@ -64,12 +52,6 @@ export const HmzMap: Record<HmzMapSize, HmzMapInfo> = {
     },
     width: 1840,
     height: 920,
-    kickoff: {
-      ball: {
-        x: 920,
-        y: 460,
-      },
-    },
     ground: {
       x: 200,
       y: 100,
@@ -78,7 +60,7 @@ export const HmzMap: Record<HmzMapSize, HmzMapInfo> = {
       goalPostWidth: 210,
       goalPostTopPositionY: (920 - 210) / 2,
       goalPostBottomPositionY: (920 + 210) / 2,
-      goalPostNetThickness: 5,
+      goalPostNetThickness: 10,
       goalPostDepth: 50,
       goalPostNetCornerRadius: 50 * 0.75, // 'goalPostDepth' based
       goalPostRadius: 16,

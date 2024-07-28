@@ -5,34 +5,27 @@ import {
   useRef,
   useState,
 } from 'react';
-import {
-  FromWaitingRoomMessageType,
-  GameRoomJoinInfo,
-  HmzMap,
-  RoomType,
-  Team,
-  ToWaitingRoomMessageType,
-} from '@shared/types';
+import { HmzMap, Team, WaitingRoomJoinInfo } from '@shared/types';
+import { WaitingRoomMessageType } from '@shared/types/message/client';
 import { Room } from 'colyseus.js';
-import { AwaiterState } from '@schema';
 import { useLoaderData } from 'react-router-dom';
-import { useHmzClient } from '@hooks/useHmzClient';
-import InGame, { InGameParams } from '../components/InGameWrapper';
+import InGameWrapper, { InGameParams } from '../components/InGameWrapper';
 import cloneDeep from 'lodash.clonedeep';
 import clsx from 'clsx';
+import { WaitingRoomPlayerState } from '@schema';
 
 export type WaitingRoomPageInitParams = {
   room: Room;
 };
 
-type AwaitersByTeam = Record<Team, [string, AwaiterState][]>;
+type PlayersByTeam = Record<Team, [string, WaitingRoomPlayerState][]>;
 
-const buildAwaitersByTeam = (
-  awaiters: Record<string, AwaiterState>
-): AwaitersByTeam => {
-  return Object.entries(awaiters).reduce(
-    (result, [sessionId, awaiter]) => {
-      result[awaiter.team].push([sessionId, awaiter]);
+const buildPlayersByTeam = (
+  players: Record<string, WaitingRoomPlayerState>
+): PlayersByTeam => {
+  return Object.entries(players).reduce(
+    (result, [sessionId, player]) => {
+      result[player.team].push([sessionId, player]);
       return result;
     },
     {
@@ -44,36 +37,35 @@ const buildAwaitersByTeam = (
 };
 
 const WaitingRoomPage = () => {
-  const client = useHmzClient();
   const { room } = useLoaderData() as WaitingRoomPageInitParams;
   const [hostSessionId, setHostSessionId] = useState();
-  const [awaitersByTeam, setAwaitersByTeam] = useState<AwaitersByTeam>({
+  const [playersByTeam, setPlayersByTeam] = useState<PlayersByTeam>({
     [Team.RED]: [],
     [Team.BLUE]: [],
     [Team.OBSERVER]: [],
   });
-  const awaitersByTeamRef = useRef<AwaitersByTeam>(awaitersByTeam);
+  const playersByTeamRef = useRef<PlayersByTeam>(playersByTeam);
   const [inGameParams, setInGameParams] = useState<InGameParams>(undefined);
 
   useLayoutEffect(() => {
-    awaitersByTeamRef.current = cloneDeep(awaitersByTeam);
-  }, [awaitersByTeam]);
+    playersByTeamRef.current = cloneDeep(playersByTeam);
+  }, [playersByTeam]);
 
   const changeTeam = useCallback((to: Team) => {
-    room.send(ToWaitingRoomMessageType.CHANGE_TEAM, { to });
+    room.send(WaitingRoomMessageType.CHANGE_TEAM, { to });
   }, []);
 
-  const getMyJoinInfo = useCallback((): GameRoomJoinInfo => {
-    const copiedAwaitersByTeam = awaitersByTeamRef.current;
+  const getMyJoinInfo = useCallback((): WaitingRoomJoinInfo => {
+    const copiedPlayersByTeam = playersByTeamRef.current;
     const flatten = [
-      ...copiedAwaitersByTeam.red,
-      ...copiedAwaitersByTeam.blue,
-      ...copiedAwaitersByTeam.observer,
+      ...copiedPlayersByTeam.red,
+      ...copiedPlayersByTeam.blue,
+      ...copiedPlayersByTeam.observer,
     ];
     const [_, myState] = flatten.find(
       ([sessionId]) => sessionId === room.sessionId
     );
-    const myIndexInTeam = copiedAwaitersByTeam[myState.team].findIndex(
+    const myIndexInTeam = copiedPlayersByTeam[myState.team].findIndex(
       ([sessionId]) => sessionId === room.sessionId
     );
     return {
@@ -83,46 +75,48 @@ const WaitingRoomPage = () => {
   }, []);
 
   useEffect(() => {
-    room.state.awaiters.onAdd((awaiter: AwaiterState, sessionId: string) => {
-      console.log('awaiter add', awaiter, sessionId);
-      setAwaitersByTeam(prev => ({
-        ...prev,
-        [awaiter.team]: prev[awaiter.team].concat([[sessionId, awaiter]]),
-      }));
-    });
+    room.state.players.onAdd(
+      (player: WaitingRoomPlayerState, sessionId: string) => {
+        console.log('player add', player, sessionId);
+        setPlayersByTeam(prev => ({
+          ...prev,
+          [player.team]: prev[player.team].concat([[sessionId, player]]),
+        }));
+      }
+    );
 
-    room.state.awaiters.onRemove((awaiter: AwaiterState, sessionId: string) => {
-      console.log('awaiter remove', awaiter, sessionId);
-      setAwaitersByTeam(prev => ({
-        ...prev,
-        [awaiter.team]: prev[awaiter.team].filter(
-          ([targetSessionId]) => targetSessionId !== sessionId
-        ),
-      }));
-    });
+    room.state.players.onRemove(
+      (player: WaitingRoomPlayerState, sessionId: string) => {
+        console.log('player remove', player, sessionId);
+        setPlayersByTeam(prev => ({
+          ...prev,
+          [player.team]: prev[player.team].filter(
+            ([targetSessionId]) => targetSessionId !== sessionId
+          ),
+        }));
+      }
+    );
 
     room.state.listen('hostSessionId', newHostSessionId => {
       setHostSessionId(newHostSessionId);
     });
 
-    room.onMessage(FromWaitingRoomMessageType.CHANGE_TEAM, ({ awaiters }) => {
-      setAwaitersByTeam(buildAwaitersByTeam(awaiters));
+    room.onMessage(WaitingRoomMessageType.CHANGE_TEAM, ({ players }) => {
+      setPlayersByTeam(buildPlayersByTeam(players));
     });
   }, [room.state]);
 
   useEffect(() => {
-    room.sessionId === hostSessionId ||
-      room.onMessage(
-        FromWaitingRoomMessageType.START_GAME,
-        ({ roomId: gameRoomId, map }) => {
-          setInGameParams({
-            roomId: gameRoomId,
-            map,
-            myJoinInfo: getMyJoinInfo(),
-          });
-        }
-      );
-  }, [hostSessionId]);
+    // console.log(room.sessionId, hostSessionId);
+    // room.sessionId === hostSessionId ||
+    room.onMessage(WaitingRoomMessageType.START_GAME, ({ inGameUrl, map }) => {
+      setInGameParams({
+        myId: room.sessionId,
+        inGameUrl,
+        map,
+      });
+    });
+  }, []);
 
   return (
     <>
@@ -137,7 +131,7 @@ const WaitingRoomPage = () => {
                 Red
               </button>
               <ul className={'member-list'}>
-                {awaitersByTeam[Team.RED].map(([_, { name }]) => (
+                {playersByTeam[Team.RED].map(([_, { name }]) => (
                   <li>{name}</li>
                 ))}
               </ul>
@@ -150,7 +144,7 @@ const WaitingRoomPage = () => {
                 Observer
               </button>
               <ul className={'member-list'}>
-                {awaitersByTeam[Team.OBSERVER].map(([_, { name }]) => (
+                {playersByTeam[Team.OBSERVER].map(([_, { name }]) => (
                   <li>{name}</li>
                 ))}
               </ul>
@@ -163,7 +157,7 @@ const WaitingRoomPage = () => {
                 Blue
               </button>
               <ul className={'member-list'}>
-                {awaitersByTeam[Team.BLUE].map(([_, { name }]) => (
+                {playersByTeam[Team.BLUE].map(([_, { name }]) => (
                   <li>{name}</li>
                 ))}
               </ul>
@@ -175,33 +169,12 @@ const WaitingRoomPage = () => {
                 className={'start-btn'}
                 onClick={() => {
                   const playerCount =
-                    Object.keys(awaitersByTeam.blue).length +
-                    Object.keys(awaitersByTeam.blue).length;
+                    Object.keys(playersByTeam.blue).length +
+                    Object.keys(playersByTeam.blue).length;
                   const map = playerCount > 6 ? HmzMap.MEDIUM : HmzMap.SMALL;
-                  client
-                    .create(RoomType.GAME_ROOM, {
-                      hostJoinInfo: getMyJoinInfo(),
-                      setting: {
-                        map,
-                        redTeamCount: awaitersByTeam.red.length,
-                        blueTeamCount: awaitersByTeam.blue.length,
-                        endScore: 3,
-                      },
-                    })
-                    .then(gameRoom => {
-                      const inGameInfo = {
-                        host: true,
-                        room: gameRoom,
-                        roomId: gameRoom.roomId,
-                        map,
-                        myJoinInfo: getMyJoinInfo(),
-                      };
-                      setInGameParams(inGameInfo);
-                      room.send(ToWaitingRoomMessageType.START_GAME, {
-                        roomId: inGameInfo.roomId,
-                        map: inGameInfo.map,
-                      });
-                    });
+                  room.send(WaitingRoomMessageType.START_GAME, {
+                    map,
+                  });
                 }}
               >
                 START
@@ -211,7 +184,10 @@ const WaitingRoomPage = () => {
         </div>
       </div>
       {inGameParams && (
-        <InGame {...inGameParams} onEnd={() => setInGameParams(undefined)} />
+        <InGameWrapper
+          {...inGameParams}
+          onEnd={() => setInGameParams(undefined)}
+        />
       )}
     </>
   );
